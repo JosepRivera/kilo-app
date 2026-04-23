@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
 	BarChart2,
@@ -16,9 +17,10 @@ import {
 	Utensils,
 	Wallet,
 } from "lucide-react";
+import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth.store";
-import type { Role } from "@/types/api";
+import type { Ingredient, Role } from "@/types/api";
 import { ROLE_LABELS } from "@/types/api";
 
 interface NavItem {
@@ -131,6 +133,16 @@ export function Sidebar() {
 	const router = useRouterState();
 	const currentPath = router.location.pathname;
 
+	const { data: ingredients = [] } = useQuery<Ingredient[]>({
+		queryKey: ["ingredients"],
+		queryFn: () => api.get("/ingredients").then((r) => r.data),
+		enabled: user?.role === "OWNER",
+		refetchInterval: 60_000,
+		staleTime: 30_000,
+	});
+
+	const lowStockCount = ingredients.filter((i) => i.stock <= i.min_stock).length;
+
 	if (!user) return null;
 
 	const visibleItems = NAV_ITEMS.filter((item) => item.roles.includes(user.role));
@@ -165,7 +177,12 @@ export function Sidebar() {
 									>
 										{item.icon}
 									</span>
-									{item.label}
+									<span className="flex-1">{item.label}</span>
+									{item.to === "/ingredients" && lowStockCount > 0 && (
+										<span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[oklch(0.55_0.08_30)] px-1 text-[10px] font-medium text-white">
+											{lowStockCount}
+										</span>
+									)}
 								</Link>
 							</li>
 						);

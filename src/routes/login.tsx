@@ -26,14 +26,7 @@ function LoginPage() {
 
 	const loginMutation = useMutation({
 		mutationFn: (data: { username: string; password: string }) =>
-			api
-				.post<LoginResponse>("/auth/login", {
-					username: data.username,
-					password: `${data.username}@smartbite.local`,
-					email: `${data.username}@smartbite.local`,
-					...data,
-				})
-				.then((r) => r.data),
+			api.post<LoginResponse>("/auth/login", data).then((r) => r.data),
 		onSuccess: (data) => {
 			setAuth({ accessToken: data.access_token, refreshToken: data.refresh_token }, data.user);
 			void navigate({ to: getHomeForRole(data.user.role) });
@@ -125,7 +118,10 @@ function LoginPage() {
 
 						{loginMutation.error && (
 							<p className="rounded-lg bg-destructive/8 px-3 py-2 text-sm text-destructive">
-								Usuario o contraseña incorrectos
+								{loginMutation.error instanceof Error &&
+								loginMutation.error.message.includes("Network Error")
+									? "No se pudo conectar con el servidor. Verifica que la API esté corriendo."
+									: "Usuario o contraseña incorrectos"}
 							</p>
 						)}
 

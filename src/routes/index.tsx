@@ -1,16 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { getHomeForRole } from "@/lib/guards";
+import { useAuthStore } from "@/stores/auth.store";
 
 export const Route = createFileRoute("/")({
-	component: HomePage,
+	beforeLoad: () => {
+		const user = useAuthStore.getState().user;
+		if (user) throw redirect({ to: getHomeForRole(user.role) });
+		throw redirect({ to: "/login" });
+	},
+	component: () => null,
 });
-
-function HomePage() {
-	return (
-		<div className="flex min-h-screen items-center justify-center">
-			<div className="text-center">
-				<h1 className="text-4xl font-bold text-foreground">SmartBite</h1>
-				<p className="mt-2 text-muted-foreground">Sistema de gestión para restaurantes</p>
-			</div>
-		</div>
-	);
-}
