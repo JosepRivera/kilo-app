@@ -9,38 +9,258 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthEmployeesRouteImport } from './routes/_auth/employees'
+import { Route as AuthRecipesIndexRouteImport } from './routes/_auth/recipes/index'
+import { Route as AuthProductsIndexRouteImport } from './routes/_auth/products/index'
+import { Route as AuthProductionPlanIndexRouteImport } from './routes/_auth/production-plan/index'
+import { Route as AuthPaymentsIndexRouteImport } from './routes/_auth/payments/index'
+import { Route as AuthIngredientsIndexRouteImport } from './routes/_auth/ingredients/index'
+import { Route as AuthExpensesIndexRouteImport } from './routes/_auth/expenses/index'
+import { Route as AuthDashboardIndexRouteImport } from './routes/_auth/dashboard/index'
+import { Route as AuthCashClosesIndexRouteImport } from './routes/_auth/cash-closes/index'
+import { Route as AuthAiIndexRouteImport } from './routes/_auth/ai/index'
+import { Route as AuthSalesNewRouteImport } from './routes/_auth/sales/new'
+import { Route as AuthSalesHistoryRouteImport } from './routes/_auth/sales/history'
+import { Route as AuthSalesCheckoutRouteImport } from './routes/_auth/sales/checkout'
+import { Route as AuthReportsProfitabilityRouteImport } from './routes/_auth/reports/profitability'
+import { Route as AuthReportsPeriodRouteImport } from './routes/_auth/reports/period'
 
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/_auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthEmployeesRoute = AuthEmployeesRouteImport.update({
+  id: '/employees',
+  path: '/employees',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthRecipesIndexRoute = AuthRecipesIndexRouteImport.update({
+  id: '/recipes/',
+  path: '/recipes/',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthProductsIndexRoute = AuthProductsIndexRouteImport.update({
+  id: '/products/',
+  path: '/products/',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthProductionPlanIndexRoute = AuthProductionPlanIndexRouteImport.update({
+  id: '/production-plan/',
+  path: '/production-plan/',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthPaymentsIndexRoute = AuthPaymentsIndexRouteImport.update({
+  id: '/payments/',
+  path: '/payments/',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthIngredientsIndexRoute = AuthIngredientsIndexRouteImport.update({
+  id: '/ingredients/',
+  path: '/ingredients/',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthExpensesIndexRoute = AuthExpensesIndexRouteImport.update({
+  id: '/expenses/',
+  path: '/expenses/',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthDashboardIndexRoute = AuthDashboardIndexRouteImport.update({
+  id: '/dashboard/',
+  path: '/dashboard/',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthCashClosesIndexRoute = AuthCashClosesIndexRouteImport.update({
+  id: '/cash-closes/',
+  path: '/cash-closes/',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthAiIndexRoute = AuthAiIndexRouteImport.update({
+  id: '/ai/',
+  path: '/ai/',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthSalesNewRoute = AuthSalesNewRouteImport.update({
+  id: '/sales/new',
+  path: '/sales/new',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthSalesHistoryRoute = AuthSalesHistoryRouteImport.update({
+  id: '/sales/history',
+  path: '/sales/history',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthSalesCheckoutRoute = AuthSalesCheckoutRouteImport.update({
+  id: '/sales/checkout',
+  path: '/sales/checkout',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthReportsProfitabilityRoute =
+  AuthReportsProfitabilityRouteImport.update({
+    id: '/reports/profitability',
+    path: '/reports/profitability',
+    getParentRoute: () => AuthRoute,
+  } as any)
+const AuthReportsPeriodRoute = AuthReportsPeriodRouteImport.update({
+  id: '/reports/period',
+  path: '/reports/period',
+  getParentRoute: () => AuthRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/employees': typeof AuthEmployeesRoute
+  '/reports/period': typeof AuthReportsPeriodRoute
+  '/reports/profitability': typeof AuthReportsProfitabilityRoute
+  '/sales/checkout': typeof AuthSalesCheckoutRoute
+  '/sales/history': typeof AuthSalesHistoryRoute
+  '/sales/new': typeof AuthSalesNewRoute
+  '/ai/': typeof AuthAiIndexRoute
+  '/cash-closes/': typeof AuthCashClosesIndexRoute
+  '/dashboard/': typeof AuthDashboardIndexRoute
+  '/expenses/': typeof AuthExpensesIndexRoute
+  '/ingredients/': typeof AuthIngredientsIndexRoute
+  '/payments/': typeof AuthPaymentsIndexRoute
+  '/production-plan/': typeof AuthProductionPlanIndexRoute
+  '/products/': typeof AuthProductsIndexRoute
+  '/recipes/': typeof AuthRecipesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/employees': typeof AuthEmployeesRoute
+  '/reports/period': typeof AuthReportsPeriodRoute
+  '/reports/profitability': typeof AuthReportsProfitabilityRoute
+  '/sales/checkout': typeof AuthSalesCheckoutRoute
+  '/sales/history': typeof AuthSalesHistoryRoute
+  '/sales/new': typeof AuthSalesNewRoute
+  '/ai': typeof AuthAiIndexRoute
+  '/cash-closes': typeof AuthCashClosesIndexRoute
+  '/dashboard': typeof AuthDashboardIndexRoute
+  '/expenses': typeof AuthExpensesIndexRoute
+  '/ingredients': typeof AuthIngredientsIndexRoute
+  '/payments': typeof AuthPaymentsIndexRoute
+  '/production-plan': typeof AuthProductionPlanIndexRoute
+  '/products': typeof AuthProductsIndexRoute
+  '/recipes': typeof AuthRecipesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_auth': typeof AuthRouteWithChildren
+  '/login': typeof LoginRoute
+  '/_auth/employees': typeof AuthEmployeesRoute
+  '/_auth/reports/period': typeof AuthReportsPeriodRoute
+  '/_auth/reports/profitability': typeof AuthReportsProfitabilityRoute
+  '/_auth/sales/checkout': typeof AuthSalesCheckoutRoute
+  '/_auth/sales/history': typeof AuthSalesHistoryRoute
+  '/_auth/sales/new': typeof AuthSalesNewRoute
+  '/_auth/ai/': typeof AuthAiIndexRoute
+  '/_auth/cash-closes/': typeof AuthCashClosesIndexRoute
+  '/_auth/dashboard/': typeof AuthDashboardIndexRoute
+  '/_auth/expenses/': typeof AuthExpensesIndexRoute
+  '/_auth/ingredients/': typeof AuthIngredientsIndexRoute
+  '/_auth/payments/': typeof AuthPaymentsIndexRoute
+  '/_auth/production-plan/': typeof AuthProductionPlanIndexRoute
+  '/_auth/products/': typeof AuthProductsIndexRoute
+  '/_auth/recipes/': typeof AuthRecipesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/employees'
+    | '/reports/period'
+    | '/reports/profitability'
+    | '/sales/checkout'
+    | '/sales/history'
+    | '/sales/new'
+    | '/ai/'
+    | '/cash-closes/'
+    | '/dashboard/'
+    | '/expenses/'
+    | '/ingredients/'
+    | '/payments/'
+    | '/production-plan/'
+    | '/products/'
+    | '/recipes/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/login'
+    | '/employees'
+    | '/reports/period'
+    | '/reports/profitability'
+    | '/sales/checkout'
+    | '/sales/history'
+    | '/sales/new'
+    | '/ai'
+    | '/cash-closes'
+    | '/dashboard'
+    | '/expenses'
+    | '/ingredients'
+    | '/payments'
+    | '/production-plan'
+    | '/products'
+    | '/recipes'
+  id:
+    | '__root__'
+    | '/'
+    | '/_auth'
+    | '/login'
+    | '/_auth/employees'
+    | '/_auth/reports/period'
+    | '/_auth/reports/profitability'
+    | '/_auth/sales/checkout'
+    | '/_auth/sales/history'
+    | '/_auth/sales/new'
+    | '/_auth/ai/'
+    | '/_auth/cash-closes/'
+    | '/_auth/dashboard/'
+    | '/_auth/expenses/'
+    | '/_auth/ingredients/'
+    | '/_auth/payments/'
+    | '/_auth/production-plan/'
+    | '/_auth/products/'
+    | '/_auth/recipes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRouteWithChildren
+  LoginRoute: typeof LoginRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth': {
+      id: '/_auth'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +268,156 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_auth/employees': {
+      id: '/_auth/employees'
+      path: '/employees'
+      fullPath: '/employees'
+      preLoaderRoute: typeof AuthEmployeesRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/recipes/': {
+      id: '/_auth/recipes/'
+      path: '/recipes'
+      fullPath: '/recipes/'
+      preLoaderRoute: typeof AuthRecipesIndexRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/products/': {
+      id: '/_auth/products/'
+      path: '/products'
+      fullPath: '/products/'
+      preLoaderRoute: typeof AuthProductsIndexRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/production-plan/': {
+      id: '/_auth/production-plan/'
+      path: '/production-plan'
+      fullPath: '/production-plan/'
+      preLoaderRoute: typeof AuthProductionPlanIndexRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/payments/': {
+      id: '/_auth/payments/'
+      path: '/payments'
+      fullPath: '/payments/'
+      preLoaderRoute: typeof AuthPaymentsIndexRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/ingredients/': {
+      id: '/_auth/ingredients/'
+      path: '/ingredients'
+      fullPath: '/ingredients/'
+      preLoaderRoute: typeof AuthIngredientsIndexRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/expenses/': {
+      id: '/_auth/expenses/'
+      path: '/expenses'
+      fullPath: '/expenses/'
+      preLoaderRoute: typeof AuthExpensesIndexRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/dashboard/': {
+      id: '/_auth/dashboard/'
+      path: '/dashboard'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof AuthDashboardIndexRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/cash-closes/': {
+      id: '/_auth/cash-closes/'
+      path: '/cash-closes'
+      fullPath: '/cash-closes/'
+      preLoaderRoute: typeof AuthCashClosesIndexRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/ai/': {
+      id: '/_auth/ai/'
+      path: '/ai'
+      fullPath: '/ai/'
+      preLoaderRoute: typeof AuthAiIndexRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/sales/new': {
+      id: '/_auth/sales/new'
+      path: '/sales/new'
+      fullPath: '/sales/new'
+      preLoaderRoute: typeof AuthSalesNewRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/sales/history': {
+      id: '/_auth/sales/history'
+      path: '/sales/history'
+      fullPath: '/sales/history'
+      preLoaderRoute: typeof AuthSalesHistoryRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/sales/checkout': {
+      id: '/_auth/sales/checkout'
+      path: '/sales/checkout'
+      fullPath: '/sales/checkout'
+      preLoaderRoute: typeof AuthSalesCheckoutRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/reports/profitability': {
+      id: '/_auth/reports/profitability'
+      path: '/reports/profitability'
+      fullPath: '/reports/profitability'
+      preLoaderRoute: typeof AuthReportsProfitabilityRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/reports/period': {
+      id: '/_auth/reports/period'
+      path: '/reports/period'
+      fullPath: '/reports/period'
+      preLoaderRoute: typeof AuthReportsPeriodRouteImport
+      parentRoute: typeof AuthRoute
+    }
   }
 }
 
+interface AuthRouteChildren {
+  AuthEmployeesRoute: typeof AuthEmployeesRoute
+  AuthReportsPeriodRoute: typeof AuthReportsPeriodRoute
+  AuthReportsProfitabilityRoute: typeof AuthReportsProfitabilityRoute
+  AuthSalesCheckoutRoute: typeof AuthSalesCheckoutRoute
+  AuthSalesHistoryRoute: typeof AuthSalesHistoryRoute
+  AuthSalesNewRoute: typeof AuthSalesNewRoute
+  AuthAiIndexRoute: typeof AuthAiIndexRoute
+  AuthCashClosesIndexRoute: typeof AuthCashClosesIndexRoute
+  AuthDashboardIndexRoute: typeof AuthDashboardIndexRoute
+  AuthExpensesIndexRoute: typeof AuthExpensesIndexRoute
+  AuthIngredientsIndexRoute: typeof AuthIngredientsIndexRoute
+  AuthPaymentsIndexRoute: typeof AuthPaymentsIndexRoute
+  AuthProductionPlanIndexRoute: typeof AuthProductionPlanIndexRoute
+  AuthProductsIndexRoute: typeof AuthProductsIndexRoute
+  AuthRecipesIndexRoute: typeof AuthRecipesIndexRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthEmployeesRoute: AuthEmployeesRoute,
+  AuthReportsPeriodRoute: AuthReportsPeriodRoute,
+  AuthReportsProfitabilityRoute: AuthReportsProfitabilityRoute,
+  AuthSalesCheckoutRoute: AuthSalesCheckoutRoute,
+  AuthSalesHistoryRoute: AuthSalesHistoryRoute,
+  AuthSalesNewRoute: AuthSalesNewRoute,
+  AuthAiIndexRoute: AuthAiIndexRoute,
+  AuthCashClosesIndexRoute: AuthCashClosesIndexRoute,
+  AuthDashboardIndexRoute: AuthDashboardIndexRoute,
+  AuthExpensesIndexRoute: AuthExpensesIndexRoute,
+  AuthIngredientsIndexRoute: AuthIngredientsIndexRoute,
+  AuthPaymentsIndexRoute: AuthPaymentsIndexRoute,
+  AuthProductionPlanIndexRoute: AuthProductionPlanIndexRoute,
+  AuthProductsIndexRoute: AuthProductsIndexRoute,
+  AuthRecipesIndexRoute: AuthRecipesIndexRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRouteWithChildren,
+  LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
