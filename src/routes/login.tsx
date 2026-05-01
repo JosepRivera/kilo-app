@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -7,10 +6,12 @@ import {
 	ChefHat,
 	Eye,
 	EyeOff,
+	Loader2,
 	Package,
 	TrendingUp,
 	UtensilsCrossed,
 } from "lucide-react";
+import { useState } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,22 +35,22 @@ const features = [
 	{
 		icon: UtensilsCrossed,
 		title: "Transacciones rápidas",
-		desc: "Registra órdenes y cobra sin demoras ni errores",
+		desc: "Registra órdenes y cobra sin demoras",
 	},
 	{
 		icon: ChefHat,
 		title: "Comunicación instantánea",
-		desc: "Los mensajes llegan al instante, sin demoras",
+		desc: "Los mensajes llegan al instante",
 	},
 	{
 		icon: Package,
 		title: "Gestión de inventario",
-		desc: "Alertas automáticas antes de quedarte sin recursos",
+		desc: "Alertas automáticas de stock",
 	},
 	{
 		icon: BarChart3,
 		title: "Análisis de datos",
-		desc: "Métricas y rentabilidad, en tiempo real",
+		desc: "Métricas claras de tu negocio",
 	},
 ];
 
@@ -76,7 +77,6 @@ function LoginPage() {
 	const form = useForm({
 		defaultValues: { username: "", password: "" },
 		onSubmit: async ({ value }) => {
-			// Strip @smartbite.local if user accidentally types the email
 			const username = value.username.replace(/@smartbite\.local$/i, "").trim();
 			const parsed = loginSchema.safeParse({ username, password: value.password });
 			if (!parsed.success) return;
@@ -85,223 +85,130 @@ function LoginPage() {
 	});
 
 	return (
-		<div
-			className="relative flex min-h-screen overflow-hidden dark"
-			style={{
-				backgroundColor: "oklch(13% 0.028 264.695)",
-				fontFamily: "'Plus Jakarta Sans Variable', sans-serif",
-			}}
-		>
-			{/* ── Left brand panel with diagonal right edge ── */}
+		<div className="flex min-h-screen bg-white">
+			{/* HERO PANEL - Desktop Only (58% width, Blue) */}
 			<div
-				className="relative hidden lg:flex lg:flex-col flex-none animate-in fade-in-left duration-500"
+				className="hidden lg:flex lg:flex-col flex-none relative"
 				style={{
 					width: "58%",
-					background:
-						"linear-gradient(150deg, oklch(13% 0.028 264.695) 0%, oklch(16% 0.031 263.5) 45%, oklch(19% 0.032 262) 80%, oklch(22% 0.033 261) 100%)",
-					clipPath: "polygon(0 0, 100% 0, 88% 100%, 0 100%)",
-					animationDelay: "0ms",
+					backgroundColor: "var(--color-login-blue-700)",
+					backgroundImage:
+						"linear-gradient(135deg, var(--color-login-blue-700) 0%, var(--color-login-blue-600) 100%)",
+					clipPath: "polygon(0 0, 100% 0, 85% 100%, 0 100%)",
 				}}
 			>
-				{/* Glow layers - blue instead of green */}
+				{/* Glow effects */}
 				<div
 					className="absolute inset-0 pointer-events-none"
 					style={{
 						background:
-							"radial-gradient(ellipse 60% 50% at 20% 20%, rgba(59, 130, 246, 0.12) 0%, transparent 70%)",
+							"radial-gradient(ellipse 60% 50% at 20% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 70%)",
 					}}
 				/>
 				<div
 					className="absolute inset-0 pointer-events-none"
 					style={{
 						background:
-							"radial-gradient(ellipse 50% 40% at 80% 80%, rgba(37, 99, 235, 0.08) 0%, transparent 70%)",
+							"radial-gradient(ellipse 50% 40% at 80% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 70%)",
 					}}
 				/>
 
-				{/* Dot pattern - blue instead of green */}
-				<div
-					className="absolute inset-0 opacity-[0.07] pointer-events-none"
-					style={{
-						backgroundImage:
-							"radial-gradient(circle at 1px 1px, oklch(62.3% 0.214 259.815) 1px, transparent 0)",
-						backgroundSize: "28px 28px",
-					}}
-				/>
-
-				{/* Diagonal accent lines - blue instead of green */}
-				<div className="absolute inset-0 overflow-hidden pointer-events-none">
-					<div
-						className="absolute"
-						style={{
-							width: "2px",
-							height: "200%",
-							top: "-50%",
-							right: "18%",
-							background:
-								"linear-gradient(to bottom, transparent, rgba(59, 130, 246, 0.15), transparent)",
-							transform: "rotate(-15deg)",
-						}}
-					/>
-					<div
-						className="absolute"
-						style={{
-							width: "1px",
-							height: "200%",
-							top: "-50%",
-							right: "28%",
-							background:
-								"linear-gradient(to bottom, transparent, rgba(59, 130, 246, 0.08), transparent)",
-							transform: "rotate(-15deg)",
-						}}
-					/>
-				</div>
-
-				<div className="relative flex flex-1 flex-col justify-between px-14 py-12 pr-28">
+				{/* Content */}
+				<div className="relative flex flex-1 flex-col justify-between px-14 py-12 animate-in fade-in-left duration-500">
 					{/* Brand */}
 					<div className="flex items-center gap-3">
 						<div
 							className="flex h-10 w-10 items-center justify-center rounded-xl"
-							style={{
-								background: "rgba(59, 130, 246, 0.12)",
-								border: "1px solid rgba(59, 130, 246, 0.25)",
-							}}
+							style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
 						>
-							<UtensilsCrossed className="h-5 w-5" style={{ color: "oklch(62.3% 0.214 259.815)" }} />
+							<UtensilsCrossed className="h-5 w-5 text-white" />
 						</div>
-						<span
-							className="text-xl font-bold tracking-tight"
-							style={{ color: "oklch(97% 0.014 254.604)" }}
-						>
-							SmartBite
-						</span>
+						<span className="text-xl font-bold text-white">SmartBite</span>
 					</div>
 
-					{/* Hero copy */}
-					<div>
-						<p
-							className="mb-3 text-xs font-bold uppercase tracking-[0.25em]"
-							style={{ color: "rgba(59, 130, 246, 0.6)" }}
-						>
-							Platform de gestión
-						</p>
-						<h2
-							className="text-[2.4rem] font-extrabold leading-[1.1]"
-							style={{ color: "oklch(97% 0.014 254.604)" }}
-						>
-							Tu negocio,
-							<br />
-							<span
-								style={{
-									background: "linear-gradient(90deg, oklch(62.3% 0.214 259.815), oklch(54.6% 0.245 262.881), oklch(48.8% 0.243 264.376))",
-									WebkitBackgroundClip: "text",
-									WebkitTextFillColor: "transparent",
-									backgroundClip: "text",
-								}}
-							>
-								simplificado.
-							</span>
+					{/* Hero Section */}
+					<div className="space-y-6">
+						<h2 className="text-4xl font-bold leading-tight text-white">
+							Tu negocio, <span className="inline-block">bajo control</span>
 						</h2>
-						<p
-							className="mt-4 max-w-[18rem] text-[0.88rem] leading-relaxed"
-							style={{ color: "rgba(156, 163, 175, 0.7)" }}
-						>
-							Todas las herramientas que necesitas para gestionar tu negocio en un solo lugar, desde operaciones hasta análisis.
+						<p className="max-w-sm text-sm leading-relaxed text-white/70">
+							Todo lo que necesitas en un solo lugar — desde la primera orden hasta el análisis de
+							datos.
 						</p>
 
 						{/* Features */}
-						<div className="mt-10 space-y-5">
+						<div className="space-y-4 pt-4">
 							{features.map(({ icon: Icon, title, desc }, idx) => (
 								<div
 									key={title}
-									className="flex items-start gap-4 animate-in fade-in-up duration-500"
+									className="flex gap-3 animate-in fade-in-up"
 									style={{
+										animationDuration: "500ms",
 										animationDelay: `${250 + idx * 50}ms`,
 										animationFillMode: "both",
 									}}
 								>
-									<div
-										className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
-										style={{
-											background: "rgba(59, 130, 246, 0.1)",
-											border: "1px solid rgba(59, 130, 246, 0.18)",
-										}}
-									>
-										<Icon className="h-4 w-4" style={{ color: "oklch(62.3% 0.214 259.815)" }} />
+									<div className="flex-shrink-0">
+										<Icon className="h-5 w-5 text-white" />
 									</div>
 									<div>
-										<p
-											className="text-sm font-semibold leading-tight"
-											style={{ color: "oklch(97% 0.014 254.604)" }}
-										>
-											{title}
-										</p>
-										<p
-											className="mt-0.5 text-xs leading-snug"
-											style={{ color: "rgba(156, 163, 175, 0.6)" }}
-										>
-											{desc}
-										</p>
+										<p className="text-sm font-semibold text-white">{title}</p>
+										<p className="text-xs leading-snug text-white/60">{desc}</p>
 									</div>
 								</div>
 							))}
 						</div>
 
-						{/* Social proof strip */}
+						{/* Social Proof */}
 						<div
-							className="mt-12 flex items-center gap-3 rounded-2xl px-4 py-3"
-							style={{
-								background: "rgba(59, 130, 246, 0.06)",
-								border: "1px solid rgba(59, 130, 246, 0.12)",
-							}}
+							className="flex items-center gap-2 rounded-lg px-3 py-2 mt-6"
+							style={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
 						>
-							<TrendingUp className="h-4 w-4 shrink-0" style={{ color: "oklch(62.3% 0.214 259.815)" }} />
-							<p className="text-xs" style={{ color: "rgba(156, 163, 175, 0.6)" }}>
-								Control total de operaciones, en tiempo real.
+							<TrendingUp className="h-4 w-4 text-white" />
+							<p className="text-xs text-white/70">
+								Menos errores, más tiempo para lo que importa.
 							</p>
 						</div>
 					</div>
 
 					{/* Footer */}
-					<p className="text-[11px]" style={{ color: "rgba(59, 130, 246, 0.25)" }}>
-						© 2026 SmartBite — Plataforma de gestión empresarial
+					<p className="text-xs text-white/40">
+						© 2026 SmartBite — Sistema inteligente para negocios
 					</p>
 				</div>
 			</div>
 
-			{/* ── Right form panel ── */}
-			<div className="flex flex-1 flex-col items-center justify-center px-6 py-12 lg:px-10" style={{ backgroundColor: "oklch(13% 0.028 264.695)" }}>
-				{/* Mobile brand */}
+			{/* FORM PANEL - Desktop Right / Mobile Full (42% desktop, 100% mobile) */}
+			<div className="flex flex-1 flex-col items-center justify-center px-6 py-12 lg:px-10">
+				{/* Mobile Brand */}
 				<div className="mb-8 flex items-center gap-2 lg:hidden">
-					<UtensilsCrossed className="h-5 w-5" style={{ color: "oklch(62.3% 0.214 259.815)" }} />
-					<span className="text-lg font-bold" style={{ color: "oklch(97% 0.014 254.604)" }}>
+					<UtensilsCrossed className="h-5 w-5" style={{ color: "var(--color-login-blue-700)" }} />
+					<span className="text-lg font-bold" style={{ color: "var(--color-login-gray-dark)" }}>
 						SmartBite
 					</span>
 				</div>
 
-				<div className="w-full max-w-[21rem]">
+				<div
+					className="w-full max-w-sm animate-in fade-in-up duration-500"
+					style={{ animationDelay: "200ms", animationFillMode: "both" }}
+				>
 					{/* Heading */}
 					<div className="mb-8">
-						<h1
-							className="text-[1.7rem] font-extrabold tracking-tight"
-							style={{ color: "oklch(97% 0.014 254.604)" }}
-						>
-							Bienvenido
+						<h1 className="text-2xl font-bold" style={{ color: "var(--color-login-gray-dark)" }}>
+							Bienvenido de vuelta
 						</h1>
-						<p className="mt-1.5 text-sm" style={{ color: "rgba(156, 163, 175, 0.7)" }}>
+						<p className="mt-2 text-sm" style={{ color: "var(--color-login-gray-muted)" }}>
 							Ingresa para continuar
 						</p>
 					</div>
 
-					{/* Form card */}
+					{/* Form Card */}
 					<div
-						className="rounded-2xl px-7 py-7 animate-in fade-in-up duration-500"
+						className="rounded-lg border px-8 py-8"
 						style={{
-							background: "oklch(27.8% 0.033 256.848)",
-							border: "1px solid rgba(59, 130, 246, 0.1)",
-							boxShadow: "0 4px 24px rgba(0, 0, 0, 0.3)",
-							animationDelay: "200ms",
-							animationFillMode: "both",
+							backgroundColor: "white",
+							borderColor: "var(--color-login-gray-light)",
+							boxShadow: "0 10px 40px rgba(0, 0, 0, 0.08)",
 						}}
 					>
 						<form
@@ -315,16 +222,12 @@ function LoginPage() {
 							<form.Field
 								name="username"
 								validators={{
-									onChange: ({ value }) =>
-										value.length === 0 ? "Ingresa tu usuario" : undefined,
+									onChange: ({ value }) => (value.length === 0 ? "Ingresa tu usuario" : undefined),
 								}}
 							>
 								{(field) => (
 									<div className="space-y-1.5">
-										<Label
-											htmlFor={field.name}
-											className="text-sm font-semibold"
-										>
+										<Label htmlFor={field.name} style={{ color: "var(--color-login-gray-dark)" }}>
 											Usuario
 										</Label>
 										<Input
@@ -336,10 +239,18 @@ function LoginPage() {
 											onChange={(e) => field.handleChange(e.target.value)}
 											onBlur={field.handleBlur}
 											aria-invalid={field.state.meta.errors.length > 0}
-											className="h-10 rounded-xl focus-visible:ring-blue-500/30"
+											style={{
+												borderColor:
+													field.state.meta.errors.length > 0
+														? "var(--color-login-red)"
+														: "var(--color-login-gray-light)",
+												backgroundColor: "white",
+												color: "var(--color-login-gray-dark)",
+											}}
+											className="h-10 w-full rounded-lg border px-3 py-2 text-base placeholder:text-[var(--color-login-gray-medium)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-login-blue-500)] focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:bg-[var(--color-login-gray-light)] disabled:opacity-50"
 										/>
 										{field.state.meta.errors.length > 0 && (
-											<p className="text-xs text-destructive">
+											<p className="text-xs" style={{ color: "var(--color-login-red)" }}>
 												{field.state.meta.errors[0]}
 											</p>
 										)}
@@ -347,7 +258,7 @@ function LoginPage() {
 								)}
 							</form.Field>
 
-							{/* Password with show/hide */}
+							{/* Password */}
 							<form.Field
 								name="password"
 								validators={{
@@ -357,10 +268,7 @@ function LoginPage() {
 							>
 								{(field) => (
 									<div className="space-y-1.5">
-										<Label
-											htmlFor={field.name}
-											className="text-sm font-semibold"
-										>
+										<Label htmlFor={field.name} style={{ color: "var(--color-login-gray-dark)" }}>
 											Contraseña
 										</Label>
 										<div className="relative">
@@ -373,13 +281,21 @@ function LoginPage() {
 												onChange={(e) => field.handleChange(e.target.value)}
 												onBlur={field.handleBlur}
 												aria-invalid={field.state.meta.errors.length > 0}
-												className="h-10 rounded-xl pr-10 focus-visible:ring-blue-500/30"
+												style={{
+													borderColor:
+														field.state.meta.errors.length > 0
+															? "var(--color-login-red)"
+															: "var(--color-login-gray-light)",
+													backgroundColor: "white",
+													color: "var(--color-login-gray-dark)",
+												}}
+												className="h-10 w-full rounded-lg border px-3 py-2 text-base placeholder:text-[var(--color-login-gray-medium)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-login-blue-500)] focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:bg-[var(--color-login-gray-light)] disabled:opacity-50"
 											/>
 											<button
 												type="button"
 												onClick={() => setShowPassword((v) => !v)}
-												className="absolute inset-y-0 right-0 flex items-center px-3 transition-colors"
-												style={{ color: "rgba(156, 163, 175, 0.7)" }}
+												className="absolute inset-y-0 right-0 flex items-center px-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-login-blue-500)]"
+												style={{ color: "var(--color-login-gray-medium)" }}
 												aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
 											>
 												{showPassword ? (
@@ -390,7 +306,7 @@ function LoginPage() {
 											</button>
 										</div>
 										{field.state.meta.errors.length > 0 && (
-											<p className="text-xs text-destructive">
+											<p className="text-xs" style={{ color: "var(--color-login-red)" }}>
 												{field.state.meta.errors[0]}
 											</p>
 										)}
@@ -398,51 +314,78 @@ function LoginPage() {
 								)}
 							</form.Field>
 
-							{/* Error */}
+							{/* Error Message */}
 							{loginMutation.error && (
 								<div
-									className="rounded-xl px-4 py-3 text-sm"
+									className="rounded-lg px-4 py-3 text-sm flex gap-2"
 									style={{
-										background: "rgba(239, 68, 68, 0.1)",
-										border: "1px solid rgba(239, 68, 68, 0.2)",
-										color: "#fca5a5",
+										backgroundColor: "rgba(239, 68, 68, 0.06)",
+										border: "1px solid rgba(239, 68, 68, 0.15)",
+										color: "var(--color-login-red)",
 									}}
 								>
-									{loginMutation.error instanceof Error &&
-									loginMutation.error.message.includes("Network Error")
-										? "Sin conexión con el servidor. Verificá que la API esté corriendo."
-										: "Usuario o contraseña incorrectos"}
+									<span>
+										{loginMutation.error instanceof Error &&
+										loginMutation.error.message.includes("Network Error")
+											? "Sin conexión con el servidor. Verificá que la API esté corriendo."
+											: "Usuario o contraseña incorrectos"}
+									</span>
 								</div>
 							)}
 
-							{/* Submit */}
+							{/* Submit Button */}
 							<Button
 								type="submit"
 								disabled={loginMutation.isPending}
 								variant="blue"
-								className="mt-1 h-11 w-full rounded-xl font-semibold text-white transition-all"
+								className="mt-2 h-12 w-full font-semibold transition-all"
+								style={{
+									backgroundColor: loginMutation.isPending
+										? "var(--color-login-gray-medium)"
+										: "var(--color-login-blue-700)",
+									color: "white",
+								}}
+								onMouseEnter={(e) => {
+									if (!loginMutation.isPending) {
+										(e.currentTarget as HTMLButtonElement).style.backgroundColor =
+											"var(--color-login-blue-600)";
+									}
+								}}
+								onMouseLeave={(e) => {
+									if (!loginMutation.isPending) {
+										(e.currentTarget as HTMLButtonElement).style.backgroundColor =
+											"var(--color-login-blue-700)";
+									}
+								}}
 							>
-								{loginMutation.isPending ? "Ingresando…" : "Ingresar"}
+								{loginMutation.isPending ? (
+									<>
+										<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+										Ingresando...
+									</>
+								) : (
+									"Ingresar"
+								)}
 							</Button>
 						</form>
 					</div>
 
-					{/* Demo credentials */}
+					{/* Demo Credentials */}
 					<div
-						className="mt-4 rounded-2xl px-5 py-4"
+						className="mt-4 rounded-lg border px-6 py-5"
 						style={{
-							background: "oklch(27.8% 0.033 256.848)",
-							border: "1px solid rgba(59, 130, 246, 0.1)",
-							boxShadow: "0 2px 12px rgba(0, 0, 0, 0.2)",
+							backgroundColor: "white",
+							borderColor: "var(--color-login-gray-light)",
+							boxShadow: "0 4px 12px rgba(0, 0, 0, 0.04)",
 						}}
 					>
 						<p
-							className="mb-3 text-[10px] font-bold uppercase tracking-widest"
-							style={{ color: "rgba(156, 163, 175, 0.5)" }}
+							className="mb-4 text-xs font-bold uppercase tracking-wider"
+							style={{ color: "var(--color-login-gray-muted)" }}
 						>
 							Cuentas de prueba
 						</p>
-						<div className="space-y-1">
+						<div className="space-y-2">
 							{demoCredentials.map(({ role, username, password }) => (
 								<button
 									key={username}
@@ -451,20 +394,26 @@ function LoginPage() {
 										form.setFieldValue("username", username);
 										form.setFieldValue("password", password);
 									}}
-									className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left transition-colors"
-									style={{ color: "oklch(97% 0.014 254.604)" }}
+									className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-login-blue-500)]"
+									style={{
+										color: "var(--color-login-gray-dark)",
+										backgroundColor: "transparent",
+									}}
 									onMouseEnter={(e) => {
-										(e.currentTarget as HTMLButtonElement).style.background =
-											"rgba(59, 130, 246, 0.1)";
+										(e.currentTarget as HTMLButtonElement).style.backgroundColor =
+											"rgba(0, 150, 136, 0.08)";
 									}}
 									onMouseLeave={(e) => {
-										(e.currentTarget as HTMLButtonElement).style.background = "";
+										(e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
 									}}
 								>
 									<span className="text-xs font-semibold">{role}</span>
 									<span
-										className="rounded-lg px-2 py-0.5 font-mono text-[11px]"
-										style={{ background: "rgba(59, 130, 246, 0.15)", color: "rgba(156, 163, 175, 0.8)" }}
+										className="rounded-lg px-2.5 py-1 font-mono text-xs"
+										style={{
+											backgroundColor: "var(--color-login-gray-light)",
+											color: "var(--color-login-gray-muted)",
+										}}
 									>
 										{username}
 									</span>

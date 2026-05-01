@@ -47,19 +47,19 @@
 	--radius-2xl: calc(var(--radius) * 1.8);
 	--radius-3xl: calc(var(--radius) * 2.2);
 	--radius-4xl: calc(var(--radius) * 2.6);
-	/* Login redesign: Blue palette (OKLch) */
-	--color-blue-500: oklch(62.3% 0.214 259.815);
-	--color-blue-600: oklch(54.6% 0.245 262.881);
-	--color-blue-700: oklch(48.8% 0.243 264.376);
-	--color-blue-800: oklch(43.2% 0.239 265.326);
-	--color-blue-900: oklch(37.8% 0.231 265.997);
-	/* Login redesign: Dark backgrounds */
-	--color-dark-bg-900: oklch(13% 0.028 264.695);
-	--color-dark-bg-800: oklch(18.5% 0.031 264.231);
-	--color-dark-surface: oklch(27.8% 0.033 256.848);
-	/* Login redesign: Dark text */
-	--color-dark-text-light: oklch(97% 0.014 254.604);
-	--color-dark-text-muted: oklch(70.7% 0.165 254.624);
+	/* Login v2 Light Theme: Blue palette (OKLch) */
+	--color-login-blue-700: oklch(48.8% 0.243 264.376);
+	--color-login-blue-600: oklch(54.6% 0.245 262.881);
+	--color-login-blue-500: oklch(62.3% 0.214 259.815);
+	--color-login-teal: oklch(60% 0.15 195);
+	--color-login-amber: oklch(65% 0.12 50);
+	--color-login-violet: oklch(50% 0.15 290);
+	--color-login-white: oklch(100% 0 0);
+	--color-login-gray-light: oklch(97% 0.002 0);
+	--color-login-gray-medium: oklch(85% 0.004 0);
+	--color-login-gray-dark: oklch(30% 0.005 0);
+	--color-login-gray-muted: oklch(55% 0.003 0);
+	--color-login-red: oklch(50% 0.2 25);
 }
 
 :root {
