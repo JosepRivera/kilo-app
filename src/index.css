@@ -47,6 +47,19 @@
 	--radius-2xl: calc(var(--radius) * 1.8);
 	--radius-3xl: calc(var(--radius) * 2.2);
 	--radius-4xl: calc(var(--radius) * 2.6);
+	/* Login redesign: Blue palette (OKLch) */
+	--color-blue-500: oklch(62.3% 0.214 259.815);
+	--color-blue-600: oklch(54.6% 0.245 262.881);
+	--color-blue-700: oklch(48.8% 0.243 264.376);
+	--color-blue-800: oklch(43.2% 0.239 265.326);
+	--color-blue-900: oklch(37.8% 0.231 265.997);
+	/* Login redesign: Dark backgrounds */
+	--color-dark-bg-900: oklch(13% 0.028 264.695);
+	--color-dark-bg-800: oklch(18.5% 0.031 264.231);
+	--color-dark-surface: oklch(27.8% 0.033 256.848);
+	/* Login redesign: Dark text */
+	--color-dark-text-light: oklch(97% 0.014 254.604);
+	--color-dark-text-muted: oklch(70.7% 0.165 254.624);
 }
 
 :root {
@@ -140,5 +153,73 @@ body {
 	}
 	html {
 		@apply font-sans;
+	}
+}
+
+/* Login redesign: Animation keyframes */
+@keyframes fade-in-right {
+	from {
+		opacity: 0;
+		transform: translateX(-20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+@keyframes fade-in-left {
+	from {
+		opacity: 0;
+		transform: translateX(20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+@keyframes fade-in-up {
+	from {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	@keyframes fade-in-right,
+	@keyframes fade-in-left,
+	@keyframes fade-in-up {
+		from {
+			opacity: 1;
+			transform: none;
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+}
+
+/* Input focus glow effect */
+input:focus-visible {
+	transition: box-shadow 150ms ease-out;
+	box-shadow: 0 0 0 3px var(--color-blue-500) / 0.3;
+}
+
+/* Button hover scale effect */
+button:not(:disabled):hover {
+	transition: all 150ms ease-out;
+}
+
+/* Reduce motion support for inputs and buttons */
+@media (prefers-reduced-motion: reduce) {
+	input:focus-visible,
+	button:not(:disabled):hover {
+		transition: none;
 	}
 }
