@@ -1,7 +1,7 @@
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Pencil, Plus, ToggleLeft, ToggleRight } from "lucide-react";
+import { Pencil, Plus, ToggleRight } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -55,9 +55,8 @@ function ProductsPage() {
 		},
 	});
 
-	const toggleMutation = useMutation({
-		mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) =>
-			api.patch(`/products/${id}`, { is_active }),
+	const deactivateMutation = useMutation({
+		mutationFn: (id: string) => api.delete(`/products/${id}`),
 		onSuccess: () => void qc.invalidateQueries({ queryKey: ["products"] }),
 	});
 
@@ -135,7 +134,7 @@ function ProductsPage() {
 						</thead>
 						<tbody className="divide-y divide-border">
 							{products.map((p) => (
-								<tr key={p.id} className={cn(!p.is_active && "opacity-50")}>
+								<tr key={p.id} className={cn(!p.isActive && "opacity-50")}>
 									<td className="px-4 py-3 font-medium text-foreground">
 										{p.name}
 										{p.description && (
@@ -154,10 +153,10 @@ function ProductsPage() {
 										<span
 											className={cn(
 												"text-xs",
-												p.is_active ? "text-foreground" : "text-muted-foreground",
+												p.isActive ? "text-foreground" : "text-muted-foreground",
 											)}
 										>
-											{p.is_active ? "Activo" : "Inactivo"}
+											{p.isActive ? "Activo" : "Inactivo"}
 										</span>
 									</td>
 									<td className="px-4 py-3">
@@ -172,11 +171,12 @@ function ProductsPage() {
 											</button>
 											<button
 												type="button"
-												title={p.is_active ? "Desactivar" : "Activar"}
-												onClick={() => toggleMutation.mutate({ id: p.id, is_active: !p.is_active })}
-												className="rounded p-1 text-muted-foreground hover:bg-[oklch(0.94_0_0)] hover:text-foreground"
+												title="Desactivar"
+												disabled={!p.isActive}
+												onClick={() => deactivateMutation.mutate(p.id)}
+												className="rounded p-1 text-muted-foreground hover:bg-[oklch(0.94_0_0)] hover:text-foreground disabled:opacity-30"
 											>
-												{p.is_active ? <ToggleRight size={14} /> : <ToggleLeft size={14} />}
+												<ToggleRight size={14} />
 											</button>
 										</div>
 									</td>

@@ -42,7 +42,7 @@ function NewSalePage() {
 
 	const activeProducts = products.filter(
 		(p) =>
-			p.is_active &&
+			p.isActive &&
 			(search === "" ||
 				p.name.toLowerCase().includes(search.toLowerCase()) ||
 				p.category.toLowerCase().includes(search.toLowerCase())),

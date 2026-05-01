@@ -5,9 +5,9 @@ export interface User {
 	name: string;
 	username: string;
 	role: Role;
-	is_active: boolean;
-	created_at: string;
-	updated_at: string;
+	isActive: boolean;
+	createdAt: string;
+	updatedAt: string;
 }
 
 export interface AuthTokens {
@@ -42,10 +42,9 @@ export interface Product {
 	description?: string;
 	price: number;
 	category: string;
-	is_active: boolean;
-	image_url?: string;
-	created_at: string;
-	updated_at: string;
+	isActive: boolean;
+	createdAt: string;
+	updatedAt: string;
 }
 
 // Ingredients
@@ -54,28 +53,25 @@ export interface Ingredient {
 	name: string;
 	unit: string;
 	stock: number;
-	min_stock: number;
-	cost_per_unit: number;
-	created_at: string;
-	updated_at: string;
+	minStock: number;
+	costPerUnit: number;
+	is_low_stock: boolean;
+	createdAt: string;
+	updatedAt: string;
 }
 
-// Recipes
+// Recipes — per product: GET /recipes/:productId, PUT /recipes/:productId
 export interface RecipeItem {
 	id: string;
 	ingredient_id: string;
-	ingredient: Ingredient;
+	ingredient_name: string;
+	unit: string;
 	quantity: number;
 }
 
 export interface Recipe {
-	id: string;
 	product_id: string;
-	product: Product;
 	items: RecipeItem[];
-	total_cost: number;
-	created_at: string;
-	updated_at: string;
 }
 
 // Sales
@@ -107,9 +103,8 @@ export interface Expense {
 	description: string;
 	amount: number;
 	category: string;
-	date: string;
 	created_at: string;
-	updated_at: string;
+	user_id: string;
 }
 
 export const SALE_STATUS_LABELS: Record<SaleStatus, string> = {

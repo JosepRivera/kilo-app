@@ -118,7 +118,7 @@ function EmployeesPage() {
 						</thead>
 						<tbody className="divide-y divide-border">
 							{employees.map((emp) => (
-								<tr key={emp.id} className={cn(!emp.is_active && "opacity-50")}>
+								<tr key={emp.id} className={cn(!emp.isActive && "opacity-50")}>
 									<td className="px-4 py-3 font-medium text-foreground">{emp.name}</td>
 									<td className="px-4 py-3 text-muted-foreground">{emp.username}</td>
 									<td className="px-4 py-3">
@@ -130,10 +130,10 @@ function EmployeesPage() {
 										<span
 											className={cn(
 												"text-xs",
-												emp.is_active ? "text-foreground" : "text-muted-foreground",
+												emp.isActive ? "text-foreground" : "text-muted-foreground",
 											)}
 										>
-											{emp.is_active ? "Activo" : "Inactivo"}
+											{emp.isActive ? "Activo" : "Inactivo"}
 										</span>
 									</td>
 									<td className="px-4 py-3">
@@ -154,7 +154,7 @@ function EmployeesPage() {
 													>
 														<RotateCcw size={14} />
 													</button>
-													{emp.is_active && (
+													{emp.isActive && (
 														<button
 															type="button"
 															title="Desactivar empleado"

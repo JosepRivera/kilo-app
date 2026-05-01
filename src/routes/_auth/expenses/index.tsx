@@ -23,7 +23,6 @@ const expenseSchema = z.object({
 	description: z.string().min(3, "Mínimo 3 caracteres"),
 	amount: z.coerce.number().positive("Debe ser mayor a 0"),
 	category: z.string().min(1, "Requerido"),
-	date: z.string().min(1, "Requerido"),
 });
 
 type ExpenseForm = z.infer<typeof expenseSchema>;
@@ -52,7 +51,7 @@ function ExpensesPage() {
 
 	const totalMonth = expenses
 		.filter((e) => {
-			const d = new Date(e.date);
+			const d = new Date(e.created_at);
 			const now = new Date();
 			return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
 		})
@@ -120,7 +119,7 @@ function ExpensesPage() {
 										S/ {Number(exp.amount).toFixed(2)}
 									</td>
 									<td className="px-4 py-3 text-xs text-muted-foreground">
-										{new Date(exp.date).toLocaleDateString("es-PE", {
+										{new Date(exp.created_at).toLocaleDateString("es-PE", {
 											day: "2-digit",
 											month: "2-digit",
 											year: "numeric",
@@ -159,14 +158,11 @@ function ExpenseFormPanel({
 	isPending: boolean;
 	error?: string;
 }) {
-	const today = new Date().toISOString().split("T")[0];
-
 	const form = useForm({
 		defaultValues: {
 			description: "",
 			amount: 0,
 			category: "",
-			date: today,
 		},
 		onSubmit: async ({ value }) => {
 			const parsed = expenseSchema.safeParse(value);
@@ -231,20 +227,6 @@ function ExpenseFormPanel({
 								value={field.state.value}
 								onChange={(e) => field.handleChange(Number(e.target.value))}
 								placeholder="150.00"
-							/>
-						</div>
-					)}
-				</form.Field>
-
-				<form.Field name="date">
-					{(field) => (
-						<div className="space-y-1.5">
-							<Label htmlFor={field.name}>Fecha</Label>
-							<Input
-								id={field.name}
-								type="date"
-								value={field.state.value}
-								onChange={(e) => field.handleChange(e.target.value)}
 							/>
 						</div>
 					)}

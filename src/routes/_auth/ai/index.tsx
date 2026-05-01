@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Send } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
@@ -12,83 +12,65 @@ export const Route = createFileRoute("/_auth/ai/")({
 	component: AIPage,
 });
 
-interface Message {
+let historySeq = 0;
+
+interface QueryResult {
 	id: number;
-	role: "user" | "assistant";
-	content: string;
+	question: string;
+	sql: string;
+	result: Record<string, unknown>[];
 }
 
-let msgId = 0;
-const nextId = () => ++msgId;
-
 function AIPage() {
-	const [messages, setMessages] = useState<Message[]>([
-		{
-			id: nextId(),
-			role: "assistant",
-			content:
-				"Hola, soy tu asistente de SmartBite. Puedo ayudarte a analizar ventas, sugerir estrategias y responder preguntas sobre tu negocio. ¿En qué te puedo ayudar?",
-		},
-	]);
-	const [input, setInput] = useState("");
+	const [question, setQuestion] = useState("");
+	const [history, setHistory] = useState<QueryResult[]>([]);
 	const bottomRef = useRef<HTMLDivElement>(null);
 
-	const chatMutation = useMutation({
-		mutationFn: (prompt: string) =>
-			api.post("/ai/chat", { prompt, history: messages }).then((r) => r.data),
-		onSuccess: (data: { response: string }) => {
-			setMessages((prev) => [...prev, { id: nextId(), role: "assistant", content: data.response }]);
-		},
-		onError: () => {
-			setMessages((prev) => [
+	const queryMutation = useMutation({
+		mutationFn: (q: string) =>
+			api
+				.post<{ sql: string; result: Record<string, unknown>[] }>("/ai/query", { question: q })
+				.then((r) => r.data),
+		onSuccess: (data, q) => {
+			setHistory((prev) => [
 				...prev,
-				{
-					id: nextId(),
-					role: "assistant",
-					content: "Lo siento, ocurrió un error. Intenta de nuevo.",
-				},
+				{ id: ++historySeq, question: q, sql: data.sql, result: data.result ?? [] },
 			]);
+			setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
 		},
 	});
 
 	const handleSend = () => {
-		const text = input.trim();
-		if (!text || chatMutation.isPending) return;
-		setInput("");
-		setMessages((prev) => [...prev, { id: nextId(), role: "user", content: text }]);
-		chatMutation.mutate(text);
+		const q = question.trim();
+		if (!q || queryMutation.isPending) return;
+		setQuestion("");
+		queryMutation.mutate(q);
 	};
-
-	const msgCount = messages.length;
-	// biome-ignore lint/correctness/useExhaustiveDependencies: scroll on message count change only
-	useEffect(() => {
-		bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-	}, [msgCount]);
 
 	return (
 		<div className="flex flex-col" style={{ height: "calc(100vh - 96px)" }}>
-			<PageHeader title="Asistente IA" description="Consulta inteligente sobre tu negocio" />
+			<PageHeader
+				title="Asistente IA"
+				description="Consulta datos del negocio en lenguaje natural"
+			/>
 
-			{/* Messages */}
+			{/* Results area */}
 			<div className="flex-1 overflow-y-auto space-y-4 pb-4">
-				{messages.map((msg) => (
-					<div
-						key={msg.id}
-						className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-					>
-						<div
-							className={`max-w-lg rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-								msg.role === "user"
-									? "bg-[oklch(0.18_0_0)] text-[oklch(0.95_0_0)]"
-									: "bg-white border border-border text-foreground"
-							}`}
-						>
-							{msg.content}
-						</div>
+				{history.length === 0 && !queryMutation.isPending && (
+					<div className="py-10 text-center">
+						<p className="text-sm font-medium text-foreground">Consulta tus datos en español</p>
+						<p className="mt-1 text-xs text-muted-foreground">
+							Ejemplos: "¿Cuántas ventas hay este mes?" · "Productos con más ventas" · "Total de
+							gastos"
+						</p>
 					</div>
+				)}
+
+				{history.map((entry) => (
+					<QueryCard key={entry.id} entry={entry} />
 				))}
 
-				{chatMutation.isPending && (
+				{queryMutation.isPending && (
 					<div className="flex justify-start">
 						<div className="rounded-2xl border border-border bg-white px-4 py-3">
 							<div className="flex gap-1">
@@ -100,6 +82,12 @@ function AIPage() {
 					</div>
 				)}
 
+				{queryMutation.isError && (
+					<div className="rounded-lg border border-[oklch(0.85_0.04_30)] bg-[oklch(0.97_0.02_30)] px-4 py-3 text-sm text-[oklch(0.45_0.08_30)]">
+						No se pudo procesar la consulta. Intenta reformularla o verifica que sea válida.
+					</div>
+				)}
+
 				<div ref={bottomRef} />
 			</div>
 
@@ -107,26 +95,97 @@ function AIPage() {
 			<div className="flex gap-2 border-t border-border pt-4">
 				<input
 					type="text"
-					value={input}
-					onChange={(e) => setInput(e.target.value)}
+					value={question}
+					onChange={(e) => setQuestion(e.target.value)}
 					onKeyDown={(e) => {
 						if (e.key === "Enter" && !e.shiftKey) {
 							e.preventDefault();
 							handleSend();
 						}
 					}}
-					placeholder="Escribe tu consulta…"
+					placeholder="¿Cuántas ventas hubo esta semana?"
 					className="flex-1 rounded-lg border border-input bg-white px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-					disabled={chatMutation.isPending}
+					disabled={queryMutation.isPending}
 				/>
 				<Button
 					onClick={handleSend}
-					disabled={!input.trim() || chatMutation.isPending}
+					disabled={!question.trim() || queryMutation.isPending}
 					size="sm"
 					className="h-10 px-4"
 				>
 					<Send size={14} />
 				</Button>
+			</div>
+		</div>
+	);
+}
+
+function QueryCard({ entry }: { entry: QueryResult }) {
+	const [showSql, setShowSql] = useState(false);
+	const cols = entry.result.length > 0 ? Object.keys(entry.result[0]) : [];
+
+	return (
+		<div className="space-y-2">
+			{/* Question */}
+			<div className="flex justify-end">
+				<div className="max-w-lg rounded-2xl bg-[oklch(0.18_0_0)] px-4 py-2.5 text-sm text-[oklch(0.95_0_0)]">
+					{entry.question}
+				</div>
+			</div>
+
+			{/* Result */}
+			<div className="rounded-2xl border border-border bg-white px-4 py-3">
+				{entry.result.length === 0 ? (
+					<p className="text-sm text-muted-foreground">Sin resultados</p>
+				) : (
+					<div className="overflow-x-auto">
+						<table className="w-full text-xs">
+							<thead>
+								<tr className="border-b border-border">
+									{cols.map((col) => (
+										<th
+											key={col}
+											className="pb-2 text-left font-medium text-muted-foreground pr-4 whitespace-nowrap"
+										>
+											{col}
+										</th>
+									))}
+								</tr>
+							</thead>
+							<tbody className="divide-y divide-border">
+								{entry.result.slice(0, 20).map((row, i) => (
+									// biome-ignore lint/suspicious/noArrayIndexKey: stable result rows
+									<tr key={i}>
+										{cols.map((col) => (
+											<td key={col} className="py-1.5 pr-4 text-foreground whitespace-nowrap">
+												{String(row[col] ?? "—")}
+											</td>
+										))}
+									</tr>
+								))}
+							</tbody>
+						</table>
+						{entry.result.length > 20 && (
+							<p className="mt-2 text-xs text-muted-foreground">
+								Mostrando 20 de {entry.result.length} filas
+							</p>
+						)}
+					</div>
+				)}
+
+				<button
+					type="button"
+					onClick={() => setShowSql((v) => !v)}
+					className="mt-2 text-xs text-muted-foreground hover:text-foreground"
+				>
+					{showSql ? "Ocultar SQL" : "Ver SQL generado"}
+				</button>
+
+				{showSql && (
+					<pre className="mt-2 rounded-md bg-[oklch(0.96_0_0)] p-2 text-xs text-foreground overflow-x-auto">
+						{entry.sql}
+					</pre>
+				)}
 			</div>
 		</div>
 	);

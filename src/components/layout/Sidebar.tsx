@@ -141,7 +141,7 @@ export function Sidebar() {
 		staleTime: 30_000,
 	});
 
-	const lowStockCount = ingredients.filter((i) => i.stock <= i.min_stock).length;
+	const lowStockCount = ingredients.filter((i) => i.stock <= i.minStock).length;
 
 	if (!user) return null;
 

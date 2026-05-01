@@ -13,7 +13,7 @@ import {
 import { PageHeader } from "@/components/shared/PageHeader";
 import { api } from "@/lib/api";
 import { requireRole } from "@/lib/guards";
-import type { Expense, Sale } from "@/types/api";
+import type { Expense } from "@/types/api";
 
 export const Route = createFileRoute("/_auth/reports/period")({
 	beforeLoad: () => requireRole("OWNER"),
@@ -30,12 +30,33 @@ const PERIOD_LABELS: Record<Period, string> = {
 
 const PERIOD_DAYS: Record<Period, number> = { "7d": 7, "30d": 30, "90d": 90 };
 
+interface PeriodRow {
+	period: string;
+	total_income: number;
+	order_count: number;
+}
+
+function getDateRange(days: number): { from: string; to: string } {
+	const to = new Date();
+	const from = new Date();
+	from.setDate(from.getDate() - (days - 1));
+	return {
+		from: from.toISOString().split("T")[0],
+		to: to.toISOString().split("T")[0],
+	};
+}
+
 function PeriodReportPage() {
 	const [period, setPeriod] = useState<Period>("30d");
+	const days = PERIOD_DAYS[period];
+	const { from, to } = getDateRange(days);
 
-	const { data: sales = [] } = useQuery<Sale[]>({
-		queryKey: ["sales"],
-		queryFn: () => api.get("/sales").then((r) => r.data),
+	const { data: periodRows = [] } = useQuery<PeriodRow[]>({
+		queryKey: ["reports-periods", from, to],
+		queryFn: () =>
+			api
+				.get("/reports/periods", { params: { from, to } })
+				.then((r) => (Array.isArray(r.data) ? r.data : [])),
 	});
 
 	const { data: expenses = [] } = useQuery<Expense[]>({
@@ -43,40 +64,39 @@ function PeriodReportPage() {
 		queryFn: () => api.get("/expenses").then((r) => r.data),
 	});
 
-	const days = PERIOD_DAYS[period];
-	const cutoff = new Date();
-	cutoff.setDate(cutoff.getDate() - days);
+	const cutoff = new Date(from);
+	const periodExpenses = expenses.filter((e) => new Date(e.created_at) >= cutoff);
 
-	const completedSales = sales.filter(
-		(s) => s.status === "COMPLETED" && new Date(s.created_at) >= cutoff,
-	);
-	const periodExpenses = expenses.filter((e) => new Date(e.date) >= cutoff);
-
-	const totalRevenue = completedSales.reduce((acc, s) => acc + Number(s.total), 0);
+	const totalRevenue = periodRows.reduce((acc, r) => acc + Number(r.total_income), 0);
 	const totalExpenses = periodExpenses.reduce((acc, e) => acc + Number(e.amount), 0);
 	const profit = totalRevenue - totalExpenses;
 	const margin = totalRevenue > 0 ? (profit / totalRevenue) * 100 : 0;
 
-	// Build daily buckets
+	// Build daily buckets aligned with API data
+	const incomeByDay: Record<string, number> = {};
+	for (const row of periodRows) {
+		incomeByDay[row.period] = Number(row.total_income);
+	}
+
+	const expenseByDay: Record<string, number> = {};
+	for (const e of periodExpenses) {
+		const day = (e.created_at ?? "").split("T")[0];
+		expenseByDay[day] = (expenseByDay[day] ?? 0) + Number(e.amount);
+	}
+
 	const buckets = Array.from({ length: days }, (_, i) => {
-		const d = new Date();
-		d.setDate(d.getDate() - (days - 1 - i));
+		const d = new Date(from);
+		d.setDate(d.getDate() + i);
 		const dayStr = d.toISOString().split("T")[0];
-		const revenue = completedSales
-			.filter((s) => s.created_at.startsWith(dayStr))
-			.reduce((acc, s) => acc + Number(s.total), 0);
-		const exp = periodExpenses
-			.filter((e) => e.date.startsWith(dayStr))
-			.reduce((acc, e) => acc + Number(e.amount), 0);
+		const revenue = incomeByDay[dayStr] ?? 0;
+		const exp = expenseByDay[dayStr] ?? 0;
 		return {
 			day: d.toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit" }),
 			Ingresos: revenue,
 			Gastos: exp,
-			Utilidad: revenue - exp,
 		};
 	});
 
-	// Expense breakdown by category
 	const byCategory: Record<string, number> = {};
 	for (const e of periodExpenses) {
 		byCategory[e.category] = (byCategory[e.category] ?? 0) + Number(e.amount);

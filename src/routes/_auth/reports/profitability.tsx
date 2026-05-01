@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import {
 	Bar,
 	BarChart,
@@ -13,68 +14,79 @@ import {
 import { PageHeader } from "@/components/shared/PageHeader";
 import { api } from "@/lib/api";
 import { requireRole } from "@/lib/guards";
-import type { Recipe, Sale } from "@/types/api";
 
 export const Route = createFileRoute("/_auth/reports/profitability")({
 	beforeLoad: () => requireRole("OWNER"),
 	component: ProfitabilityPage,
 });
 
+type Period = "7d" | "30d" | "90d";
+
+const PERIOD_LABELS: Record<Period, string> = {
+	"7d": "7 días",
+	"30d": "30 días",
+	"90d": "90 días",
+};
+
+interface ProfitabilityRow {
+	product_id: string;
+	name: string;
+	category: string;
+	sale_price: number;
+	unit_cost: number;
+	unit_margin: number;
+	margin_percentage: number;
+}
+
+function getDateRange(days: number): { from: string; to: string } {
+	const to = new Date();
+	const from = new Date();
+	from.setDate(from.getDate() - (days - 1));
+	return {
+		from: from.toISOString().split("T")[0],
+		to: to.toISOString().split("T")[0],
+	};
+}
+
 function ProfitabilityPage() {
-	const { data: sales = [] } = useQuery<Sale[]>({
-		queryKey: ["sales"],
-		queryFn: () => api.get("/sales").then((r) => r.data),
+	const [period, setPeriod] = useState<Period>("30d");
+	const { from, to } = getDateRange({ "7d": 7, "30d": 30, "90d": 90 }[period]);
+
+	const { data: rows = [] } = useQuery<ProfitabilityRow[]>({
+		queryKey: ["reports-profitability", from, to],
+		queryFn: () =>
+			api
+				.get("/reports/profitability", { params: { from, to } })
+				.then((r) => (Array.isArray(r.data) ? r.data : [])),
 	});
-
-	const { data: recipes = [] } = useQuery<Recipe[]>({
-		queryKey: ["recipes"],
-		queryFn: () => api.get("/recipes").then((r) => r.data),
-	});
-
-	const completedSales = sales.filter((s) => s.status === "COMPLETED");
-
-	// Build per-product profitability
-	const costByProduct: Record<string, number> = {};
-	for (const recipe of recipes) {
-		costByProduct[recipe.product_id] = Number(recipe.total_cost);
-	}
-
-	const productStats: Record<string, { name: string; revenue: number; cost: number; qty: number }> =
-		{};
-	for (const sale of completedSales) {
-		for (const item of sale.items ?? []) {
-			const pid = item.product_id;
-			if (!productStats[pid]) {
-				productStats[pid] = {
-					name: item.product?.name ?? pid,
-					revenue: 0,
-					cost: 0,
-					qty: 0,
-				};
-			}
-			productStats[pid].revenue += Number(item.subtotal);
-			productStats[pid].cost += (costByProduct[pid] ?? 0) * item.quantity;
-			productStats[pid].qty += item.quantity;
-		}
-	}
-
-	const rows = Object.values(productStats)
-		.map((p) => ({
-			...p,
-			profit: p.revenue - p.cost,
-			margin: p.revenue > 0 ? ((p.revenue - p.cost) / p.revenue) * 100 : 0,
-		}))
-		.sort((a, b) => b.profit - a.profit);
 
 	const chartData = rows.slice(0, 10).map((r) => ({
 		name: r.name.length > 12 ? `${r.name.slice(0, 12)}…` : r.name,
-		Margen: Number(r.margin.toFixed(1)),
+		Margen: Number(r.margin_percentage.toFixed(1)),
 		fullName: r.name,
 	}));
 
 	return (
 		<div>
 			<PageHeader title="Rentabilidad" description="Utilidad y margen por producto" />
+
+			{/* Period selector */}
+			<div className="mb-6 flex gap-1">
+				{(Object.keys(PERIOD_LABELS) as Period[]).map((p) => (
+					<button
+						key={p}
+						type="button"
+						onClick={() => setPeriod(p)}
+						className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+							period === p
+								? "bg-foreground text-background"
+								: "text-muted-foreground hover:bg-[oklch(0.94_0_0)] hover:text-foreground"
+						}`}
+					>
+						{PERIOD_LABELS[p]}
+					</button>
+				))}
+			</div>
 
 			{/* Chart */}
 			{chartData.length > 0 && (
@@ -141,48 +153,48 @@ function ProfitabilityPage() {
 								<th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
 									Producto
 								</th>
-								<th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">
-									Vendidos
+								<th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
+									Categoría
 								</th>
 								<th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">
-									Ingresos
+									Precio
 								</th>
 								<th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">
 									Costo
 								</th>
 								<th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">
-									Utilidad
+									Margen unit.
 								</th>
 								<th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">
-									Margen
+									Margen %
 								</th>
 							</tr>
 						</thead>
 						<tbody className="divide-y divide-border">
 							{rows.map((r) => (
-								<tr key={r.name}>
+								<tr key={r.product_id}>
 									<td className="px-4 py-3 font-medium text-foreground">{r.name}</td>
-									<td className="px-4 py-3 text-right text-muted-foreground">{r.qty}</td>
+									<td className="px-4 py-3 text-muted-foreground">{r.category}</td>
 									<td className="px-4 py-3 text-right text-foreground">
-										S/ {r.revenue.toFixed(2)}
+										S/ {Number(r.sale_price).toFixed(2)}
 									</td>
 									<td className="px-4 py-3 text-right text-muted-foreground">
-										S/ {r.cost.toFixed(2)}
+										S/ {Number(r.unit_cost).toFixed(2)}
 									</td>
 									<td className="px-4 py-3 text-right font-medium text-foreground">
-										S/ {r.profit.toFixed(2)}
+										S/ {Number(r.unit_margin).toFixed(2)}
 									</td>
 									<td className="px-4 py-3 text-right">
 										<span
 											className={`text-xs font-medium ${
-												r.margin >= 30
+												r.margin_percentage >= 30
 													? "text-[oklch(0.4_0.1_145)]"
-													: r.margin >= 15
+													: r.margin_percentage >= 15
 														? "text-foreground"
 														: "text-[oklch(0.5_0.1_30)]"
 											}`}
 										>
-											{r.margin.toFixed(1)}%
+											{Number(r.margin_percentage).toFixed(1)}%
 										</span>
 									</td>
 								</tr>

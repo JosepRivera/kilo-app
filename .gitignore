@@ -27,3 +27,4 @@ Claude.md
 .claude
 skills-lock.json
 .agents
+.env

@@ -23,8 +23,19 @@ api.interceptors.request.use((config) => {
 let isRefreshing = false;
 let refreshQueue: Array<(token: string) => void> = [];
 
+// Unwrap NestJS global { data: ... } envelope from all responses
 api.interceptors.response.use(
-	(response) => response,
+	(response) => {
+		if (
+			response.data !== null &&
+			response.data !== undefined &&
+			typeof response.data === "object" &&
+			"data" in response.data
+		) {
+			response.data = response.data.data;
+		}
+		return response;
+	},
 	async (error) => {
 		const original = error.config;
 
@@ -56,7 +67,7 @@ api.interceptors.response.use(
 				refresh_token: refreshToken,
 			});
 
-			const newToken: string = data.access_token;
+			const newToken: string = (data.data ?? data).access_token;
 			setAccessToken(newToken);
 
 			for (const cb of refreshQueue) cb(newToken);

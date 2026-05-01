@@ -56,7 +56,7 @@ function IngredientsPage() {
 		},
 	});
 
-	const lowStock = ingredients.filter((i) => i.stock <= i.min_stock);
+	const lowStock = ingredients.filter((i) => i.stock <= i.minStock);
 
 	return (
 		<div>
@@ -138,7 +138,7 @@ function IngredientsPage() {
 						</thead>
 						<tbody className="divide-y divide-border">
 							{ingredients.map((ing) => {
-								const isLow = ing.stock <= ing.min_stock;
+								const isLow = ing.stock <= ing.minStock;
 								return (
 									<tr key={ing.id}>
 										<td className="px-4 py-3 font-medium text-foreground">{ing.name}</td>
@@ -154,9 +154,9 @@ function IngredientsPage() {
 												{isLow && <AlertTriangle size={12} className="ml-1 inline" />}
 											</span>
 										</td>
-										<td className="px-4 py-3 text-muted-foreground">{ing.min_stock}</td>
+										<td className="px-4 py-3 text-muted-foreground">{ing.minStock}</td>
 										<td className="px-4 py-3 text-foreground">
-											S/ {Number(ing.cost_per_unit).toFixed(2)}
+											S/ {Number(ing.costPerUnit).toFixed(2)}
 										</td>
 										<td className="px-4 py-3">
 											<div className="flex justify-end">
@@ -202,8 +202,8 @@ function IngredientForm({
 			name: initialValues?.name ?? "",
 			unit: initialValues?.unit ?? "",
 			stock: initialValues?.stock ?? 0,
-			min_stock: initialValues?.min_stock ?? 0,
-			cost_per_unit: initialValues?.cost_per_unit ?? 0,
+			min_stock: initialValues?.minStock ?? 0,
+			cost_per_unit: initialValues?.costPerUnit ?? 0,
 		},
 		onSubmit: async ({ value }) => {
 			const parsed = ingredientSchema.safeParse(value);

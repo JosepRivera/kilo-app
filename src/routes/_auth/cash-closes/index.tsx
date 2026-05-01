@@ -1,14 +1,9 @@
-import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
-import { useState } from "react";
-import { z } from "zod";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api";
 import { requireRole } from "@/lib/guards";
 
@@ -20,60 +15,56 @@ export const Route = createFileRoute("/_auth/cash-closes/")({
 interface CashClose {
 	id: string;
 	date: string;
-	opening_amount: number;
-	closing_amount: number;
-	total_sales: number;
+	cash_income: number;
+	digital_income: number;
+	total_income: number;
 	total_expenses: number;
-	notes?: string;
+	net_profit: number;
+	closed_by: string;
 	created_at: string;
 }
 
-const closeSchema = z.object({
-	date: z.string().min(1, "Requerido"),
-	opening_amount: z.coerce.number().min(0),
-	closing_amount: z.coerce.number().min(0),
-	notes: z.string().optional(),
-});
-
-type CloseForm = z.infer<typeof closeSchema>;
+interface PaginatedResponse {
+	data: CashClose[];
+	meta: { total: number; page: number; limit: number; pages: number };
+}
 
 function CashClosesPage() {
 	const qc = useQueryClient();
-	const [showForm, setShowForm] = useState(false);
 
-	const { data: closes = [], isLoading } = useQuery<CashClose[]>({
+	const { data: response, isLoading } = useQuery<PaginatedResponse>({
 		queryKey: ["cash-closes"],
 		queryFn: () => api.get("/cash-closes").then((r) => r.data),
 	});
 
+	const closes: CashClose[] = response?.data ?? (Array.isArray(response) ? response : []);
+
 	const createMutation = useMutation({
-		mutationFn: (body: CloseForm) => api.post("/cash-closes", body),
-		onSuccess: () => {
-			void qc.invalidateQueries({ queryKey: ["cash-closes"] });
-			setShowForm(false);
-		},
+		mutationFn: () => api.post("/cash-closes"),
+		onSuccess: () => void qc.invalidateQueries({ queryKey: ["cash-closes"] }),
 	});
 
 	return (
 		<div>
 			<PageHeader
 				title="Cierre de caja"
-				description="Registro diario de apertura y cierre"
+				description="Registro diario de ingresos y gastos"
 				action={
-					<Button size="sm" onClick={() => setShowForm(true)}>
+					<Button
+						size="sm"
+						onClick={() => createMutation.mutate()}
+						disabled={createMutation.isPending}
+					>
 						<Plus size={14} className="mr-1" />
-						Nuevo cierre
+						{createMutation.isPending ? "Generando…" : "Generar cierre de hoy"}
 					</Button>
 				}
 			/>
 
-			{showForm && (
-				<CloseFormPanel
-					onSubmit={(v) => createMutation.mutate(v)}
-					onCancel={() => setShowForm(false)}
-					isPending={createMutation.isPending}
-					error={createMutation.isError ? "Error al registrar el cierre" : undefined}
-				/>
+			{createMutation.isError && (
+				<div className="mb-4 rounded-lg border border-[oklch(0.85_0.04_30)] bg-[oklch(0.97_0.02_30)] px-4 py-3 text-sm text-[oklch(0.45_0.08_30)]">
+					Error al generar el cierre. Es posible que ya exista un cierre para hoy.
+				</div>
 			)}
 
 			{isLoading ? (
@@ -81,7 +72,7 @@ function CashClosesPage() {
 			) : closes.length === 0 ? (
 				<EmptyState
 					title="Sin cierres registrados"
-					description="Registra el cierre de caja diario"
+					description="Genera el cierre de caja al final del día"
 				/>
 			) : (
 				<div className="rounded-xl border border-border bg-white overflow-hidden">
@@ -92,181 +83,61 @@ function CashClosesPage() {
 									Fecha
 								</th>
 								<th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">
-									Apertura
+									Efectivo
 								</th>
 								<th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">
-									Ventas
+									Digital
+								</th>
+								<th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">
+									Ingresos
 								</th>
 								<th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">
 									Gastos
 								</th>
 								<th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">
-									Cierre
-								</th>
-								<th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">
-									Diferencia
+									Utilidad neta
 								</th>
 							</tr>
 						</thead>
 						<tbody className="divide-y divide-border">
-							{closes.map((c) => {
-								const expected =
-									Number(c.opening_amount) + Number(c.total_sales) - Number(c.total_expenses);
-								const diff = Number(c.closing_amount) - expected;
-								return (
-									<tr key={c.id}>
-										<td className="px-4 py-3 text-foreground">
-											{new Date(c.date).toLocaleDateString("es-PE", {
-												day: "2-digit",
-												month: "2-digit",
-												year: "numeric",
-											})}
-										</td>
-										<td className="px-4 py-3 text-right text-muted-foreground">
-											S/ {Number(c.opening_amount).toFixed(2)}
-										</td>
-										<td className="px-4 py-3 text-right text-foreground">
-											S/ {Number(c.total_sales).toFixed(2)}
-										</td>
-										<td className="px-4 py-3 text-right text-muted-foreground">
-											S/ {Number(c.total_expenses).toFixed(2)}
-										</td>
-										<td className="px-4 py-3 text-right font-medium text-foreground">
-											S/ {Number(c.closing_amount).toFixed(2)}
-										</td>
-										<td className="px-4 py-3 text-right">
-											<span
-												className={`text-xs font-medium ${
-													Math.abs(diff) < 0.01
-														? "text-muted-foreground"
-														: diff > 0
-															? "text-[oklch(0.4_0.1_145)]"
-															: "text-[oklch(0.5_0.1_30)]"
-												}`}
-											>
-												{diff >= 0 ? "+" : ""}S/ {diff.toFixed(2)}
-											</span>
-										</td>
-									</tr>
-								);
-							})}
+							{closes.map((c) => (
+								<tr key={c.id}>
+									<td className="px-4 py-3 text-foreground">
+										{new Date(c.date).toLocaleDateString("es-PE", {
+											day: "2-digit",
+											month: "2-digit",
+											year: "numeric",
+										})}
+									</td>
+									<td className="px-4 py-3 text-right text-muted-foreground">
+										S/ {Number(c.cash_income).toFixed(2)}
+									</td>
+									<td className="px-4 py-3 text-right text-muted-foreground">
+										S/ {Number(c.digital_income).toFixed(2)}
+									</td>
+									<td className="px-4 py-3 text-right text-foreground">
+										S/ {Number(c.total_income).toFixed(2)}
+									</td>
+									<td className="px-4 py-3 text-right text-muted-foreground">
+										S/ {Number(c.total_expenses).toFixed(2)}
+									</td>
+									<td className="px-4 py-3 text-right">
+										<span
+											className={`text-xs font-medium ${
+												Number(c.net_profit) >= 0
+													? "text-[oklch(0.4_0.1_145)]"
+													: "text-[oklch(0.5_0.1_30)]"
+											}`}
+										>
+											S/ {Number(c.net_profit).toFixed(2)}
+										</span>
+									</td>
+								</tr>
+							))}
 						</tbody>
 					</table>
 				</div>
 			)}
-		</div>
-	);
-}
-
-function CloseFormPanel({
-	onSubmit,
-	onCancel,
-	isPending,
-	error,
-}: {
-	onSubmit: (v: CloseForm) => void;
-	onCancel: () => void;
-	isPending: boolean;
-	error?: string;
-}) {
-	const today = new Date().toISOString().split("T")[0];
-
-	const form = useForm({
-		defaultValues: {
-			date: today,
-			opening_amount: 0,
-			closing_amount: 0,
-			notes: "",
-		},
-		onSubmit: async ({ value }) => {
-			const parsed = closeSchema.safeParse(value);
-			if (parsed.success) onSubmit(parsed.data);
-		},
-	});
-
-	return (
-		<div className="mb-4 rounded-xl border border-border bg-white p-5">
-			<h3 className="mb-4 text-sm font-medium text-foreground">Nuevo cierre de caja</h3>
-			<form
-				onSubmit={(e) => {
-					e.preventDefault();
-					void form.handleSubmit();
-				}}
-				className="grid grid-cols-3 gap-4"
-			>
-				<form.Field name="date">
-					{(field) => (
-						<div className="space-y-1.5">
-							<Label htmlFor={field.name}>Fecha</Label>
-							<Input
-								id={field.name}
-								type="date"
-								value={field.state.value}
-								onChange={(e) => field.handleChange(e.target.value)}
-							/>
-						</div>
-					)}
-				</form.Field>
-
-				<form.Field name="opening_amount">
-					{(field) => (
-						<div className="space-y-1.5">
-							<Label htmlFor={field.name}>Fondo inicial (S/)</Label>
-							<Input
-								id={field.name}
-								type="number"
-								step="0.01"
-								min="0"
-								value={field.state.value}
-								onChange={(e) => field.handleChange(Number(e.target.value))}
-							/>
-						</div>
-					)}
-				</form.Field>
-
-				<form.Field name="closing_amount">
-					{(field) => (
-						<div className="space-y-1.5">
-							<Label htmlFor={field.name}>Cierre real (S/)</Label>
-							<Input
-								id={field.name}
-								type="number"
-								step="0.01"
-								min="0"
-								value={field.state.value}
-								onChange={(e) => field.handleChange(Number(e.target.value))}
-							/>
-						</div>
-					)}
-				</form.Field>
-
-				<form.Field name="notes">
-					{(field) => (
-						<div className="space-y-1.5 col-span-3">
-							<Label htmlFor={field.name}>
-								Notas <span className="text-muted-foreground">(opcional)</span>
-							</Label>
-							<Input
-								id={field.name}
-								value={field.state.value}
-								onChange={(e) => field.handleChange(e.target.value)}
-								placeholder="Observaciones del día"
-							/>
-						</div>
-					)}
-				</form.Field>
-
-				{error && <p className="col-span-3 text-xs text-destructive">{error}</p>}
-
-				<div className="col-span-3 flex justify-end gap-2">
-					<Button type="button" variant="outline" size="sm" onClick={onCancel}>
-						Cancelar
-					</Button>
-					<Button type="submit" size="sm" disabled={isPending}>
-						{isPending ? "Guardando…" : "Registrar cierre"}
-					</Button>
-				</div>
-			</form>
 		</div>
 	);
 }

@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { RefreshCw } from "lucide-react";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -12,60 +12,60 @@ export const Route = createFileRoute("/_auth/production-plan/")({
 	component: ProductionPlanPage,
 });
 
-interface ProductionItem {
+interface PlanItem {
+	id: string;
 	product_id: string;
 	product_name: string;
-	quantity_to_produce: number;
-	ingredients: {
-		ingredient_id: string;
-		ingredient_name: string;
-		unit: string;
-		quantity_needed: number;
-		stock_available: number;
-		sufficient: boolean;
-	}[];
+	quantity: number;
+	prediction_source: string;
 }
 
 interface ProductionPlan {
 	date: string;
-	items: ProductionItem[];
-	generated_at: string;
+	items: PlanItem[];
 }
 
 function ProductionPlanPage() {
+	const qc = useQueryClient();
+
 	const {
 		data: plan,
 		isLoading,
-		refetch,
+		isError,
 	} = useQuery<ProductionPlan>({
 		queryKey: ["production-plan"],
-		queryFn: () => api.get("/ai/production-plan").then((r) => r.data),
+		queryFn: () => api.get("/production-plans/today").then((r) => r.data),
+		retry: false,
 	});
 
-	const refreshMutation = useMutation({
-		mutationFn: () => api.post("/ai/production-plan/generate").then((r) => r.data),
-		onSuccess: () => void refetch(),
+	const regenerateMutation = useMutation({
+		mutationFn: () => api.post("/production-plans/regenerate"),
+		onSuccess: () => void qc.invalidateQueries({ queryKey: ["production-plan"] }),
 	});
+
+	const planDate = plan?.date
+		? new Date(plan.date).toLocaleDateString("es-PE", {
+				weekday: "long",
+				day: "2-digit",
+				month: "long",
+			})
+		: undefined;
 
 	return (
 		<div>
 			<PageHeader
 				title="Plan de producción"
-				description={
-					plan?.generated_at
-						? `Generado ${new Date(plan.generated_at).toLocaleString("es-PE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}`
-						: "Plan diario de producción"
-				}
+				description={planDate ?? "Plan diario basado en demanda histórica"}
 				action={
 					<Button
 						size="sm"
 						variant="outline"
-						onClick={() => refreshMutation.mutate()}
-						disabled={refreshMutation.isPending}
+						onClick={() => regenerateMutation.mutate()}
+						disabled={regenerateMutation.isPending}
 					>
 						<RefreshCw
 							size={14}
-							className={`mr-1 ${refreshMutation.isPending ? "animate-spin" : ""}`}
+							className={`mr-1 ${regenerateMutation.isPending ? "animate-spin" : ""}`}
 						/>
 						Regenerar
 					</Button>
@@ -73,88 +73,53 @@ function ProductionPlanPage() {
 			/>
 
 			{isLoading ? (
-				<div className="py-12 text-center text-sm text-muted-foreground">Cargando plan…</div>
-			) : !plan || plan.items.length === 0 ? (
+				<div className="py-12 text-center text-sm text-muted-foreground">Cargando…</div>
+			) : isError || !plan || plan.items.length === 0 ? (
 				<EmptyState
 					title="Sin plan de producción"
 					description="Genera el plan diario basado en ventas históricas"
 					action={
 						<Button
 							size="sm"
-							onClick={() => refreshMutation.mutate()}
-							disabled={refreshMutation.isPending}
+							onClick={() => regenerateMutation.mutate()}
+							disabled={regenerateMutation.isPending}
 						>
-							{refreshMutation.isPending ? "Generando…" : "Generar plan"}
+							{regenerateMutation.isPending ? "Generando…" : "Generar plan"}
 						</Button>
 					}
 				/>
 			) : (
-				<div className="space-y-3">
-					{plan.items.map((item) => {
-						const hasShortage = item.ingredients.some((i) => !i.sufficient);
-						return (
-							<div
-								key={item.product_id}
-								className="rounded-xl border border-border bg-white overflow-hidden"
-							>
-								<div className="flex items-center justify-between border-b border-border px-4 py-3">
-									<div>
-										<p className="text-sm font-medium text-foreground">{item.product_name}</p>
-										<p className="text-xs text-muted-foreground">
-											Producir: {item.quantity_to_produce} unidades
-										</p>
-									</div>
-									{hasShortage && (
-										<span className="rounded-md bg-[oklch(0.93_0.03_60)] px-2 py-0.5 text-xs font-medium text-[oklch(0.45_0.08_60)]">
-											Stock insuficiente
+				<div className="rounded-xl border border-border bg-white overflow-hidden">
+					<table className="w-full text-sm">
+						<thead>
+							<tr className="border-b border-border bg-[oklch(0.975_0_0)]">
+								<th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
+									Producto
+								</th>
+								<th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">
+									Cantidad a preparar
+								</th>
+								<th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">
+									Fuente
+								</th>
+							</tr>
+						</thead>
+						<tbody className="divide-y divide-border">
+							{plan.items.map((item) => (
+								<tr key={item.id}>
+									<td className="px-4 py-3 font-medium text-foreground">{item.product_name}</td>
+									<td className="px-4 py-3 text-right text-foreground font-medium">
+										{item.quantity}
+									</td>
+									<td className="px-4 py-3 text-right">
+										<span className="rounded-md bg-[oklch(0.94_0_0)] px-2 py-0.5 text-xs text-muted-foreground">
+											{item.prediction_source}
 										</span>
-									)}
-								</div>
-								<table className="w-full text-xs">
-									<thead>
-										<tr className="bg-[oklch(0.975_0_0)]">
-											<th className="px-4 py-2 text-left font-medium text-muted-foreground">
-												Insumo
-											</th>
-											<th className="px-4 py-2 text-right font-medium text-muted-foreground">
-												Necesario
-											</th>
-											<th className="px-4 py-2 text-right font-medium text-muted-foreground">
-												Disponible
-											</th>
-											<th className="px-4 py-2 text-right font-medium text-muted-foreground">
-												Estado
-											</th>
-										</tr>
-									</thead>
-									<tbody className="divide-y divide-border">
-										{item.ingredients.map((ing) => (
-											<tr key={ing.ingredient_id}>
-												<td className="px-4 py-2 text-foreground">{ing.ingredient_name}</td>
-												<td className="px-4 py-2 text-right text-muted-foreground">
-													{ing.quantity_needed} {ing.unit}
-												</td>
-												<td className="px-4 py-2 text-right text-muted-foreground">
-													{ing.stock_available} {ing.unit}
-												</td>
-												<td className="px-4 py-2 text-right">
-													<span
-														className={
-															ing.sufficient
-																? "text-[oklch(0.4_0.1_145)]"
-																: "text-[oklch(0.5_0.1_30)]"
-														}
-													>
-														{ing.sufficient ? "OK" : "Falta"}
-													</span>
-												</td>
-											</tr>
-										))}
-									</tbody>
-								</table>
-							</div>
-						);
-					})}
+									</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
 				</div>
 			)}
 		</div>
