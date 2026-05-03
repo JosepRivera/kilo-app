@@ -195,21 +195,23 @@ function PeriodReportPage() {
 					<div className="border-b border-border px-4 py-3">
 						<p className="text-sm font-medium text-foreground">Gastos por categoría</p>
 					</div>
-					<table className="w-full text-sm">
-						<tbody className="divide-y divide-border">
-							{categoryRows.map(([cat, amount]) => (
-								<tr key={cat}>
-									<td className="px-4 py-3 text-foreground">{cat}</td>
-									<td className="px-4 py-3 text-right font-medium text-foreground">
-										S/ {amount.toFixed(2)}
-									</td>
-									<td className="px-4 py-3 text-right text-xs text-muted-foreground w-20">
-										{totalExpenses > 0 ? ((amount / totalExpenses) * 100).toFixed(1) : 0}%
-									</td>
-								</tr>
-							))}
-						</tbody>
-					</table>
+					<div className="overflow-x-auto">
+						<table className="w-full min-w-[400px] text-sm">
+							<tbody className="divide-y divide-border">
+								{categoryRows.map(([cat, amount]) => (
+									<tr key={cat}>
+										<td className="px-4 py-3 text-foreground">{cat}</td>
+										<td className="px-4 py-3 text-right font-medium text-foreground">
+											S/ {amount.toFixed(2)}
+										</td>
+										<td className="px-4 py-3 text-right text-xs text-muted-foreground w-20">
+											{totalExpenses > 0 ? ((amount / totalExpenses) * 100).toFixed(1) : 0}%
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
 				</div>
 			)}
 		</div>

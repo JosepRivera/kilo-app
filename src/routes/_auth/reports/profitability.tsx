@@ -92,7 +92,7 @@ function ProfitabilityPage() {
 			{chartData.length > 0 && (
 				<div className="mb-4 rounded-xl border border-border bg-white p-5">
 					<p className="mb-4 text-sm font-medium text-foreground">Margen por producto (%)</p>
-					<ResponsiveContainer width="100%" height={220}>
+					<ResponsiveContainer width="100%" height={Math.max(220, chartData.length * 30)}>
 						<BarChart data={chartData} layout="vertical" barSize={14}>
 							<CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92_0_0)" horizontal={false} />
 							<XAxis
@@ -147,7 +147,8 @@ function ProfitabilityPage() {
 				</div>
 			) : (
 				<div className="rounded-xl border border-border bg-white overflow-hidden">
-					<table className="w-full text-sm">
+					<div className="overflow-x-auto">
+					<table className="w-full min-w-[560px] text-sm">
 						<thead>
 							<tr className="border-b border-border bg-[oklch(0.975_0_0)]">
 								<th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
@@ -201,6 +202,7 @@ function ProfitabilityPage() {
 							))}
 						</tbody>
 					</table>
+					</div>
 				</div>
 			)}
 		</div>

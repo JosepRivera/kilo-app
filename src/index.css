@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -156,6 +157,28 @@ body {
 	}
 }
 
+/* Login v3 — prototype-matched input */
+.login-input {
+  width: 100%;
+  height: 40px;
+  background: #f7f7fc;
+  border: 1.5px solid #e2e2ee;
+  border-radius: 10px;
+  padding: 0 12px 0 36px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #1a1a2e;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+.login-input::placeholder { color: #9090aa; }
+.login-input:focus {
+  border-color: #FF8C00;
+  box-shadow: 0 0 0 3px rgba(255, 140, 0, 0.12);
+  background: #fff;
+}
+.login-input[aria-invalid="true"] { border-color: #ef4444; }
+
 /* Login redesign: Animation keyframes */
 @keyframes fade-in-right {
 	from {
@@ -222,4 +245,58 @@ button:not(:disabled):hover {
 	button:not(:disabled):hover {
 		transition: none;
 	}
+}
+
+/* Waveform bar animation */
+@keyframes waveBar {
+	0%, 100% { transform: scaleY(1); }
+	50% { transform: scaleY(0.28); }
+}
+
+.wave-bar {
+	transform-origin: bottom;
+	animation: waveBar 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.wave-bar { animation: none; }
+}
+
+/* Feature card hover: warm glow (no elevation) */
+.bento-card {
+	transition: box-shadow 220ms ease, border-color 220ms ease;
+}
+.bento-card:hover {
+	box-shadow: 0 0 0 1.5px rgba(200, 180, 255, 0.5), 0 8px 32px rgba(80, 60, 140, 0.18);
+	border-color: rgba(200, 185, 255, 0.75) !important;
+}
+
+/* Login bento grid — mobile: 1 col, tablet: 2 col, desktop: 3-col named areas */
+.login-bento {
+	display: grid;
+	gap: clamp(8px, 1.2vh, 14px);
+	grid-template-columns: 1fr;
+}
+
+@media (min-width: 600px) {
+	.login-bento {
+		grid-template-columns: 1fr 1fr;
+	}
+	.bento-finanzas { grid-column: span 2; }
+}
+
+@media (min-width: 1024px) {
+	.login-bento {
+		grid-template-columns: 1fr 1fr 1fr;
+		grid-template-rows: 1fr 1fr;
+		grid-template-areas: none;
+		grid-auto-rows: unset;
+	}
+
+	.bento-cobros    { grid-area: auto; }
+	.bento-ia        { grid-area: auto; }
+	.bento-dashboard { grid-area: auto; }
+	.bento-voz       { grid-area: auto; }
+	.bento-equipo    { grid-area: auto; }
+	.bento-finanzas  { grid-area: auto; grid-column: unset; }
 }

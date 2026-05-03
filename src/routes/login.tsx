@@ -1,21 +1,24 @@
+import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
-	BarChart3,
-	ChefHat,
+	Activity,
+	BarChart2,
+	DollarSign,
 	Eye,
 	EyeOff,
 	Loader2,
-	Package,
+	Mic,
+	ShoppingBag,
+	Store,
 	TrendingUp,
-	UtensilsCrossed,
+	Users,
 } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import logoSrc from "@/assets/logo-smartbite.png";
+import restauranteSrc from "@/assets/restaurante.png";
 import { api } from "@/lib/api";
 import { getHomeForRole, redirectIfAuth } from "@/lib/guards";
 import { useAuthStore } from "@/stores/auth.store";
@@ -31,39 +34,472 @@ const loginSchema = z.object({
 	password: z.string().min(1, "Ingresa tu contraseña"),
 });
 
-const features = [
+type FeatureColor = "orange" | "violet" | "blue" | "green" | "rose" | "amber";
+type Accent = { c: string; cb: string; cbr: string };
+
+interface Feature {
+	area: string;
+	color: FeatureColor;
+	icon: React.ElementType;
+	module: string;
+	name: string;
+	desc: string;
+}
+
+const features: Feature[] = [
 	{
-		icon: UtensilsCrossed,
-		title: "Transacciones rápidas",
-		desc: "Registra órdenes y cobra sin demoras",
+		area: "cobros",
+		color: "orange",
+		icon: ShoppingBag,
+		module: "Punto de Venta",
+		name: "Cobros Rápidos",
+		desc: "El mozo registra el pedido. El cajero lo cobra en segundos — efectivo, Yape, Plin o Ágora.",
 	},
 	{
-		icon: ChefHat,
-		title: "Comunicación instantánea",
-		desc: "Los mensajes llegan al instante",
+		area: "ia",
+		color: "violet",
+		icon: Activity,
+		module: "Inteligencia Artificial",
+		name: "Predicción de Demanda",
+		desc: "El sistema anticipa cuánto producir cada día. Menos desperdicio, sin quedarte corto.",
 	},
 	{
-		icon: Package,
-		title: "Gestión de inventario",
-		desc: "Alertas automáticas de stock",
+		area: "dashboard",
+		color: "blue",
+		icon: BarChart2,
+		module: "Reportes",
+		name: "Panel del Día",
+		desc: "Ventas totales, efectivo en caja y desglose digital — actualizado en tiempo real.",
 	},
 	{
-		icon: BarChart3,
-		title: "Análisis de datos",
-		desc: "Métricas claras de tu negocio",
+		area: "voz",
+		color: "rose",
+		icon: Mic,
+		module: "Hands-Free",
+		name: "Registro por Voz",
+		desc: "Dictá el pedido sin soltar la bandeja. El formulario se llena solo.",
+	},
+	{
+		area: "equipo",
+		color: "amber",
+		icon: Users,
+		module: "Equipo",
+		name: "Gestión de Personal",
+		desc: "Cada rol ve solo lo que necesita: el cocinero el plan, el cajero la caja.",
+	},
+	{
+		area: "finanzas",
+		color: "green",
+		icon: DollarSign,
+		module: "Finanzas",
+		name: "Cierre y Ganancias",
+		desc: "Al cerrar el día: ingresos, gastos y ganancia neta en un registro inmutable.",
 	},
 ];
 
-const demoCredentials = [
-	{ role: "Dueño", username: "owner", password: "owner1234" },
-	{ role: "Cajera", username: "cajera01", password: "cashier1234" },
-	{ role: "Cocinero", username: "cocinero01", password: "cook1234" },
-];
+const ACCENT: Record<FeatureColor, Accent> = {
+	orange: { c: "#FF6A00", cb: "rgba(255,106,0,0.09)",   cbr: "rgba(255,106,0,0.20)" },
+	violet: { c: "#7c5cbf", cb: "rgba(124,92,191,0.09)",  cbr: "rgba(124,92,191,0.20)" },
+	blue:   { c: "#3b82f6", cb: "rgba(59,130,246,0.09)",  cbr: "rgba(59,130,246,0.20)" },
+	green:  { c: "#22c55e", cb: "rgba(34,197,94,0.09)",   cbr: "rgba(34,197,94,0.20)" },
+	rose:   { c: "#f43f5e", cb: "rgba(244,63,94,0.09)",   cbr: "rgba(244,63,94,0.20)" },
+	amber:  { c: "#f59e0b", cb: "rgba(245,158,11,0.09)",  cbr: "rgba(245,158,11,0.20)" },
+};
+
+// Pre-computed constants — no randomness on render
+const SPARKLINE_HX = "0,78 20,70 40,72 60,58 80,62 100,46 120,50 140,36 155,40 170,28 185,20 200,16 215,10 230,5";
+const SPARKLINE_FILL = `${SPARKLINE_HX} 230,88 0,88`;
+const FORECAST_HX = "230,5 250,2 265,0";
+const WAVEFORM    = [5,10,18,26,34,28,38,22,36,16,32,20,36,24,30,14,26,34,18,28,8,22,32,12,24];
+const WEEK_BARS   = [42, 61, 48, 74, 69, 100, 54];
+const WEEK_DAYS   = ["L", "M", "M", "J", "V", "S", "D"];
+const WEEK_VALS   = ["520", "754", "592", "912", "848", "1240", "666"];
+
+function CobrosGraphic({ c, cb, cbr }: Accent) {
+	return (
+		<div style={{ marginTop: 10 }}>
+			<div
+				style={{
+					background: "rgba(255,255,255,0.92)",
+					border: "1px solid rgba(0,0,0,0.06)",
+					borderRadius: 10,
+					padding: "10px 12px",
+				}}
+			>
+				<div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 9.5, fontWeight: 600, color: "#1a1a2e" }}>
+					<span>Orden #042</span>
+					<span style={{ color: c }}>S/ 24.50</span>
+				</div>
+				{[
+					{ n: "Hamburguesa Simple ×2", p: "12.00" },
+					{ n: "Papas medianas ×1",     p: "6.00"  },
+					{ n: "Limonada ×2",           p: "6.50"  },
+				].map((item) => (
+					<div key={item.n} style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "#5a5a7a", marginBottom: 2 }}>
+						<span>{item.n}</span><span>S/ {item.p}</span>
+					</div>
+				))}
+				<div style={{ display: "flex", gap: 4, marginTop: 8 }}>
+					{["Yape", "Plin", "Efectivo"].map((m) => (
+						<div key={m} style={{ flex: 1, textAlign: "center", fontSize: 9, fontWeight: 700, padding: "4px 0", borderRadius: 6, background: cb, color: c, border: `1px solid ${cbr}` }}>
+							{m}
+						</div>
+					))}
+				</div>
+			</div>
+			<div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+				<div style={{ flex: 1, background: cb, border: `1px solid ${cbr}`, borderRadius: 8, padding: "6px 8px", textAlign: "center" }}>
+					<div style={{ fontSize: 8.5, color: "#9090aa", marginBottom: 2 }}>Hoy</div>
+					<div style={{ fontSize: 12, fontWeight: 800, color: c }}>47 órdenes</div>
+				</div>
+				<div style={{ flex: 1, background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 8, padding: "6px 8px", textAlign: "center" }}>
+					<div style={{ fontSize: 8.5, color: "#9090aa", marginBottom: 2 }}>Efectivo</div>
+					<div style={{ fontSize: 12, fontWeight: 800, color: "#22c55e" }}>S/ 680</div>
+				</div>
+			</div>
+		</div>
+	);
+}
+
+function IaGraphic({ c, cb, cbr }: Accent) {
+	return (
+		<div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 6 }}>
+			{/* Chart */}
+			<div style={{ position: "relative" }}>
+				<svg viewBox="0 0 280 88" style={{ width: "100%", height: "auto", maxHeight: 88, display: "block" }}>
+					<defs>
+						<linearGradient id="iaFill" x1="0" y1="0" x2="0" y2="1">
+							<stop offset="0%" stopColor={c} stopOpacity="0.22" />
+							<stop offset="100%" stopColor={c} stopOpacity="0.02" />
+						</linearGradient>
+						<linearGradient id="iaFore" x1="0" y1="0" x2="0" y2="1">
+							<stop offset="0%" stopColor={c} stopOpacity="0.06" />
+							<stop offset="100%" stopColor={c} stopOpacity="0.01" />
+						</linearGradient>
+					</defs>
+					{/* grid lines */}
+					{[22, 44, 66].map((y) => (
+						<line key={y} x1="0" y1={y} x2="280" y2={y} stroke="#e2e2ee" strokeWidth="0.5" strokeDasharray="4 4" />
+					))}
+					{/* historical fill + line */}
+					<polygon points={SPARKLINE_FILL} fill="url(#iaFill)" />
+					<polyline points={SPARKLINE_HX} fill="none" stroke={c} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+					{/* forecast zone */}
+					<polygon points={`230,5 ${FORECAST_HX} 265,88 230,88`} fill="url(#iaFore)" />
+					<polyline points={FORECAST_HX} fill="none" stroke={c} strokeWidth="2" strokeDasharray="5 4" strokeLinecap="round" />
+					{/* today divider */}
+					<line x1="230" y1="0" x2="230" y2="88" stroke={c} strokeWidth="0.8" strokeDasharray="3 3" opacity="0.4" />
+					{/* live dot */}
+					<circle cx="230" cy="5" r="5" fill={c} opacity="0.2" />
+					<circle cx="230" cy="5" r="3" fill={c} />
+					{/* labels */}
+					<text x="3" y="85" fontSize="8" fill="#c0c0cc">14 días atrás</text>
+					<text x="232" y="85" fontSize="8" fill={c} fontWeight="600">Predicción</text>
+				</svg>
+			</div>
+			{/* Prediction pills */}
+			<div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+				{[
+					{ name: "Hamburguesa", qty: "×23" },
+					{ name: "Pizza",       qty: "×14" },
+					{ name: "Limonada",    qty: "×31" },
+				].map((item) => (
+					<div key={item.name} style={{ display: "inline-flex", alignItems: "center", gap: 4, background: cb, border: `1px solid ${cbr}`, borderRadius: 7, padding: "3px 8px", fontSize: 10, fontWeight: 600, color: c }}>
+						<span>{item.name}</span>
+						<span style={{ fontWeight: 800 }}>{item.qty}</span>
+						<span style={{ color: "#9090aa", fontWeight: 400 }}>mañana</span>
+					</div>
+				))}
+			</div>
+		</div>
+	);
+}
+
+function DashboardGraphic({ c, cb }: Accent) {
+	const maxPct = Math.max(...WEEK_BARS);
+	return (
+		<div style={{ marginTop: 8 }}>
+			{/* Stats row */}
+			<div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+				{[
+					{ label: "Ventas hoy", value: "S/ 1,240", color: c },
+					{ label: "Efectivo",   value: "S/ 730",   color: "#22c55e" },
+					{ label: "Digital",    value: "S/ 510",   color: "#3b82f6" },
+				].map((stat) => (
+					<div key={stat.label} style={{ flex: 1, background: "rgba(255,255,255,0.7)", border: "1px solid rgba(0,0,0,0.06)", borderRadius: 7, padding: "4px 6px" }}>
+						<div style={{ fontSize: 8, color: "#9090aa" }}>{stat.label}</div>
+						<div style={{ fontSize: 11, fontWeight: 800, color: stat.color }}>{stat.value}</div>
+					</div>
+				))}
+			</div>
+			{/* Bar chart */}
+			<svg viewBox="0 0 210 80" style={{ width: "100%", height: "auto", maxHeight: 90, display: "block" }}>
+				{/* grid lines */}
+				{[20, 40, 60].map((y) => (
+					<line key={y} x1="0" y1={y} x2="210" y2={y} stroke="#e8e8f0" strokeWidth="0.5" />
+				))}
+				{WEEK_BARS.map((pct, i) => {
+					const h = Math.round((pct / maxPct) * 58);
+					const isToday = i === 5;
+					const x = i * 30 + 3;
+					return (
+						<React.Fragment key={i}>
+							<rect x={x} y={62 - h} width="24" height={h} rx="3"
+								fill={c} opacity={isToday ? 1 : 0.22} />
+							{isToday && (
+								<text x={x + 12} y={58 - h} fontSize="7.5" fill={c} fontWeight="700" textAnchor="middle">
+									{WEEK_VALS[i]}
+								</text>
+							)}
+						</React.Fragment>
+					);
+				})}
+				<line x1="0" y1="63" x2="210" y2="63" stroke="#e2e2ee" strokeWidth="0.5" />
+				{WEEK_DAYS.map((d, i) => (
+					<text key={i} x={i * 30 + 15} y="72" fontSize="8.5" fill={i === 5 ? c : "#c0c0cc"} fontWeight={i === 5 ? "700" : "400"} textAnchor="middle">
+						{d}
+					</text>
+				))}
+			</svg>
+		</div>
+	);
+}
+
+function VozGraphic({ c }: Accent) {
+	const maxH = Math.max(...WAVEFORM);
+	return (
+		<div style={{ marginTop: 10 }}>
+			{/* Animated waveform bars */}
+			<div style={{ display: "flex", alignItems: "flex-end", gap: 2.5, height: 52 }}>
+				{WAVEFORM.map((h, i) => (
+					<div
+						key={i}
+						className="wave-bar"
+						style={{
+							flex: 1,
+							height: Math.round((h / maxH) * 46) + 6,
+							borderRadius: 2,
+							background: c,
+							opacity: 0.3 + (h / maxH) * 0.7,
+							animationDelay: `${(i * 0.065).toFixed(3)}s`,
+							animationDuration: `${1.2 + (i % 4) * 0.15}s`,
+						}}
+					/>
+				))}
+			</div>
+			{/* Status */}
+			<div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 5, fontSize: 10, color: "#5a5a7a" }}>
+				<span className="animate-pulse" style={{ width: 7, height: 7, borderRadius: "50%", background: c, display: "inline-block", flexShrink: 0 }} />
+				<span style={{ fontWeight: 600, color: c }}>Escuchando</span>
+				<span style={{ color: "#9090aa" }}>· Ventas · Gastos · Stock</span>
+			</div>
+		</div>
+	);
+}
+
+function EquipoGraphic({ c, cb, cbr }: Accent) {
+	const matrix = [
+		{ role: "Dueño",    ventas: true,  caja: true,  plan: true  },
+		{ role: "Cajero",   ventas: true,  caja: true,  plan: false },
+		{ role: "Mozo",     ventas: true,  caja: false, plan: false },
+		{ role: "Cocinero", ventas: false, caja: false, plan: true  },
+	];
+	return (
+		<div style={{ marginTop: 10, fontSize: 9.5 }}>
+			<div style={{ display: "grid", gridTemplateColumns: "auto 1fr 1fr 1fr", gap: 3, color: "#c0c0cc", fontWeight: 600, marginBottom: 6, textAlign: "center" }}>
+				<span />
+				{["Ventas", "Caja", "Plan"].map((col) => <span key={col}>{col}</span>)}
+			</div>
+			{matrix.map((row) => (
+				<div key={row.role} style={{ display: "grid", gridTemplateColumns: "auto 1fr 1fr 1fr", gap: 3, marginBottom: 5, alignItems: "center", textAlign: "center" }}>
+					<span style={{ color: "#1a1a2e", fontWeight: 600, textAlign: "left", fontSize: 9, paddingRight: 6, whiteSpace: "nowrap" }}>{row.role}</span>
+					{[row.ventas, row.caja, row.plan].map((has, i) => (
+						<span key={i} style={{ fontSize: 10, fontWeight: 700, color: has ? c : "#e0e0e8", padding: "2px 0", borderRadius: 4, background: has ? cb : "transparent", border: has ? `1px solid ${cbr}` : "1px solid transparent" }}>
+							{has ? "✓" : "·"}
+						</span>
+					))}
+				</div>
+			))}
+		</div>
+	);
+}
+
+const WEEKLY_REVENUE = [890, 1020, 760, 1150, 980, 1240, 870];
+const WEEKLY_LABELS  = ["L", "M", "M", "J", "V", "S", "D"];
+
+function FinanzasGraphic({ c, cb, cbr }: Accent) {
+	const maxRev = Math.max(...WEEKLY_REVENUE);
+	const W = 200, H = 48;
+	const pts = WEEKLY_REVENUE.map((v, i) =>
+		`${Math.round((i / 6) * W)},${Math.round(H - (v / maxRev) * (H - 4) - 4)}`
+	).join(" ");
+	const fillPts = `0,${H} ${pts} ${W},${H}`;
+
+	return (
+		<div style={{ marginTop: 10 }}>
+			{/* Sparkline */}
+			<div style={{ position: "relative" }}>
+				<svg viewBox={`0 0 ${W} ${H + 12}`} style={{ width: "100%", height: "auto", maxHeight: 56, display: "block" }}>
+					<defs>
+						<linearGradient id="finFill" x1="0" y1="0" x2="0" y2="1">
+							<stop offset="0%" stopColor={c} stopOpacity="0.18" />
+							<stop offset="100%" stopColor={c} stopOpacity="0.02" />
+						</linearGradient>
+					</defs>
+					<polygon points={fillPts} fill="url(#finFill)" />
+					<polyline points={pts} fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+					{/* Saturday highlight dot */}
+					{(() => {
+						const [sx, sy] = pts.split(" ")[5].split(",");
+						return <circle cx={sx} cy={sy} r="3.5" fill={c} />;
+					})()}
+					{/* Day labels */}
+					{WEEKLY_LABELS.map((d, i) => (
+						<text key={d + i} x={Math.round((i / 6) * W)} y={H + 11} fontSize="8" fill={i === 5 ? c : "#c0c0cc"} fontWeight={i === 5 ? "700" : "400"} textAnchor="middle">
+							{d}
+						</text>
+					))}
+				</svg>
+			</div>
+			{/* KPI pills */}
+			<div style={{ display: "flex", gap: 7, marginTop: 8 }}>
+				<div style={{ flex: 1, background: cb, border: `1px solid ${cbr}`, borderRadius: 8, padding: "5px 8px" }}>
+					<div style={{ fontSize: 8.5, color: "#9090aa", marginBottom: 1 }}>Utilidad semana</div>
+					<div style={{ fontSize: 12, fontWeight: 800, color: c }}>S/ 2,500</div>
+					<div style={{ display: "flex", alignItems: "center", gap: 2, marginTop: 2, fontSize: 8.5, color: "#22c55e" }}>
+						<TrendingUp className="w-2.5 h-2.5" />
+						<span>+12% vs anterior</span>
+					</div>
+				</div>
+				<div style={{ flex: 1, background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 8, padding: "5px 8px" }}>
+					<div style={{ fontSize: 8.5, color: "#9090aa", marginBottom: 1 }}>Margen promedio</div>
+					<div style={{ fontSize: 12, fontWeight: 800, color: "#22c55e" }}>34.2%</div>
+					<div style={{ display: "flex", alignItems: "center", gap: 2, marginTop: 2, fontSize: 8.5, color: "#22c55e" }}>
+						<TrendingUp className="w-2.5 h-2.5" />
+						<span>+2.1 pts</span>
+					</div>
+				</div>
+			</div>
+			<div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 7, fontSize: 9, color: "#9090aa" }}>
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 flex-shrink-0">
+					<rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+				</svg>
+				<span>Registro inmutable · Sin modificaciones post-cierre</span>
+			</div>
+		</div>
+	);
+}
+
+function FeatureGraphic({ area, accent }: { area: string; accent: Accent }) {
+	switch (area) {
+		case "cobros":    return <CobrosGraphic    {...accent} />;
+		case "ia":        return <IaGraphic        {...accent} />;
+		case "dashboard": return <DashboardGraphic {...accent} />;
+		case "voz":       return <VozGraphic       {...accent} />;
+		case "equipo":    return <EquipoGraphic    {...accent} />;
+		case "finanzas":  return <FinanzasGraphic  {...accent} />;
+		default:          return null;
+	}
+}
+
+function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
+	const [email, setEmail] = useState("");
+	const [sent, setSent] = useState(false);
+
+	const mutation = useMutation({
+		mutationFn: (e: string) => api.post("/auth/forgot-password", { email: e }).then((r) => r.data),
+		onSuccess: () => setSent(true),
+	});
+
+	return (
+		<div
+			className="fixed inset-0 z-50 flex items-center justify-center"
+			style={{ background: "rgba(10,5,30,0.55)", backdropFilter: "blur(6px)" }}
+			onClick={onClose}
+		>
+			<div
+				style={{
+					background: "rgba(255,255,255,0.97)",
+					borderRadius: 18,
+					padding: "28px 28px 24px",
+					width: "min(420px, 90vw)",
+					boxShadow: "0 20px 60px rgba(50,30,100,0.22)",
+					border: "1px solid rgba(255,255,255,0.95)",
+				}}
+				onClick={(e) => e.stopPropagation()}
+			>
+				<div className="flex items-start justify-between" style={{ marginBottom: 18 }}>
+					<div>
+						<p style={{ fontSize: 18, fontWeight: 700, color: "#1a1a2e", letterSpacing: "-0.4px" }}>
+							Recuperar contraseña
+						</p>
+						<p style={{ fontSize: 12, color: "#9090aa", marginTop: 3 }}>
+							El procedimiento depende de tu rol.
+						</p>
+					</div>
+					<button
+						type="button"
+						onClick={onClose}
+						style={{ background: "none", border: "none", cursor: "pointer", color: "#9090aa", fontSize: 20, lineHeight: 1, padding: "0 0 0 8px" }}
+						aria-label="Cerrar"
+					>
+						×
+					</button>
+				</div>
+
+				{/* Dueño section */}
+				<div style={{ background: "rgba(255,106,0,0.05)", border: "1px solid rgba(255,106,0,0.15)", borderRadius: 12, padding: "14px 16px", marginBottom: 12 }}>
+					<p style={{ fontSize: 12, fontWeight: 700, color: "#FF6A00", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.4px" }}>
+						👤 Si eres el dueño
+					</p>
+					<p style={{ fontSize: 12, color: "#5a5a7a", lineHeight: 1.55, marginBottom: 10 }}>
+						Ingresa tu email de registro. Recibirás un enlace para restablecer tu contraseña.
+					</p>
+					{sent ? (
+						<div style={{ fontSize: 12, color: "#22c55e", fontWeight: 600, padding: "8px 12px", background: "rgba(34,197,94,0.08)", borderRadius: 8, border: "1px solid rgba(34,197,94,0.2)" }}>
+							✓ Si el email existe, recibirás las instrucciones en tu correo.
+						</div>
+					) : (
+						<div className="flex gap-2">
+							<input
+								type="email"
+								placeholder="tu@email.com"
+								value={email}
+								onChange={(e) => setEmail(e.target.value)}
+								className="login-input"
+								style={{ flex: 1, paddingLeft: 12 }}
+							/>
+							<button
+								type="button"
+								disabled={mutation.isPending || !email}
+								onClick={() => mutation.mutate(email)}
+								style={{ padding: "0 14px", height: 40, borderRadius: 10, background: "linear-gradient(90deg,#FF4500,#FF8C00)", color: "#fff", fontSize: 12, fontWeight: 700, border: "none", cursor: "pointer", opacity: (!email || mutation.isPending) ? 0.6 : 1, whiteSpace: "nowrap" }}
+							>
+								{mutation.isPending ? "…" : "Enviar"}
+							</button>
+						</div>
+					)}
+				</div>
+
+				{/* Empleado section */}
+				<div style={{ background: "rgba(80,60,180,0.05)", border: "1px solid rgba(80,60,180,0.12)", borderRadius: 12, padding: "14px 16px" }}>
+					<p style={{ fontSize: 12, fontWeight: 700, color: "#7c5cbf", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.4px" }}>
+						👷 Si eres empleado
+					</p>
+					<p style={{ fontSize: 12, color: "#5a5a7a", lineHeight: 1.55 }}>
+						Los empleados usan cuentas internas — no hay recuperación por email. Contacta al <strong>dueño del local</strong> para que restablezca tu contraseña desde el panel de Empleados.
+					</p>
+				</div>
+			</div>
+		</div>
+	);
+}
 
 function LoginPage() {
 	const navigate = useNavigate();
 	const setAuth = useAuthStore((s) => s.setAuth);
 	const [showPassword, setShowPassword] = useState(false);
+	const [forgotOpen, setForgotOpen] = useState(false);
 
 	const loginMutation = useMutation({
 		mutationFn: (data: { username: string; password: string }) =>
@@ -85,174 +521,121 @@ function LoginPage() {
 	});
 
 	return (
-		<div className="flex min-h-screen bg-white">
-			{/* HERO PANEL - Desktop Only (58% width, Blue) */}
+		<>
+		{forgotOpen && <ForgotPasswordModal onClose={() => setForgotOpen(false)} />}
+		<div
+			className="min-h-screen lg:h-screen overflow-auto lg:overflow-hidden flex flex-col"
+			style={{
+				padding: "clamp(16px, 3vh, 40px) clamp(16px, 3vw, 52px)",
+				background: `
+					radial-gradient(ellipse 70% 60% at 15% 20%, rgba(200,205,240,0.65) 0%, transparent 60%),
+					radial-gradient(ellipse 55% 55% at 85% 80%, rgba(220,200,245,0.55) 0%, transparent 55%),
+					radial-gradient(ellipse 50% 40% at 65% 5%, rgba(255,180,120,0.13) 0%, transparent 50%),
+					linear-gradient(135deg, #e8eaf6 0%, #dde3f0 45%, #ede8f5 100%)
+				`,
+			}}
+		>
+			{/* Main row — stacks on mobile, side-by-side on desktop */}
 			<div
-				className="hidden lg:flex lg:flex-col flex-none relative"
-				style={{
-					width: "58%",
-					backgroundColor: "var(--color-login-blue-700)",
-					backgroundImage:
-						"linear-gradient(135deg, var(--color-login-blue-700) 0%, var(--color-login-blue-600) 100%)",
-					clipPath: "polygon(0 0, 100% 0, 85% 100%, 0 100%)",
-				}}
+				className="flex-1 min-h-0 flex flex-col lg:grid"
+				style={{ gridTemplateColumns: "380px 1fr", gap: "clamp(20px, 4vw, 56px)", alignItems: "stretch" }}
 			>
-				{/* Glow effects */}
+				{/* ── LOGIN CARD ── */}
 				<div
-					className="absolute inset-0 pointer-events-none"
+					className="relative flex flex-col justify-center overflow-hidden"
 					style={{
-						background:
-							"radial-gradient(ellipse 60% 50% at 20% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 70%)",
+						background: "rgba(255,255,255,0.84)",
+						border: "1px solid rgba(255,255,255,0.96)",
+						borderRadius: 22,
+						padding: "clamp(22px, 3vh, 38px) clamp(20px, 2.5vw, 34px)",
+						boxShadow: "0 8px 40px rgba(80,60,140,0.11), 0 2px 8px rgba(80,60,140,0.06)",
+						backdropFilter: "blur(20px)",
 					}}
-				/>
-				<div
-					className="absolute inset-0 pointer-events-none"
-					style={{
-						background:
-							"radial-gradient(ellipse 50% 40% at 80% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 70%)",
-					}}
-				/>
-
-				{/* Content */}
-				<div className="relative flex flex-1 flex-col justify-between px-14 py-12 animate-in fade-in-left duration-500">
-					{/* Brand */}
-					<div className="flex items-center gap-3">
-						<div
-							className="flex h-10 w-10 items-center justify-center rounded-xl"
-							style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
-						>
-							<UtensilsCrossed className="h-5 w-5 text-white" />
-						</div>
-						<span className="text-xl font-bold text-white">SmartBite</span>
-					</div>
-
-					{/* Hero Section */}
-					<div className="space-y-6">
-						<h2 className="text-4xl font-bold leading-tight text-white">
-							Tu negocio, <span className="inline-block">bajo control</span>
-						</h2>
-						<p className="max-w-sm text-sm leading-relaxed text-white/70">
-							Todo lo que necesitas en un solo lugar — desde la primera orden hasta el análisis de
-							datos.
-						</p>
-
-						{/* Features */}
-						<div className="space-y-4 pt-4">
-							{features.map(({ icon: Icon, title, desc }, idx) => (
-								<div
-									key={title}
-									className="flex gap-3 animate-in fade-in-up"
-									style={{
-										animationDuration: "500ms",
-										animationDelay: `${250 + idx * 50}ms`,
-										animationFillMode: "both",
-									}}
-								>
-									<div className="flex-shrink-0">
-										<Icon className="h-5 w-5 text-white" />
-									</div>
-									<div>
-										<p className="text-sm font-semibold text-white">{title}</p>
-										<p className="text-xs leading-snug text-white/60">{desc}</p>
-									</div>
-								</div>
-							))}
-						</div>
-
-						{/* Social Proof */}
-						<div
-							className="flex items-center gap-2 rounded-lg px-3 py-2 mt-6"
-							style={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
-						>
-							<TrendingUp className="h-4 w-4 text-white" />
-							<p className="text-xs text-white/70">
-								Menos errores, más tiempo para lo que importa.
-							</p>
-						</div>
-					</div>
-
-					{/* Footer */}
-					<p className="text-xs text-white/40">
-						© 2026 SmartBite — Sistema inteligente para negocios
-					</p>
-				</div>
-			</div>
-
-			{/* FORM PANEL - Desktop Right / Mobile Full (42% desktop, 100% mobile) */}
-			<div className="flex flex-1 flex-col items-center justify-center px-6 py-12 lg:px-10">
-				{/* Mobile Brand */}
-				<div className="mb-8 flex items-center gap-2 lg:hidden">
-					<UtensilsCrossed className="h-5 w-5" style={{ color: "var(--color-login-blue-700)" }} />
-					<span className="text-lg font-bold" style={{ color: "var(--color-login-gray-dark)" }}>
-						SmartBite
-					</span>
-				</div>
-
-				<div
-					className="w-full max-w-sm animate-in fade-in-up duration-500"
-					style={{ animationDelay: "200ms", animationFillMode: "both" }}
 				>
-					{/* Heading */}
-					<div className="mb-8">
-						<h1 className="text-2xl font-bold" style={{ color: "var(--color-login-gray-dark)" }}>
-							Bienvenido de vuelta
-						</h1>
-						<p className="mt-2 text-sm" style={{ color: "var(--color-login-gray-muted)" }}>
-							Ingresa para continuar
-						</p>
+					{/* Decorative orbs */}
+					<div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ borderRadius: 22 }}>
+						<svg width="100%" height="100%" viewBox="0 0 380 520" preserveAspectRatio="xMidYMid slice" fill="none">
+							<circle cx="340" cy="40"  r="130" fill="rgba(255,106,0,0.05)" />
+							<circle cx="360" cy="480" r="170" fill="rgba(124,92,191,0.04)" />
+							<circle cx="-30" cy="260" r="110" fill="rgba(255,140,0,0.03)" />
+						</svg>
 					</div>
 
-					{/* Form Card */}
-					<div
-						className="rounded-lg border px-8 py-8"
-						style={{
-							backgroundColor: "white",
-							borderColor: "var(--color-login-gray-light)",
-							boxShadow: "0 10px 40px rgba(0, 0, 0, 0.08)",
-						}}
-					>
-						<form
-							onSubmit={(e) => {
-								e.preventDefault();
-								void form.handleSubmit();
-							}}
-							className="space-y-5"
-						>
+					<div className="relative">
+						{/* Brand inside form */}
+						<div className="flex items-center gap-2" style={{ marginBottom: "clamp(14px, 2vh, 22px)" }}>
+							<img src={logoSrc} alt="SmartBite" style={{ height: 28, width: "auto" }} />
+							<span style={{ fontFamily: "'Bebas Neue', 'Plus Jakarta Sans Variable', sans-serif", fontSize: 22, letterSpacing: "1.5px", color: "#1a1a2e", lineHeight: 1 }}>
+								SmartBite
+							</span>
+						</div>
+
+						{/* Restaurant icon + name */}
+						<div style={{ width: 46, height: 46, background: "rgba(255,106,0,0.1)", border: "1px solid rgba(255,106,0,0.18)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "clamp(10px, 1.5vh, 16px)" }}>
+							<Store className="w-5 h-5" style={{ color: "#FF6A00" }} />
+						</div>
+
+						<h1 className="font-bold" style={{ fontSize: "clamp(17px, 2vw, 22px)", letterSpacing: "-0.5px", color: "#1a1a2e", marginBottom: 4 }}>
+							Adrian Shawarma Pizza
+						</h1>
+						<p style={{ fontSize: "clamp(11px, 1.1vw, 13.5px)", color: "#5a5a7a", lineHeight: 1.5, marginBottom: "clamp(10px, 1.5vh, 16px)" }}>
+							Restaurante de comida rápida.
+						</p>
+
+						{/* Restaurant photo — Ghibli-style warm effect */}
+						<div style={{ position: "relative", borderRadius: 12, overflow: "hidden", marginBottom: "clamp(14px, 2vh, 22px)" }}>
+							<img
+								src={restauranteSrc}
+								alt="Adrian Shawarma Pizza"
+								style={{
+									width: "100%",
+									height: "clamp(110px, 16vh, 160px)",
+									objectFit: "cover",
+									objectPosition: "center 30%",
+									display: "block",
+									filter: "saturate(1.22) contrast(1.04) sepia(0.12) brightness(1.04) hue-rotate(-4deg)",
+								}}
+							/>
+							{/* Vignette + warm tone overlay */}
+							<div style={{
+								position: "absolute",
+								inset: 0,
+								background: "radial-gradient(ellipse at center, transparent 45%, rgba(30,15,5,0.28) 100%)",
+								pointerEvents: "none",
+							}} />
+							{/* Bottom fade to card background */}
+							<div style={{
+								position: "absolute",
+								bottom: 0,
+								left: 0,
+								right: 0,
+								height: "40%",
+								background: "linear-gradient(to bottom, transparent, rgba(255,253,250,0.72))",
+								pointerEvents: "none",
+							}} />
+						</div>
+
+						<form onSubmit={(e) => { e.preventDefault(); void form.handleSubmit(); }}>
 							{/* Username */}
 							<form.Field
 								name="username"
-								validators={{
-									onChange: ({ value }) => (value.length === 0 ? "Ingresa tu usuario" : undefined),
-								}}
+								validators={{ onChange: ({ value }) => value.length === 0 ? "Ingresa tu usuario" : undefined }}
 							>
 								{(field) => (
-									<div className="space-y-1.5">
-										<Label htmlFor={field.name} style={{ color: "var(--color-login-gray-dark)" }}>
+									<div style={{ marginBottom: "clamp(10px, 1.5vh, 16px)" }}>
+										<label htmlFor={field.name} className="block font-medium" style={{ fontSize: 12, color: "#1a1a2e", marginBottom: 5 }}>
 											Usuario
-										</Label>
-										<Input
-											id={field.name}
-											type="text"
-											placeholder="ej: owner"
-											autoComplete="username"
-											value={field.state.value}
-											onChange={(e) => field.handleChange(e.target.value)}
-											onBlur={field.handleBlur}
-											aria-invalid={field.state.meta.errors.length > 0}
-											style={{
-												borderColor:
-													field.state.meta.errors.length > 0
-														? "var(--color-login-red)"
-														: "var(--color-login-gray-light)",
-												backgroundColor: "white",
-												color: "var(--color-login-gray-dark)",
-											}}
-											className="h-10 w-full rounded-lg border px-3 py-2 text-base placeholder:text-[var(--color-login-gray-medium)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-login-blue-500)] focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:bg-[var(--color-login-gray-light)] disabled:opacity-50"
-										/>
+										</label>
+										<div className="relative">
+											<span className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none" style={{ color: "#9090aa" }}>
+												<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+													<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+												</svg>
+											</span>
+											<input id={field.name} type="text" placeholder="ej: owner" autoComplete="username" value={field.state.value} onChange={(e) => field.handleChange(e.target.value)} onBlur={field.handleBlur} aria-invalid={field.state.meta.errors.length > 0} className="login-input" />
+										</div>
 										{field.state.meta.errors.length > 0 && (
-											<p className="text-xs" style={{ color: "var(--color-login-red)" }}>
-												{field.state.meta.errors[0]}
-											</p>
+											<p className="text-xs mt-1" style={{ color: "#ef4444" }}>{field.state.meta.errors[0]}</p>
 										)}
 									</div>
 								)}
@@ -261,168 +644,129 @@ function LoginPage() {
 							{/* Password */}
 							<form.Field
 								name="password"
-								validators={{
-									onChange: ({ value }) =>
-										value.length === 0 ? "Ingresa tu contraseña" : undefined,
-								}}
+								validators={{ onChange: ({ value }) => value.length === 0 ? "Ingresa tu contraseña" : undefined }}
 							>
 								{(field) => (
-									<div className="space-y-1.5">
-										<Label htmlFor={field.name} style={{ color: "var(--color-login-gray-dark)" }}>
-											Contraseña
-										</Label>
+									<div style={{ marginBottom: "clamp(10px, 1.5vh, 16px)" }}>
+										<div className="flex items-center justify-between" style={{ marginBottom: 5 }}>
+											<label htmlFor={field.name} className="font-medium" style={{ fontSize: 12, color: "#1a1a2e" }}>Contraseña</label>
+											<button type="button" onClick={() => setForgotOpen(true)} className="font-medium hover:opacity-75 transition-opacity" style={{ fontSize: "11.5px", color: "#FF6A00", textDecoration: "none", background: "none", border: "none", cursor: "pointer", padding: 0 }}>¿Olvidaste tu contraseña?</button>
+										</div>
 										<div className="relative">
-											<Input
-												id={field.name}
-												type={showPassword ? "text" : "password"}
-												placeholder="••••••••"
-												autoComplete="current-password"
-												value={field.state.value}
-												onChange={(e) => field.handleChange(e.target.value)}
-												onBlur={field.handleBlur}
-												aria-invalid={field.state.meta.errors.length > 0}
-												style={{
-													borderColor:
-														field.state.meta.errors.length > 0
-															? "var(--color-login-red)"
-															: "var(--color-login-gray-light)",
-													backgroundColor: "white",
-													color: "var(--color-login-gray-dark)",
-												}}
-												className="h-10 w-full rounded-lg border px-3 py-2 text-base placeholder:text-[var(--color-login-gray-medium)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-login-blue-500)] focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:bg-[var(--color-login-gray-light)] disabled:opacity-50"
-											/>
-											<button
-												type="button"
-												onClick={() => setShowPassword((v) => !v)}
-												className="absolute inset-y-0 right-0 flex items-center px-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-login-blue-500)]"
-												style={{ color: "var(--color-login-gray-medium)" }}
-												aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-											>
-												{showPassword ? (
-													<EyeOff className="h-4 w-4" />
-												) : (
-													<Eye className="h-4 w-4" />
-												)}
+											<span className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none" style={{ color: "#9090aa" }}>
+												<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+													<rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+												</svg>
+											</span>
+											<input id={field.name} type={showPassword ? "text" : "password"} placeholder="••••••••" autoComplete="current-password" value={field.state.value} onChange={(e) => field.handleChange(e.target.value)} onBlur={field.handleBlur} aria-invalid={field.state.meta.errors.length > 0} className="login-input" style={{ paddingRight: 38 }} />
+											<button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center bg-transparent border-0 cursor-pointer p-0" style={{ color: "#9090aa" }} aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}>
+												{showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
 											</button>
 										</div>
 										{field.state.meta.errors.length > 0 && (
-											<p className="text-xs" style={{ color: "var(--color-login-red)" }}>
-												{field.state.meta.errors[0]}
-											</p>
+											<p className="text-xs mt-1" style={{ color: "#ef4444" }}>{field.state.meta.errors[0]}</p>
 										)}
 									</div>
 								)}
 							</form.Field>
 
-							{/* Error Message */}
 							{loginMutation.error && (
-								<div
-									className="rounded-lg px-4 py-3 text-sm flex gap-2"
-									style={{
-										backgroundColor: "rgba(239, 68, 68, 0.06)",
-										border: "1px solid rgba(239, 68, 68, 0.15)",
-										color: "var(--color-login-red)",
-									}}
-								>
-									<span>
-										{loginMutation.error instanceof Error &&
-										loginMutation.error.message.includes("Network Error")
-											? "Sin conexión con el servidor. Verificá que la API esté corriendo."
-											: "Usuario o contraseña incorrectos"}
-									</span>
+								<div className="rounded-lg px-3 py-2.5 mb-3" style={{ fontSize: 13, background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)", color: "#ef4444" }}>
+									{loginMutation.error instanceof Error && loginMutation.error.message.includes("Network Error")
+										? "Sin conexión con el servidor."
+										: "Usuario o contraseña incorrectos"}
 								</div>
 							)}
 
-							{/* Submit Button */}
-							<Button
+							<button
 								type="submit"
 								disabled={loginMutation.isPending}
-								variant="blue"
-								className="mt-2 h-12 w-full font-semibold transition-all"
-								style={{
-									backgroundColor: loginMutation.isPending
-										? "var(--color-login-gray-medium)"
-										: "var(--color-login-blue-700)",
-									color: "white",
-								}}
-								onMouseEnter={(e) => {
-									if (!loginMutation.isPending) {
-										(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-											"var(--color-login-blue-600)";
-									}
-								}}
-								onMouseLeave={(e) => {
-									if (!loginMutation.isPending) {
-										(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-											"var(--color-login-blue-700)";
-									}
-								}}
+								className="w-full flex items-center justify-center gap-2 font-semibold border-0 cursor-pointer transition-[opacity,transform,box-shadow] duration-200 hover:opacity-90 hover:-translate-y-px active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed"
+								style={{ height: 44, background: loginMutation.isPending ? "#c0c0c8" : "linear-gradient(90deg, #FF4500 0%, #FF8C00 100%)", borderRadius: 11, color: "#fff", fontSize: 14, letterSpacing: "-0.2px", boxShadow: loginMutation.isPending ? "none" : "0 4px 20px rgba(255,100,0,0.35)", marginTop: 4 }}
 							>
 								{loginMutation.isPending ? (
-									<>
-										<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-										Ingresando...
-									</>
+									<><Loader2 className="w-4 h-4 animate-spin" /> Verificando...</>
 								) : (
-									"Ingresar"
+									<>
+										<span>Ingresar</span>
+										<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+											<path d="M5 12h14M12 5l7 7-7 7" />
+										</svg>
+									</>
 								)}
-							</Button>
+							</button>
 						</form>
+
+						<div className="text-center" style={{ marginTop: "clamp(10px, 1.5vh, 18px)", paddingTop: "clamp(8px, 1.2vh, 14px)", borderTop: "1px solid #e2e2ee", fontSize: 12, color: "#9090aa" }}>
+							¿Necesitas soporte?{" "}
+							<a href="mailto:josepdanton1518@gmail.com" style={{ color: "#FF6A00", fontWeight: 500, textDecoration: "none" }}>Contacta a IT</a>
+						</div>
+					</div>
+				</div>
+
+				{/* ── FEATURES BENTO ── */}
+				<div className="flex flex-col min-h-0" style={{ gap: "clamp(10px, 1.5vh, 18px)", marginTop: "clamp(16px, 0px, 0px)" }}>
+					{/* Heading */}
+					<div className="flex-shrink-0">
+						<h2 className="font-extrabold leading-[1.2]" style={{ fontSize: "clamp(20px, 2.2vw, 28px)", letterSpacing: "-0.7px", color: "#1a1a2e" }}>
+							Todo lo que necesitas
+							<br />
+							<span style={{ background: "linear-gradient(90deg, #FF4500, #FF8C00)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+								en un solo sistema.
+							</span>
+						</h2>
+						<p style={{ fontSize: "12.5px", color: "#9090aa", marginTop: 4 }}>
+							Tu restaurante, a la vista. Pedidos, pagos y ganancias en tiempo real.
+						</p>
 					</div>
 
-					{/* Demo Credentials */}
-					<div
-						className="mt-4 rounded-lg border px-6 py-5"
-						style={{
-							backgroundColor: "white",
-							borderColor: "var(--color-login-gray-light)",
-							boxShadow: "0 4px 12px rgba(0, 0, 0, 0.04)",
-						}}
-					>
-						<p
-							className="mb-4 text-xs font-bold uppercase tracking-wider"
-							style={{ color: "var(--color-login-gray-muted)" }}
-						>
-							Cuentas de prueba
-						</p>
-						<div className="space-y-2">
-							{demoCredentials.map(({ role, username, password }) => (
-								<button
-									key={username}
-									type="button"
-									onClick={() => {
-										form.setFieldValue("username", username);
-										form.setFieldValue("password", password);
-									}}
-									className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-login-blue-500)]"
+					{/* Bento grid */}
+					<div className="flex-1 min-h-0 login-bento">
+						{features.map(({ area, color, icon: Icon, module, name, desc }) => {
+							const accent = ACCENT[color];
+							const { c, cb, cbr } = accent;
+							return (
+								<div
+									key={area}
+									className={`flex flex-col overflow-hidden bento-card bento-${area}`}
 									style={{
-										color: "var(--color-login-gray-dark)",
-										backgroundColor: "transparent",
-									}}
-									onMouseEnter={(e) => {
-										(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-											"rgba(0, 150, 136, 0.08)";
-									}}
-									onMouseLeave={(e) => {
-										(e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
+										background: "rgba(255,255,255,0.84)",
+										border: "1px solid rgba(255,255,255,0.96)",
+										borderRadius: 14,
+										padding: "clamp(12px, 1.5vh, 16px) clamp(14px, 1.5vw, 18px)",
+										boxShadow: "0 2px 14px rgba(80,60,140,0.07)",
+										backdropFilter: "blur(14px)",
 									}}
 								>
-									<span className="text-xs font-semibold">{role}</span>
-									<span
-										className="rounded-lg px-2.5 py-1 font-mono text-xs"
-										style={{
-											backgroundColor: "var(--color-login-gray-light)",
-											color: "var(--color-login-gray-muted)",
-										}}
-									>
-										{username}
-									</span>
-								</button>
-							))}
-						</div>
+									{/* Header: icon + module */}
+									<div className="flex items-center gap-2.5 flex-shrink-0">
+										<div style={{ width: 32, height: 32, borderRadius: 8, background: cb, border: `1px solid ${cbr}`, color: c, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+											<Icon className="w-3.5 h-3.5" />
+										</div>
+										<div style={{ fontSize: 9.5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: c }}>{module}</div>
+											</div>
+
+									{/* Name */}
+									<div className="font-bold leading-tight flex-shrink-0" style={{ fontSize: "clamp(12px, 1.1vw, 14px)", letterSpacing: "-0.2px", color: "#1a1a2e", marginTop: 6 }}>
+										{name}
+									</div>
+
+									{/* Description */}
+									<div style={{ fontSize: "clamp(10.5px, 0.85vw, 12px)", color: "#5a5a7a", lineHeight: 1.45, marginTop: 3, flexShrink: 0, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+										{desc}
+									</div>
+
+									{/* Graphic */}
+									<div className={`flex-1 min-h-0 flex flex-col ${area === "voz" || area === "equipo" ? "justify-center" : "justify-end"}`}>
+										<FeatureGraphic area={area} accent={accent} />
+									</div>
+								</div>
+							);
+						})}
 					</div>
 				</div>
 			</div>
 		</div>
+		</>
 	);
 }

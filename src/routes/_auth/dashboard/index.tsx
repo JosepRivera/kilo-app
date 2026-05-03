@@ -107,9 +107,9 @@ function DashboardPage() {
 				/>
 			</div>
 
-			<div className="grid grid-cols-3 gap-4">
+			<div className="grid grid-cols-2 gap-4">
 				{/* Income by method */}
-				<div className="col-span-2 rounded-xl border border-border bg-white p-5">
+				<div className="rounded-xl border border-border bg-white p-5">
 					<p className="mb-4 text-sm font-medium text-foreground">Ingresos por método de pago</p>
 					<ResponsiveContainer width="100%" height={200}>
 						<BarChart data={chartData} barSize={40}>
