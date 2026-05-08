@@ -5,15 +5,19 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
 	Activity,
 	BarChart2,
+	Check,
 	DollarSign,
 	Eye,
 	EyeOff,
+	HardHat,
 	Loader2,
 	Mic,
 	ShoppingBag,
 	Store,
 	TrendingUp,
+	User,
 	Users,
+	X,
 } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
@@ -163,7 +167,7 @@ function CobrosGraphic({ c, cb, cbr }: Accent) {
 
 function IaGraphic({ c, cb, cbr }: Accent) {
 	return (
-		<div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 6 }}>
+		<div style={{ marginTop: 2, display: "flex", flexDirection: "column", gap: 6 }}>
 			{/* Chart */}
 			<div style={{ position: "relative" }}>
 				<svg viewBox="0 0 280 88" style={{ width: "100%", height: "auto", maxHeight: 88, display: "block" }}>
@@ -218,20 +222,7 @@ function IaGraphic({ c, cb, cbr }: Accent) {
 function DashboardGraphic({ c, cb }: Accent) {
 	const maxPct = Math.max(...WEEK_BARS);
 	return (
-		<div style={{ marginTop: 8 }}>
-			{/* Stats row */}
-			<div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-				{[
-					{ label: "Ventas hoy", value: "S/ 1,240", color: c },
-					{ label: "Efectivo",   value: "S/ 730",   color: "#22c55e" },
-					{ label: "Digital",    value: "S/ 510",   color: "#3b82f6" },
-				].map((stat) => (
-					<div key={stat.label} style={{ flex: 1, background: "rgba(255,255,255,0.7)", border: "1px solid rgba(0,0,0,0.06)", borderRadius: 7, padding: "4px 6px" }}>
-						<div style={{ fontSize: 8, color: "#9090aa" }}>{stat.label}</div>
-						<div style={{ fontSize: 11, fontWeight: 800, color: stat.color }}>{stat.value}</div>
-					</div>
-				))}
-			</div>
+		<div style={{ marginTop: 4 }}>
 			{/* Bar chart */}
 			<svg viewBox="0 0 210 80" style={{ width: "100%", height: "auto", maxHeight: 90, display: "block" }}>
 				{/* grid lines */}
@@ -261,6 +252,19 @@ function DashboardGraphic({ c, cb }: Accent) {
 					</text>
 				))}
 			</svg>
+			{/* Stats row */}
+			<div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+				{[
+					{ label: "Ventas hoy", value: "S/ 1,240", color: c,          border: "rgba(59,130,246,0.25)" },
+					{ label: "Efectivo",   value: "S/ 730",   color: "#22c55e",  border: "rgba(34,197,94,0.25)"  },
+					{ label: "Digital",    value: "S/ 510",   color: "#3b82f6",  border: "rgba(59,130,246,0.25)" },
+				].map((stat) => (
+					<div key={stat.label} style={{ flex: 1, background: "rgba(255,255,255,0.85)", border: `1px solid ${stat.border}`, borderRadius: 7, padding: "5px 7px" }}>
+						<div style={{ fontSize: 8, color: "#9090aa" }}>{stat.label}</div>
+						<div style={{ fontSize: 11, fontWeight: 800, color: stat.color }}>{stat.value}</div>
+					</div>
+				))}
+			</div>
 		</div>
 	);
 }
@@ -304,19 +308,27 @@ function EquipoGraphic({ c, cb, cbr }: Accent) {
 		{ role: "Mozo",     ventas: true,  caja: false, plan: false },
 		{ role: "Cocinero", ventas: false, caja: false, plan: true  },
 	];
+	const cols = "72px 1fr 1fr 1fr";
 	return (
-		<div style={{ marginTop: 10, fontSize: 9.5 }}>
-			<div style={{ display: "grid", gridTemplateColumns: "auto 1fr 1fr 1fr", gap: 3, color: "#c0c0cc", fontWeight: 600, marginBottom: 6, textAlign: "center" }}>
+		<div style={{ marginTop: 6 }}>
+			{/* Header */}
+			<div style={{ display: "grid", gridTemplateColumns: cols, gap: 4, marginBottom: 5, alignItems: "center" }}>
 				<span />
-				{["Ventas", "Caja", "Plan"].map((col) => <span key={col}>{col}</span>)}
+				{["Ventas", "Caja", "Plan"].map((col) => (
+					<span key={col} style={{ fontSize: 9, fontWeight: 600, color: "#a0a0bc", textAlign: "center", textTransform: "uppercase", letterSpacing: "0.3px" }}>{col}</span>
+				))}
 			</div>
+			{/* Rows */}
 			{matrix.map((row) => (
-				<div key={row.role} style={{ display: "grid", gridTemplateColumns: "auto 1fr 1fr 1fr", gap: 3, marginBottom: 5, alignItems: "center", textAlign: "center" }}>
-					<span style={{ color: "#1a1a2e", fontWeight: 600, textAlign: "left", fontSize: 9, paddingRight: 6, whiteSpace: "nowrap" }}>{row.role}</span>
+				<div key={row.role} style={{ display: "grid", gridTemplateColumns: cols, gap: 4, marginBottom: 4, alignItems: "center" }}>
+					<span style={{ fontSize: 9.5, fontWeight: 600, color: "#1a1a2e", whiteSpace: "nowrap" }}>{row.role}</span>
 					{[row.ventas, row.caja, row.plan].map((has, i) => (
-						<span key={i} style={{ fontSize: 10, fontWeight: 700, color: has ? c : "#e0e0e8", padding: "2px 0", borderRadius: 4, background: has ? cb : "transparent", border: has ? `1px solid ${cbr}` : "1px solid transparent" }}>
-							{has ? "✓" : "·"}
-						</span>
+						<div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 24, borderRadius: 5, background: has ? cb : "rgba(220,220,230,0.18)", border: `1px solid ${has ? cbr : "rgba(200,200,215,0.5)"}` }}>
+							{has
+								? <Check className="w-3 h-3" style={{ color: c }} />
+								: <X className="w-3 h-3" style={{ color: "#c0c0cc" }} />
+							}
+						</div>
 					))}
 				</div>
 			))}
@@ -336,7 +348,7 @@ function FinanzasGraphic({ c, cb, cbr }: Accent) {
 	const fillPts = `0,${H} ${pts} ${W},${H}`;
 
 	return (
-		<div style={{ marginTop: 10 }}>
+		<div style={{ marginTop: 2 }}>
 			{/* Sparkline */}
 			<div style={{ position: "relative" }}>
 				<svg viewBox={`0 0 ${W} ${H + 12}`} style={{ width: "100%", height: "auto", maxHeight: 56, display: "block" }}>
@@ -449,15 +461,15 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
 
 				{/* Dueño section */}
 				<div style={{ background: "rgba(255,106,0,0.05)", border: "1px solid rgba(255,106,0,0.15)", borderRadius: 12, padding: "14px 16px", marginBottom: 12 }}>
-					<p style={{ fontSize: 12, fontWeight: 700, color: "#FF6A00", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.4px" }}>
-						👤 Si eres el dueño
+					<p style={{ fontSize: 12, fontWeight: 700, color: "#FF6A00", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.4px", display: "flex", alignItems: "center", gap: 5 }}>
+						<User className="w-3 h-3" /> Si eres el dueño
 					</p>
 					<p style={{ fontSize: 12, color: "#5a5a7a", lineHeight: 1.55, marginBottom: 10 }}>
 						Ingresa tu email de registro. Recibirás un enlace para restablecer tu contraseña.
 					</p>
 					{sent ? (
-						<div style={{ fontSize: 12, color: "#22c55e", fontWeight: 600, padding: "8px 12px", background: "rgba(34,197,94,0.08)", borderRadius: 8, border: "1px solid rgba(34,197,94,0.2)" }}>
-							✓ Si el email existe, recibirás las instrucciones en tu correo.
+						<div style={{ fontSize: 12, color: "#22c55e", fontWeight: 600, padding: "8px 12px", background: "rgba(34,197,94,0.08)", borderRadius: 8, border: "1px solid rgba(34,197,94,0.2)", display: "flex", alignItems: "center", gap: 6 }}>
+							<Check className="w-3.5 h-3.5 flex-shrink-0" /> Si el email existe, recibirás las instrucciones en tu correo.
 						</div>
 					) : (
 						<div className="flex gap-2">
@@ -483,8 +495,8 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
 
 				{/* Empleado section */}
 				<div style={{ background: "rgba(80,60,180,0.05)", border: "1px solid rgba(80,60,180,0.12)", borderRadius: 12, padding: "14px 16px" }}>
-					<p style={{ fontSize: 12, fontWeight: 700, color: "#7c5cbf", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.4px" }}>
-						👷 Si eres empleado
+					<p style={{ fontSize: 12, fontWeight: 700, color: "#7c5cbf", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.4px", display: "flex", alignItems: "center", gap: 5 }}>
+						<HardHat className="w-3 h-3" /> Si eres empleado
 					</p>
 					<p style={{ fontSize: 12, color: "#5a5a7a", lineHeight: 1.55 }}>
 						Los empleados usan cuentas internas — no hay recuperación por email. Contacta al <strong>dueño del local</strong> para que restablezca tu contraseña desde el panel de Empleados.
@@ -563,22 +575,23 @@ function LoginPage() {
 
 					<div className="relative">
 						{/* Brand inside form */}
-						<div className="flex items-center gap-2" style={{ marginBottom: "clamp(14px, 2vh, 22px)" }}>
-							<img src={logoSrc} alt="SmartBite" style={{ height: 28, width: "auto" }} />
-							<span style={{ fontFamily: "'Bebas Neue', 'Plus Jakarta Sans Variable', sans-serif", fontSize: 22, letterSpacing: "1.5px", color: "#1a1a2e", lineHeight: 1 }}>
-								SmartBite
+						<div className="flex items-center justify-center gap-2.5" style={{ marginBottom: "clamp(16px, 2.5vh, 28px)" }}>
+							<img src={logoSrc} alt="SmartBite" style={{ height: 38, width: "auto" }} />
+							<span style={{ fontFamily: "'Bebas Neue', 'Plus Jakarta Sans Variable', sans-serif", fontSize: 28, letterSpacing: "2px", color: "#1a1a2e", lineHeight: 1 }}>
+								SMARTBITE
 							</span>
 						</div>
 
-						{/* Restaurant icon + name */}
-						<div style={{ width: 46, height: 46, background: "rgba(255,106,0,0.1)", border: "1px solid rgba(255,106,0,0.18)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "clamp(10px, 1.5vh, 16px)" }}>
-							<Store className="w-5 h-5" style={{ color: "#FF6A00" }} />
+						{/* Restaurant name + icon inline */}
+						<div className="flex items-center gap-3" style={{ marginBottom: 4 }}>
+							<div style={{ width: 40, height: 40, background: "rgba(255,106,0,0.1)", border: "1px solid rgba(255,106,0,0.18)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+								<Store className="w-4.5 h-4.5" style={{ color: "#FF6A00" }} />
+							</div>
+							<h1 className="font-bold" style={{ fontSize: "clamp(16px, 1.8vw, 20px)", letterSpacing: "-0.4px", color: "#1a1a2e", lineHeight: 1.2 }}>
+								Adrian Shawarma Pizza
+							</h1>
 						</div>
-
-						<h1 className="font-bold" style={{ fontSize: "clamp(17px, 2vw, 22px)", letterSpacing: "-0.5px", color: "#1a1a2e", marginBottom: 4 }}>
-							Adrian Shawarma Pizza
-						</h1>
-						<p style={{ fontSize: "clamp(11px, 1.1vw, 13.5px)", color: "#5a5a7a", lineHeight: 1.5, marginBottom: "clamp(10px, 1.5vh, 16px)" }}>
+						<p style={{ fontSize: "clamp(11px, 1.1vw, 13.5px)", color: "#5a5a7a", lineHeight: 1.5, marginBottom: "clamp(10px, 1.5vh, 16px)", marginLeft: 52 }}>
 							Restaurante de comida rápida.
 						</p>
 
@@ -757,7 +770,7 @@ function LoginPage() {
 									</div>
 
 									{/* Graphic */}
-									<div className={`flex-1 min-h-0 flex flex-col ${area === "voz" || area === "equipo" ? "justify-center" : "justify-end"}`}>
+									<div className="flex-1 min-h-0 flex flex-col justify-center">
 										<FeatureGraphic area={area} accent={accent} />
 									</div>
 								</div>
