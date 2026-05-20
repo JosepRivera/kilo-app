@@ -7,8 +7,6 @@ import {
 	BarChart2,
 	Check,
 	DollarSign,
-	Eye,
-	EyeOff,
 	HardHat,
 	Loader2,
 	Mic,
@@ -124,13 +122,13 @@ function CobrosGraphic({ c, cb, cbr }: Accent) {
 		<div style={{ marginTop: 10 }}>
 			<div
 				style={{
-					background: "rgba(255,255,255,0.92)",
-					border: "1px solid rgba(0,0,0,0.06)",
+					background: "color-mix(in oklch, var(--color-card) 92%, transparent)",
+					border: "1px solid color-mix(in srgb, var(--color-border) 6%, transparent)",
 					borderRadius: 10,
 					padding: "10px 12px",
 				}}
 			>
-				<div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 9.5, fontWeight: 600, color: "#1a1a2e" }}>
+					<div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 9.5, fontWeight: 600, color: "var(--login-graphic-text)" }}>
 					<span>Orden #042</span>
 					<span style={{ color: c }}>S/ 24.50</span>
 				</div>
@@ -139,7 +137,7 @@ function CobrosGraphic({ c, cb, cbr }: Accent) {
 					{ n: "Papas medianas ×1",     p: "6.00"  },
 					{ n: "Limonada ×2",           p: "6.50"  },
 				].map((item) => (
-					<div key={item.n} style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "#5a5a7a", marginBottom: 2 }}>
+					<div key={item.n} style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "var(--login-graphic-muted)", marginBottom: 2 }}>
 						<span>{item.n}</span><span>S/ {item.p}</span>
 					</div>
 				))}
@@ -153,12 +151,12 @@ function CobrosGraphic({ c, cb, cbr }: Accent) {
 			</div>
 			<div style={{ display: "flex", gap: 6, marginTop: 8 }}>
 				<div style={{ flex: 1, background: cb, border: `1px solid ${cbr}`, borderRadius: 8, padding: "6px 8px", textAlign: "center" }}>
-					<div style={{ fontSize: 8.5, color: "#9090aa", marginBottom: 2 }}>Hoy</div>
+					<div style={{ fontSize: 8.5, color: "var(--login-graphic-subtle)", marginBottom: 2 }}>Hoy</div>
 					<div style={{ fontSize: 12, fontWeight: 800, color: c }}>47 órdenes</div>
 				</div>
 				<div style={{ flex: 1, background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 8, padding: "6px 8px", textAlign: "center" }}>
-					<div style={{ fontSize: 8.5, color: "#9090aa", marginBottom: 2 }}>Efectivo</div>
-					<div style={{ fontSize: 12, fontWeight: 800, color: "#22c55e" }}>S/ 680</div>
+					<div style={{ fontSize: 8.5, color: "var(--login-graphic-subtle)", marginBottom: 2 }}>Efectivo</div>
+					<div style={{ fontSize: 12, fontWeight: 800, color: "var(--login-graphic-accent-green)" }}>S/ 680</div>
 				</div>
 			</div>
 		</div>
@@ -183,7 +181,7 @@ function IaGraphic({ c, cb, cbr }: Accent) {
 					</defs>
 					{/* grid lines */}
 					{[22, 44, 66].map((y) => (
-						<line key={y} x1="0" y1={y} x2="280" y2={y} stroke="#e2e2ee" strokeWidth="0.5" strokeDasharray="4 4" />
+						<line key={y} x1="0" y1={y} x2="280" y2={y} stroke="var(--login-graphic-grid)" strokeWidth="0.5" strokeDasharray="4 4" />
 					))}
 					{/* historical fill + line */}
 					<polygon points={SPARKLINE_FILL} fill="url(#iaFill)" />
@@ -197,7 +195,7 @@ function IaGraphic({ c, cb, cbr }: Accent) {
 					<circle cx="230" cy="5" r="5" fill={c} opacity="0.2" />
 					<circle cx="230" cy="5" r="3" fill={c} />
 					{/* labels */}
-					<text x="3" y="85" fontSize="8" fill="#c0c0cc">14 días atrás</text>
+					<text x="3" y="85" fontSize="8" fill="var(--login-graphic-subtle)">14 días atrás</text>
 					<text x="232" y="85" fontSize="8" fill={c} fontWeight="600">Predicción</text>
 				</svg>
 			</div>
@@ -211,7 +209,7 @@ function IaGraphic({ c, cb, cbr }: Accent) {
 					<div key={item.name} style={{ display: "inline-flex", alignItems: "center", gap: 4, background: cb, border: `1px solid ${cbr}`, borderRadius: 7, padding: "3px 8px", fontSize: 10, fontWeight: 600, color: c }}>
 						<span>{item.name}</span>
 						<span style={{ fontWeight: 800 }}>{item.qty}</span>
-						<span style={{ color: "#9090aa", fontWeight: 400 }}>mañana</span>
+						<span style={{ color: "var(--login-graphic-subtle)", fontWeight: 400 }}>mañana</span>
 					</div>
 				))}
 			</div>
@@ -219,7 +217,7 @@ function IaGraphic({ c, cb, cbr }: Accent) {
 	);
 }
 
-function DashboardGraphic({ c, cb }: Accent) {
+function DashboardGraphic({ c }: Accent) {
 	const maxPct = Math.max(...WEEK_BARS);
 	return (
 		<div style={{ marginTop: 4 }}>
@@ -227,7 +225,7 @@ function DashboardGraphic({ c, cb }: Accent) {
 			<svg viewBox="0 0 210 80" style={{ width: "100%", height: "auto", maxHeight: 90, display: "block" }}>
 				{/* grid lines */}
 				{[20, 40, 60].map((y) => (
-					<line key={y} x1="0" y1={y} x2="210" y2={y} stroke="#e8e8f0" strokeWidth="0.5" />
+					<line key={y} x1="0" y1={y} x2="210" y2={y} stroke="var(--login-graphic-grid)" strokeWidth="0.5" />
 				))}
 				{WEEK_BARS.map((pct, i) => {
 					const h = Math.round((pct / maxPct) * 58);
@@ -245,9 +243,9 @@ function DashboardGraphic({ c, cb }: Accent) {
 						</React.Fragment>
 					);
 				})}
-				<line x1="0" y1="63" x2="210" y2="63" stroke="#e2e2ee" strokeWidth="0.5" />
+				<line x1="0" y1="63" x2="210" y2="63" stroke="var(--login-graphic-grid)" strokeWidth="0.5" />
 				{WEEK_DAYS.map((d, i) => (
-					<text key={i} x={i * 30 + 15} y="72" fontSize="8.5" fill={i === 5 ? c : "#c0c0cc"} fontWeight={i === 5 ? "700" : "400"} textAnchor="middle">
+					<text key={i} x={i * 30 + 15} y="72" fontSize="8.5" fill={i === 5 ? c : "var(--login-graphic-subtle)"} fontWeight={i === 5 ? "700" : "400"} textAnchor="middle">
 						{d}
 					</text>
 				))}
@@ -256,11 +254,11 @@ function DashboardGraphic({ c, cb }: Accent) {
 			<div style={{ display: "flex", gap: 8, marginTop: 8 }}>
 				{[
 					{ label: "Ventas hoy", value: "S/ 1,240", color: c,          border: "rgba(59,130,246,0.25)" },
-					{ label: "Efectivo",   value: "S/ 730",   color: "#22c55e",  border: "rgba(34,197,94,0.25)"  },
+					{ label: "Efectivo",   value: "S/ 730",   color: "var(--login-graphic-accent-green)",  border: "rgba(34,197,94,0.25)"  },
 					{ label: "Digital",    value: "S/ 510",   color: "#3b82f6",  border: "rgba(59,130,246,0.25)" },
 				].map((stat) => (
-					<div key={stat.label} style={{ flex: 1, background: "rgba(255,255,255,0.85)", border: `1px solid ${stat.border}`, borderRadius: 7, padding: "5px 7px" }}>
-						<div style={{ fontSize: 8, color: "#9090aa" }}>{stat.label}</div>
+						<div key={stat.label} style={{ flex: 1, background: "color-mix(in oklch, var(--color-card) 85%, transparent)", border: `1px solid ${stat.border}`, borderRadius: 7, padding: "5px 7px" }}>
+							<div style={{ fontSize: 8, color: "var(--login-graphic-subtle)" }}>{stat.label}</div>
 						<div style={{ fontSize: 11, fontWeight: 800, color: stat.color }}>{stat.value}</div>
 					</div>
 				))}
@@ -292,10 +290,10 @@ function VozGraphic({ c }: Accent) {
 				))}
 			</div>
 			{/* Status */}
-			<div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 5, fontSize: 10, color: "#5a5a7a" }}>
+			<div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 5, fontSize: 10, color: "var(--login-graphic-muted)" }}>
 				<span className="animate-pulse" style={{ width: 7, height: 7, borderRadius: "50%", background: c, display: "inline-block", flexShrink: 0 }} />
 				<span style={{ fontWeight: 600, color: c }}>Escuchando</span>
-				<span style={{ color: "#9090aa" }}>· Ventas · Gastos · Stock</span>
+				<span style={{ color: "var(--login-graphic-subtle)" }}>· Ventas · Gastos · Stock</span>
 			</div>
 		</div>
 	);
@@ -315,18 +313,18 @@ function EquipoGraphic({ c, cb, cbr }: Accent) {
 			<div style={{ display: "grid", gridTemplateColumns: cols, gap: 4, marginBottom: 5, alignItems: "center" }}>
 				<span />
 				{["Ventas", "Caja", "Plan"].map((col) => (
-					<span key={col} style={{ fontSize: 9, fontWeight: 600, color: "#a0a0bc", textAlign: "center", textTransform: "uppercase", letterSpacing: "0.3px" }}>{col}</span>
+					<span key={col} style={{ fontSize: 9, fontWeight: 600, color: "var(--login-graphic-muted)", textAlign: "center", textTransform: "uppercase", letterSpacing: "0.3px" }}>{col}</span>
 				))}
 			</div>
 			{/* Rows */}
 			{matrix.map((row) => (
 				<div key={row.role} style={{ display: "grid", gridTemplateColumns: cols, gap: 4, marginBottom: 4, alignItems: "center" }}>
-					<span style={{ fontSize: 9.5, fontWeight: 600, color: "#1a1a2e", whiteSpace: "nowrap" }}>{row.role}</span>
+					<span style={{ fontSize: 9.5, fontWeight: 600, color: "var(--login-graphic-text)", whiteSpace: "nowrap" }}>{row.role}</span>
 					{[row.ventas, row.caja, row.plan].map((has, i) => (
 						<div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 24, borderRadius: 5, background: has ? cb : "rgba(220,220,230,0.18)", border: `1px solid ${has ? cbr : "rgba(200,200,215,0.5)"}` }}>
 							{has
 								? <Check className="w-3 h-3" style={{ color: c }} />
-								: <X className="w-3 h-3" style={{ color: "#c0c0cc" }} />
+								: <X className="w-3 h-3" style={{ color: "var(--login-graphic-subtle)" }} />
 							}
 						</div>
 					))}
@@ -367,7 +365,7 @@ function FinanzasGraphic({ c, cb, cbr }: Accent) {
 					})()}
 					{/* Day labels */}
 					{WEEKLY_LABELS.map((d, i) => (
-						<text key={d + i} x={Math.round((i / 6) * W)} y={H + 11} fontSize="8" fill={i === 5 ? c : "#c0c0cc"} fontWeight={i === 5 ? "700" : "400"} textAnchor="middle">
+						<text key={d + i} x={Math.round((i / 6) * W)} y={H + 11} fontSize="8" fill={i === 5 ? c : "var(--login-graphic-subtle)"} fontWeight={i === 5 ? "700" : "400"} textAnchor="middle">
 							{d}
 						</text>
 					))}
@@ -376,23 +374,23 @@ function FinanzasGraphic({ c, cb, cbr }: Accent) {
 			{/* KPI pills */}
 			<div style={{ display: "flex", gap: 7, marginTop: 8 }}>
 				<div style={{ flex: 1, background: cb, border: `1px solid ${cbr}`, borderRadius: 8, padding: "5px 8px" }}>
-					<div style={{ fontSize: 8.5, color: "#9090aa", marginBottom: 1 }}>Utilidad semana</div>
+					<div style={{ fontSize: 8.5, color: "var(--login-graphic-subtle)", marginBottom: 1 }}>Utilidad semana</div>
 					<div style={{ fontSize: 12, fontWeight: 800, color: c }}>S/ 2,500</div>
-					<div style={{ display: "flex", alignItems: "center", gap: 2, marginTop: 2, fontSize: 8.5, color: "#22c55e" }}>
+					<div style={{ display: "flex", alignItems: "center", gap: 2, marginTop: 2, fontSize: 8.5, color: "var(--login-graphic-accent-green)" }}>
 						<TrendingUp className="w-2.5 h-2.5" />
 						<span>+12% vs anterior</span>
 					</div>
 				</div>
 				<div style={{ flex: 1, background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 8, padding: "5px 8px" }}>
-					<div style={{ fontSize: 8.5, color: "#9090aa", marginBottom: 1 }}>Margen promedio</div>
-					<div style={{ fontSize: 12, fontWeight: 800, color: "#22c55e" }}>34.2%</div>
-					<div style={{ display: "flex", alignItems: "center", gap: 2, marginTop: 2, fontSize: 8.5, color: "#22c55e" }}>
+					<div style={{ fontSize: 8.5, color: "var(--login-graphic-subtle)", marginBottom: 1 }}>Margen promedio</div>
+					<div style={{ fontSize: 12, fontWeight: 800, color: "var(--login-graphic-accent-green)" }}>34.2%</div>
+					<div style={{ display: "flex", alignItems: "center", gap: 2, marginTop: 2, fontSize: 8.5, color: "var(--login-graphic-accent-green)" }}>
 						<TrendingUp className="w-2.5 h-2.5" />
 						<span>+2.1 pts</span>
 					</div>
 				</div>
 			</div>
-			<div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 7, fontSize: 9, color: "#9090aa" }}>
+			<div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 7, fontSize: 9, color: "var(--login-graphic-subtle)" }}>
 				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 flex-shrink-0">
 					<rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
 				</svg>
@@ -442,17 +440,18 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
 			>
 				<div className="flex items-start justify-between" style={{ marginBottom: 18 }}>
 					<div>
-						<p style={{ fontSize: 18, fontWeight: 700, color: "#1a1a2e", letterSpacing: "-0.4px" }}>
+						<p className="text-foreground" style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.4px" }}>
 							Recuperar contraseña
 						</p>
-						<p style={{ fontSize: 12, color: "#9090aa", marginTop: 3 }}>
+						<p className="text-muted-foreground" style={{ fontSize: 12, marginTop: 3 }}>
 							El procedimiento depende de tu rol.
 						</p>
 					</div>
 					<button
 						type="button"
 						onClick={onClose}
-						style={{ background: "none", border: "none", cursor: "pointer", color: "#9090aa", fontSize: 20, lineHeight: 1, padding: "0 0 0 8px" }}
+						className="text-muted-foreground"
+						style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, lineHeight: 1, padding: "0 0 0 8px" }}
 						aria-label="Cerrar"
 					>
 						×
@@ -464,11 +463,11 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
 					<p style={{ fontSize: 12, fontWeight: 700, color: "#FF6A00", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.4px", display: "flex", alignItems: "center", gap: 5 }}>
 						<User className="w-3 h-3" /> Si eres el dueño
 					</p>
-					<p style={{ fontSize: 12, color: "#5a5a7a", lineHeight: 1.55, marginBottom: 10 }}>
+					<p className="text-muted-foreground" style={{ fontSize: 12, lineHeight: 1.55, marginBottom: 10 }}>
 						Ingresa tu email de registro. Recibirás un enlace para restablecer tu contraseña.
 					</p>
 					{sent ? (
-						<div style={{ fontSize: 12, color: "#22c55e", fontWeight: 600, padding: "8px 12px", background: "rgba(34,197,94,0.08)", borderRadius: 8, border: "1px solid rgba(34,197,94,0.2)", display: "flex", alignItems: "center", gap: 6 }}>
+						<div style={{ fontSize: 12, color: "var(--login-graphic-accent-green)", fontWeight: 600, padding: "8px 12px", background: "color-mix(in srgb, var(--login-graphic-accent-green) 8%, transparent)", borderRadius: 8, border: "1px solid color-mix(in srgb, var(--login-graphic-accent-green) 20%, transparent)", display: "flex", alignItems: "center", gap: 6 }}>
 							<Check className="w-3.5 h-3.5 flex-shrink-0" /> Si el email existe, recibirás las instrucciones en tu correo.
 						</div>
 					) : (
@@ -495,10 +494,10 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
 
 				{/* Empleado section */}
 				<div style={{ background: "rgba(80,60,180,0.05)", border: "1px solid rgba(80,60,180,0.12)", borderRadius: 12, padding: "14px 16px" }}>
-					<p style={{ fontSize: 12, fontWeight: 700, color: "#7c5cbf", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.4px", display: "flex", alignItems: "center", gap: 5 }}>
+					<p style={{ fontSize: 12, fontWeight: 700, color: "var(--login-graphic-accent-purple)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.4px", display: "flex", alignItems: "center", gap: 5 }}>
 						<HardHat className="w-3 h-3" /> Si eres empleado
 					</p>
-					<p style={{ fontSize: 12, color: "#5a5a7a", lineHeight: 1.55 }}>
+					<p className="text-muted-foreground" style={{ fontSize: 12, lineHeight: 1.55 }}>
 						Los empleados usan cuentas internas — no hay recuperación por email. Contacta al <strong>dueño del local</strong> para que restablezca tu contraseña desde el panel de Empleados.
 					</p>
 				</div>
@@ -510,7 +509,7 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
 function LoginPage() {
 	const navigate = useNavigate();
 	const setAuth = useAuthStore((s) => s.setAuth);
-	const [showPassword, setShowPassword] = useState(false);
+	const [showPassword] = useState(false);
 	const [forgotOpen, setForgotOpen] = useState(false);
 
 	const loginMutation = useMutation({
@@ -536,7 +535,7 @@ function LoginPage() {
 		<>
 		{forgotOpen && <ForgotPasswordModal onClose={() => setForgotOpen(false)} />}
 		<div
-			className="min-h-screen lg:h-screen overflow-auto lg:overflow-hidden flex flex-col"
+			className="min-h-screen flex flex-col overflow-auto"
 			style={{
 				padding: "clamp(16px, 3vh, 40px) clamp(16px, 3vw, 52px)",
 				background: `
@@ -549,15 +548,15 @@ function LoginPage() {
 		>
 			{/* Main row — stacks on mobile, side-by-side on desktop */}
 			<div
-				className="flex-1 min-h-0 flex flex-col lg:grid"
-				style={{ gridTemplateColumns: "380px 1fr", gap: "clamp(20px, 4vw, 56px)", alignItems: "stretch" }}
+				className="flex-1 min-h-0 flex flex-col md:grid md:items-stretch"
+				style={{ gridTemplateColumns: "minmax(min(320px,100%),420px) 1fr", gap: "clamp(20px, 4vw, 56px)" }}
 			>
 				{/* ── LOGIN CARD ── */}
 				<div
 					className="relative flex flex-col justify-center overflow-hidden"
 					style={{
-						background: "rgba(255,255,255,0.84)",
-						border: "1px solid rgba(255,255,255,0.96)",
+						background: "color-mix(in oklch, var(--color-card) 84%, transparent)",
+						border: "1px solid color-mix(in oklch, var(--color-card) 96%, transparent)",
 						borderRadius: 22,
 						padding: "clamp(22px, 3vh, 38px) clamp(20px, 2.5vw, 34px)",
 						boxShadow: "0 8px 40px rgba(80,60,140,0.11), 0 2px 8px rgba(80,60,140,0.06)",
@@ -577,7 +576,7 @@ function LoginPage() {
 						{/* Brand inside form */}
 						<div className="flex items-center justify-center gap-2.5" style={{ marginBottom: "clamp(16px, 2.5vh, 28px)" }}>
 							<img src={logoSrc} alt="SmartBite" style={{ height: 38, width: "auto" }} />
-							<span style={{ fontFamily: "'Bebas Neue', 'Plus Jakarta Sans Variable', sans-serif", fontSize: 28, letterSpacing: "2px", color: "#1a1a2e", lineHeight: 1 }}>
+							<span className="text-foreground" style={{ fontFamily: "'Bebas Neue', 'Plus Jakarta Sans Variable', sans-serif", fontSize: 28, letterSpacing: "2px", lineHeight: 1 }}>
 								SMARTBITE
 							</span>
 						</div>
@@ -587,11 +586,11 @@ function LoginPage() {
 							<div style={{ width: 40, height: 40, background: "rgba(255,106,0,0.1)", border: "1px solid rgba(255,106,0,0.18)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
 								<Store className="w-4.5 h-4.5" style={{ color: "#FF6A00" }} />
 							</div>
-							<h1 className="font-bold" style={{ fontSize: "clamp(16px, 1.8vw, 20px)", letterSpacing: "-0.4px", color: "#1a1a2e", lineHeight: 1.2 }}>
+							<h1 className="font-bold text-foreground" style={{ fontSize: "clamp(16px, 1.8vw, 20px)", letterSpacing: "-0.4px", lineHeight: 1.2 }}>
 								Adrian Shawarma Pizza
 							</h1>
 						</div>
-						<p style={{ fontSize: "clamp(11px, 1.1vw, 13.5px)", color: "#5a5a7a", lineHeight: 1.5, marginBottom: "clamp(10px, 1.5vh, 16px)", marginLeft: 52 }}>
+							<p className="text-muted-foreground" style={{ fontSize: "clamp(11px, 1.1vw, 13.5px)", lineHeight: 1.5, marginBottom: "clamp(10px, 1.5vh, 16px)", marginLeft: 52 }}>
 							Restaurante de comida rápida.
 						</p>
 
@@ -636,19 +635,19 @@ function LoginPage() {
 							>
 								{(field) => (
 									<div style={{ marginBottom: "clamp(10px, 1.5vh, 16px)" }}>
-										<label htmlFor={field.name} className="block font-medium" style={{ fontSize: 12, color: "#1a1a2e", marginBottom: 5 }}>
+										<label htmlFor={field.name} className="block font-medium text-foreground" style={{ fontSize: 12, marginBottom: 5 }}>
 											Usuario
 										</label>
 										<div className="relative">
-											<span className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none" style={{ color: "#9090aa" }}>
-												<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
-													<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
-												</svg>
-											</span>
+										<span className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none text-muted-foreground">
+											<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+												<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+											</svg>
+										</span>
 											<input id={field.name} type="text" placeholder="ej: owner" autoComplete="username" value={field.state.value} onChange={(e) => field.handleChange(e.target.value)} onBlur={field.handleBlur} aria-invalid={field.state.meta.errors.length > 0} className="login-input" />
 										</div>
 										{field.state.meta.errors.length > 0 && (
-											<p className="text-xs mt-1" style={{ color: "#ef4444" }}>{field.state.meta.errors[0]}</p>
+											<p className="text-xs mt-1 text-destructive">{field.state.meta.errors[0]}</p>
 										)}
 									</div>
 								)}
@@ -661,30 +660,27 @@ function LoginPage() {
 							>
 								{(field) => (
 									<div style={{ marginBottom: "clamp(10px, 1.5vh, 16px)" }}>
-										<div className="flex items-center justify-between" style={{ marginBottom: 5 }}>
-											<label htmlFor={field.name} className="font-medium" style={{ fontSize: 12, color: "#1a1a2e" }}>Contraseña</label>
+											<div className="flex items-center justify-between" style={{ marginBottom: 5 }}>
+												<label htmlFor={field.name} className="font-medium text-foreground" style={{ fontSize: 12 }}>Contraseña</label>
 											<button type="button" onClick={() => setForgotOpen(true)} className="font-medium hover:opacity-75 transition-opacity" style={{ fontSize: "11.5px", color: "#FF6A00", textDecoration: "none", background: "none", border: "none", cursor: "pointer", padding: 0 }}>¿Olvidaste tu contraseña?</button>
 										</div>
 										<div className="relative">
-											<span className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none" style={{ color: "#9090aa" }}>
-												<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
-													<rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
-												</svg>
-											</span>
-											<input id={field.name} type={showPassword ? "text" : "password"} placeholder="••••••••" autoComplete="current-password" value={field.state.value} onChange={(e) => field.handleChange(e.target.value)} onBlur={field.handleBlur} aria-invalid={field.state.meta.errors.length > 0} className="login-input" style={{ paddingRight: 38 }} />
-											<button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center bg-transparent border-0 cursor-pointer p-0" style={{ color: "#9090aa" }} aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}>
-												{showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-											</button>
+										<span className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none text-muted-foreground">
+											<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+												<rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+											</svg>
+										</span>
+										<input id={field.name} type={showPassword ? "text" : "password"} placeholder="••••••••" autoComplete="current-password" value={field.state.value} onChange={(e) => field.handleChange(e.target.value)} onBlur={field.handleBlur} aria-invalid={field.state.meta.errors.length > 0} className="login-input" style={{ paddingRight: 38 }} />
 										</div>
 										{field.state.meta.errors.length > 0 && (
-											<p className="text-xs mt-1" style={{ color: "#ef4444" }}>{field.state.meta.errors[0]}</p>
+											<p className="text-xs mt-1 text-destructive">{field.state.meta.errors[0]}</p>
 										)}
 									</div>
 								)}
 							</form.Field>
 
 							{loginMutation.error && (
-								<div className="rounded-lg px-3 py-2.5 mb-3" style={{ fontSize: 13, background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)", color: "#ef4444" }}>
+								<div className="rounded-lg px-3 py-2.5 mb-3 text-destructive" style={{ fontSize: 13, background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)" }}>
 									{loginMutation.error instanceof Error && loginMutation.error.message.includes("Network Error")
 										? "Sin conexión con el servidor."
 										: "Usuario o contraseña incorrectos"}
@@ -710,7 +706,7 @@ function LoginPage() {
 							</button>
 						</form>
 
-						<div className="text-center" style={{ marginTop: "clamp(10px, 1.5vh, 18px)", paddingTop: "clamp(8px, 1.2vh, 14px)", borderTop: "1px solid #e2e2ee", fontSize: 12, color: "#9090aa" }}>
+						<div className="text-center border-t text-muted-foreground" style={{ marginTop: "clamp(10px, 1.5vh, 18px)", paddingTop: "clamp(8px, 1.2vh, 14px)", fontSize: 12 }}>
 							¿Necesitas soporte?{" "}
 							<a href="mailto:josepdanton1518@gmail.com" style={{ color: "#FF6A00", fontWeight: 500, textDecoration: "none" }}>Contacta a IT</a>
 						</div>
@@ -718,17 +714,17 @@ function LoginPage() {
 				</div>
 
 				{/* ── FEATURES BENTO ── */}
-				<div className="flex flex-col min-h-0" style={{ gap: "clamp(10px, 1.5vh, 18px)", marginTop: "clamp(16px, 0px, 0px)" }}>
+				<div className="hidden md:flex flex-col min-h-0 login-bento-wrapper" style={{ gap: "clamp(10px, 1.5vh, 18px)" }}>
 					{/* Heading */}
 					<div className="flex-shrink-0">
-						<h2 className="font-extrabold leading-[1.2]" style={{ fontSize: "clamp(20px, 2.2vw, 28px)", letterSpacing: "-0.7px", color: "#1a1a2e" }}>
+						<h2 className="font-extrabold leading-[1.2] text-foreground" style={{ fontSize: "clamp(20px, 2.2vw, 28px)", letterSpacing: "-0.7px" }}>
 							Todo lo que necesitas
 							<br />
 							<span style={{ background: "linear-gradient(90deg, #FF4500, #FF8C00)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
 								en un solo sistema.
 							</span>
 						</h2>
-						<p style={{ fontSize: "12.5px", color: "#9090aa", marginTop: 4 }}>
+						<p className="text-muted-foreground" style={{ fontSize: "12.5px", marginTop: 4 }}>
 							Tu restaurante, a la vista. Pedidos, pagos y ganancias en tiempo real.
 						</p>
 					</div>
@@ -743,8 +739,8 @@ function LoginPage() {
 									key={area}
 									className={`flex flex-col overflow-hidden bento-card bento-${area}`}
 									style={{
-										background: "rgba(255,255,255,0.84)",
-										border: "1px solid rgba(255,255,255,0.96)",
+										background: "color-mix(in oklch, var(--color-card) 84%, transparent)",
+										border: "1px solid color-mix(in oklch, var(--color-card) 96%, transparent)",
 										borderRadius: 14,
 										padding: "clamp(12px, 1.5vh, 16px) clamp(14px, 1.5vw, 18px)",
 										boxShadow: "0 2px 14px rgba(80,60,140,0.07)",
@@ -759,13 +755,13 @@ function LoginPage() {
 										<div style={{ fontSize: 9.5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: c }}>{module}</div>
 											</div>
 
-									{/* Name */}
-									<div className="font-bold leading-tight flex-shrink-0" style={{ fontSize: "clamp(12px, 1.1vw, 14px)", letterSpacing: "-0.2px", color: "#1a1a2e", marginTop: 6 }}>
+										{/* Name */}
+										<div className="font-bold leading-tight flex-shrink-0 text-foreground" style={{ fontSize: "clamp(12px, 1.1vw, 14px)", letterSpacing: "-0.2px", marginTop: 6 }}>
 										{name}
 									</div>
 
-									{/* Description */}
-									<div style={{ fontSize: "clamp(10.5px, 0.85vw, 12px)", color: "#5a5a7a", lineHeight: 1.45, marginTop: 3, flexShrink: 0, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+										{/* Description */}
+										<div className="text-muted-foreground" style={{ fontSize: "clamp(10.5px, 0.85vw, 12px)", lineHeight: 1.45, marginTop: 3, flexShrink: 0, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
 										{desc}
 									</div>
 

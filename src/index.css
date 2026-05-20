@@ -132,6 +132,20 @@
 	--sidebar-ring: oklch(0.556 0 0);
 }
 
+@layer base {
+	:root {
+		/* Login graphic palette — maps to semantic equivalents */
+		--login-graphic-text: var(--color-foreground);
+		--login-graphic-muted: var(--color-muted-foreground);
+		--login-graphic-subtle: color-mix(in oklch, var(--color-muted-foreground) 60%, transparent);
+		--login-graphic-bg: var(--color-card);
+		--login-graphic-accent-green: #22c55e; /* keep functional color */
+		--login-graphic-accent-purple: #7c5cbf; /* keep functional color */
+		--login-graphic-grid: color-mix(in oklch, var(--color-border) 50%, transparent);
+		--login-graphic-surface: color-mix(in oklch, var(--color-card) 84%, transparent);
+	}
+}
+
 *,
 *::before,
 *::after {
@@ -157,27 +171,27 @@ body {
 	}
 }
 
-/* Login v3 — prototype-matched input */
+/* Login v3 — semantic input */
 .login-input {
   width: 100%;
   height: 40px;
-  background: #f7f7fc;
-  border: 1.5px solid #e2e2ee;
+  background: var(--color-input);
+  border: 1.5px solid var(--color-border);
   border-radius: 10px;
   padding: 0 12px 0 36px;
   font-size: 13px;
   font-family: inherit;
-  color: #1a1a2e;
+  color: var(--color-foreground);
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
 }
-.login-input::placeholder { color: #9090aa; }
+.login-input::placeholder { color: var(--color-muted-foreground); }
 .login-input:focus {
-  border-color: #FF8C00;
-  box-shadow: 0 0 0 3px rgba(255, 140, 0, 0.12);
-  background: #fff;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-primary) 12%, transparent);
+  background: var(--color-background);
 }
-.login-input[aria-invalid="true"] { border-color: #ef4444; }
+.login-input[aria-invalid="true"] { border-color: var(--color-destructive); }
 
 /* Login redesign: Animation keyframes */
 @keyframes fade-in-right {
@@ -214,17 +228,17 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-	@keyframes fade-in-right,
-	@keyframes fade-in-left,
+	@keyframes fade-in-right {
+		from { opacity: 1; transform: none; }
+		to { opacity: 1; transform: none; }
+	}
+	@keyframes fade-in-left {
+		from { opacity: 1; transform: none; }
+		to { opacity: 1; transform: none; }
+	}
 	@keyframes fade-in-up {
-		from {
-			opacity: 1;
-			transform: none;
-		}
-		to {
-			opacity: 1;
-			transform: none;
-		}
+		from { opacity: 1; transform: none; }
+		to { opacity: 1; transform: none; }
 	}
 }
 
@@ -271,32 +285,24 @@ button:not(:disabled):hover {
 	border-color: rgba(200, 185, 255, 0.75) !important;
 }
 
-/* Login bento grid — mobile: 1 col, tablet: 2 col, desktop: 3-col named areas */
+/* Login bento grid — container-query driven */
+.login-bento-wrapper { container-type: inline-size; container-name: bento; }
+
 .login-bento {
 	display: grid;
 	gap: clamp(8px, 1.2vh, 14px);
 	grid-template-columns: 1fr;
 }
 
-@media (min-width: 600px) {
-	.login-bento {
-		grid-template-columns: 1fr 1fr;
-	}
+@container bento (min-width: 400px) {
+	.login-bento { grid-template-columns: 1fr 1fr; }
 	.bento-finanzas { grid-column: span 2; }
 }
 
-@media (min-width: 1024px) {
+@container bento (min-width: 700px) {
 	.login-bento {
 		grid-template-columns: 1fr 1fr 1fr;
 		grid-template-rows: 1fr 1fr;
-		grid-template-areas: none;
-		grid-auto-rows: unset;
 	}
-
-	.bento-cobros    { grid-area: auto; }
-	.bento-ia        { grid-area: auto; }
-	.bento-dashboard { grid-area: auto; }
-	.bento-voz       { grid-area: auto; }
-	.bento-equipo    { grid-area: auto; }
-	.bento-finanzas  { grid-area: auto; grid-column: unset; }
+	.bento-finanzas { grid-column: unset; }
 }
