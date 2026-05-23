@@ -49,10 +49,16 @@ const ROLE_ICONS: Record<Role, React.ReactNode> = {
 const OPERACION: NavItem[] = [
 	{ label: "Inicio", to: "/dashboard", icon: <Home size={15} />, roles: ["OWNER"] },
 	{
-		label: "Punto de Venta",
+		label: "Tomar Pedido",
 		to: "/sales/new",
 		icon: <ShoppingCart size={15} />,
 		roles: ["OWNER", "CASHIER", "WAITER"],
+	},
+	{
+		label: "Cobrar",
+		to: "/sales/checkout",
+		icon: <CreditCard size={15} />,
+		roles: ["OWNER", "CASHIER"],
 	},
 	{
 		label: "Cocina",

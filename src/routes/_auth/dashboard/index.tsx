@@ -5,15 +5,16 @@ import {
 	AlertCircle,
 	AlertTriangle,
 	ArrowUpRight,
-	Award,
 	Bell,
 	Clock,
 	FileText,
-	Medal,
+	Flame,
+	Mic,
 	Plus,
+	Sparkles,
+	Star,
 	TrendingDown,
 	TrendingUp,
-	Trophy,
 	Users,
 } from "lucide-react";
 import {
@@ -50,7 +51,15 @@ interface DashboardData {
 		quantity: number;
 		revenue: number;
 		category?: string;
+		margin?: number | null;
 	}[];
+	yesterday_comparison?: {
+		income: { delta: number; percent: number | null };
+		expenses: { delta: number; percent: number | null };
+		profit: { delta: number; percent: number | null };
+		tickets: { delta: number; percent: number | null };
+	} | null;
+	time_series?: { date: string; income: number; expenses: number; profit: number; orders?: number }[];
 }
 
 interface StockAlert {
@@ -72,24 +81,6 @@ interface OperationalAlert {
 const DEV_DATE = import.meta.env.VITE_DASHBOARD_DATE as string | undefined;
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
-
-function makeSpark(base: number, len = 7, sign: 1 | -1 = 1) {
-	return Array.from({ length: len }, (_, i) => ({
-		v: Math.max(0, base + sign * (i / len) * base * 0.15 + (Math.random() - 0.5) * base * 0.08),
-	}));
-}
-
-function makeChartData(base: number, base2: number) {
-	return Array.from({ length: 30 }, (_, i) => {
-		const date = new Date();
-		date.setDate(date.getDate() - 29 + i);
-		return {
-			d: `${date.getDate()}`,
-			ventas: Math.round(base * (0.85 + (i / 30) * 0.35 + (Math.random() - 0.4) * 0.15)),
-			ganancia: Math.round(base2 * (0.82 + (i / 30) * 0.38 + (Math.random() - 0.4) * 0.12)),
-		};
-	});
-}
 
 function greeting() {
 	const h = new Date().getHours();
@@ -194,11 +185,37 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
 	);
 }
 
-function SalesChart({ data30d }: { data30d: { d: string; ventas: number; ganancia: number }[] }) {
+function SalesChart({ data30d, dashboard }: { data30d: { d: string; ventas: number; ganancia: number }[]; dashboard: DashboardData }) {
 	const [period, setPeriod] = useState<ChartPeriod>("14d");
 	const sliceMap: Record<ChartPeriod, number> = { "7d": 7, "14d": 14, "30d": 30 };
 	const chartData = data30d.slice(-sliceMap[period]);
 	const periodLabel = period === "7d" ? "7" : period === "14d" ? "14" : "30";
+
+	const digitalPct = dashboard.total_income > 0 ? Math.round((dashboard.digital_income / dashboard.total_income) * 100) : 0;
+	const cashPct = dashboard.total_income > 0 ? Math.round((dashboard.cash_income / dashboard.total_income) * 100) : 0;
+
+	const footerItems = [
+		{
+			label: "PRODUCTO TOP",
+			value: dashboard.top_products[0]?.name ?? "Sin datos",
+			sub: dashboard.top_products[0] ? `${dashboard.top_products[0].quantity} unidades` : "—",
+		},
+		{
+			label: "PAGO DIGITAL",
+			value: digitalPct > 0 ? `${digitalPct}%` : "—",
+			sub: dashboard.digital_income > 0 ? `S/ ${Math.round(dashboard.digital_income).toLocaleString("es-PE")}` : "Sin transacciones",
+		},
+		{
+			label: "EFECTIVO",
+			value: cashPct > 0 ? `${cashPct}%` : "—",
+			sub: dashboard.cash_income > 0 ? `S/ ${Math.round(dashboard.cash_income).toLocaleString("es-PE")}` : "Sin transacciones",
+		},
+		{
+			label: "ÓRDENES HOY",
+			value: dashboard.paid_orders.toString(),
+			sub: dashboard.open_orders > 0 ? `${dashboard.open_orders} pendientes` : "Todas cerradas",
+		},
+	];
 
 	return (
 		<div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
@@ -246,12 +263,7 @@ function SalesChart({ data30d }: { data30d: { d: string; ventas: number; gananci
 				</LineChart>
 			</ResponsiveContainer>
 			<div className="mt-4 grid grid-cols-2 divide-gray-100 border-t border-gray-100 pt-4 gap-y-3 lg:grid-cols-4 lg:divide-x">
-				{[
-					{ label: "MEJOR DÍA", value: "Sábado", sub: "S/ 3,210 promedio" },
-					{ label: "HORA PICO", value: "13:00 – 14:30", sub: "38% de las ventas" },
-					{ label: "PRODUCTO TOP", value: "Shawarma Mixto", sub: "94 unidades / día" },
-					{ label: "MÉTODO PAGO", value: "Yape", sub: "52% del volumen" },
-				].map((item) => (
+				{footerItems.map((item) => (
 					<div key={item.label} className="px-4 first:pl-0 last:pr-0">
 						<p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">{item.label}</p>
 						<p className="mt-1 text-sm font-semibold text-gray-800">{item.value}</p>
@@ -274,21 +286,6 @@ const OPERATIONAL_BG: Record<string, string> = {
 	open_orders: "bg-blue-50",
 	production_plan: "bg-slate-50",
 };
-
-const MOCK_CATS: Record<string, string> = {
-	Shawarma: "Shawarma",
-	Pizza: "Pizza",
-	Combo: "Combos",
-	Limonada: "Bebidas",
-	Pollo: "Pollo",
-};
-
-function guessCategory(name: string) {
-	for (const [k, v] of Object.entries(MOCK_CATS)) {
-		if (name.includes(k)) return v;
-	}
-	return "Otros";
-}
 
 const MARGIN_COLOR = (m: number) =>
 	m >= 50 ? "text-green-600" : m >= 35 ? "text-amber-600" : "text-gray-500";
@@ -334,26 +331,62 @@ function DashboardPage() {
 		total_expenses: 0,
 		estimated_profit: 0,
 		top_products: [],
+		yesterday_comparison: null,
+		time_series: [],
 	};
 
 	const totalQty = d.top_products.reduce((s, p) => s + p.quantity, 0);
 	const margin = d.total_income > 0 ? ((d.estimated_profit / d.total_income) * 100).toFixed(1) : "0.0";
 
-	const sparkSales = useMemo(() => makeSpark(Number(d.total_income) || 2500, 7, 1), [d.total_income]);
-	const sparkProfit = useMemo(() => makeSpark(Number(d.estimated_profit) || 900, 7, 1), [d.estimated_profit]);
-	const sparkOrders = useMemo(() => makeSpark(d.paid_orders || 80, 7, 1), [d.paid_orders]);
-	const sparkProducts = useMemo(() => makeSpark(totalQty || 200, 7, -1), [totalQty]);
+	// Sparkline data from time_series (last 7 days)
+	const sparkSales = useMemo(
+		() => (d.time_series ?? []).slice(-7).map((t) => ({ v: t.income })),
+		[d.time_series],
+	);
+	const sparkProfit = useMemo(
+		() => (d.time_series ?? []).slice(-7).map((t) => ({ v: t.profit })),
+		[d.time_series],
+	);
+	const sparkOrders = useMemo(() => {
+		const ts = d.time_series ?? [];
+		if (ts.length > 0 && ts.some((t) => t.orders != null)) return ts.slice(-7).map((t) => ({ v: t.orders ?? 0 }));
+		return Array.from({ length: 7 }, () => ({ v: 0 }));
+	}, [d.time_series]);
+	const sparkProducts = useMemo(() => {
+		const ts = d.time_series ?? [];
+		if (ts.length > 0) return ts.slice(-7).map((t) => ({ v: t.profit }));
+		return Array.from({ length: 7 }, () => ({ v: 0 }));
+	}, [d.time_series]);
 
+	// Chart data from time_series
 	const chart30d = useMemo(
-		() => makeChartData(Number(d.total_income) || 2500, Number(d.estimated_profit) || 900),
-		[d.total_income, d.estimated_profit],
+		() =>
+			(d.time_series ?? []).map((t) => ({
+				d: t.date.slice(8), // DD from YYYY-MM-DD
+				ventas: t.income,
+				ganancia: t.profit,
+			})),
+		[d.time_series],
 	);
 
-	const productMargins = useMemo(
-		() => d.top_products.map(() => Math.floor(30 + Math.random() * 40)),
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[d.top_products.map((p) => p.product_id).join(",")],
-	);
+	// Format KPI delta from yesterday_comparison
+	const formatDelta = (delta: number, percent: number | null | undefined): { text: string; positive: boolean } => {
+		if (percent == null) {
+			return { text: delta >= 0 ? `+${delta}` : `${delta}`, positive: delta >= 0 };
+		}
+		const sign = percent >= 0 ? "+" : "";
+		return { text: `${sign}${percent.toFixed(1)}%`, positive: percent >= 0 };
+	};
+
+	const salesDelta = d.yesterday_comparison
+		? formatDelta(d.yesterday_comparison.income.delta, d.yesterday_comparison.income.percent)
+		: { text: "N/A", positive: true };
+	const profitDelta = d.yesterday_comparison
+		? formatDelta(d.yesterday_comparison.profit.delta, d.yesterday_comparison.profit.percent)
+		: { text: "N/A", positive: true };
+	const ordersDelta = d.yesterday_comparison
+		? formatDelta(d.yesterday_comparison.tickets.delta, d.yesterday_comparison.tickets.percent)
+		: { text: "N/A", positive: true };
 
 	const totalAlerts = stockAlerts.length + operationalAlerts.length;
 
@@ -406,9 +439,9 @@ function DashboardPage() {
 					<KpiCard
 						label="Ventas hoy"
 						value={`S/ ${Number(d.total_income).toLocaleString("es-PE", { maximumFractionDigits: 0 })}`}
-						sub={`vs. ayer S/ ${Math.round(Number(d.total_income) * 0.89).toLocaleString("es-PE")}`}
-						delta="+12.4%"
-						positive={true}
+						sub={d.yesterday_comparison ? "vs. ayer" : "Sin datos previos"}
+						delta={salesDelta.text}
+						positive={salesDelta.positive}
 						sparkData={sparkSales}
 						color="#f97316"
 						fill="#f97316"
@@ -416,9 +449,9 @@ function DashboardPage() {
 					<KpiCard
 						label="Ganancia neta"
 						value={`S/ ${Number(d.estimated_profit).toLocaleString("es-PE", { maximumFractionDigits: 0 })}`}
-						sub={`margen ${margin}%`}
-						delta="+8.2%"
-						positive={true}
+						sub={d.total_expenses > 0 ? `margen ${margin}%` : "Sin gastos registrados"}
+						delta={profitDelta.text}
+						positive={profitDelta.positive}
 						sparkData={sparkProfit}
 						color="#22c55e"
 						fill="#22c55e"
@@ -427,8 +460,8 @@ function DashboardPage() {
 						label="Órdenes"
 						value={d.paid_orders.toString()}
 						sub={`ticket promedio S/ ${d.paid_orders > 0 ? (Number(d.total_income) / d.paid_orders).toFixed(2) : "0.00"}`}
-						delta="+19"
-						positive={true}
+						delta={ordersDelta.text}
+						positive={ordersDelta.positive}
 						sparkData={sparkOrders}
 						color="#64748b"
 						fill="#64748b"
@@ -437,8 +470,8 @@ function DashboardPage() {
 						label="Productos vendidos"
 						value={totalQty.toString()}
 						sub={`${d.top_products.length} SKUs activos`}
-						delta="-3.1%"
-						positive={false}
+						delta={d.yesterday_comparison ? `${d.yesterday_comparison.tickets.delta >= 0 ? "+" : ""}${d.yesterday_comparison.tickets.delta}` : "N/A"}
+						positive={d.yesterday_comparison ? d.yesterday_comparison.tickets.delta >= 0 : true}
 						sparkData={sparkProducts}
 						color="#ef4444"
 						fill="#ef4444"
@@ -448,7 +481,7 @@ function DashboardPage() {
 
 			{/* ── chart + alerts side by side ── */}
 			<div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_340px]">
-				<SalesChart data30d={chart30d} />
+				<SalesChart data30d={chart30d} dashboard={d} />
 
 				{/* alerts panel */}
 				<div className="rounded-xl border border-gray-100 bg-white shadow-sm">
@@ -527,22 +560,22 @@ function DashboardPage() {
 						</thead>
 						<tbody className="divide-y divide-gray-50">
 							{d.top_products.map((p, i) => {
-								const m = productMargins[i] ?? 35;
+								const m = p.margin ?? null;
 								return (
 									<tr key={p.product_id} className="hover:bg-gray-50">
 										<td className="px-5 py-3">
 											<div className="flex items-center gap-2.5">
 												{i === 0 ? (
 													<span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-100">
-														<Trophy size={13} className="text-amber-500" />
+														<Flame size={13} className="text-amber-500" />
 													</span>
 												) : i === 1 ? (
-													<span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100">
-														<Medal size={13} className="text-slate-400" />
+													<span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-violet-100">
+														<Star size={13} className="text-violet-500" />
 													</span>
 												) : i === 2 ? (
-													<span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-100">
-														<Award size={13} className="text-orange-600" />
+													<span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100">
+														<Sparkles size={13} className="text-emerald-500" />
 													</span>
 												) : (
 													<span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gray-100 text-[10px] font-bold text-gray-400">
@@ -552,12 +585,14 @@ function DashboardPage() {
 												<span className="font-medium text-gray-800">{p.name}</span>
 											</div>
 										</td>
-										<td className="px-3 py-3 text-gray-400">{p.category ?? guessCategory(p.name)}</td>
+										<td className="px-3 py-3 text-gray-400">{p.category ?? "Otros"}</td>
 										<td className="px-3 py-3 text-right font-medium text-gray-700">{p.quantity}</td>
 										<td className="px-3 py-3 text-right font-medium text-gray-700">
 											S/ {Number(p.revenue).toLocaleString("es-PE", { maximumFractionDigits: 2 })}
 										</td>
-										<td className={`px-5 py-3 text-right font-bold ${MARGIN_COLOR(m)}`}>{m}%</td>
+										<td className={`px-5 py-3 text-right font-bold ${m != null ? MARGIN_COLOR(m) : "text-gray-400"}`}>
+											{m != null ? `${m}%` : "N/A"}
+										</td>
 									</tr>
 								);
 							})}
@@ -571,14 +606,12 @@ function DashboardPage() {
 			<div className="pointer-events-none fixed bottom-6 right-6">
 				<button
 					type="button"
-					className="pointer-events-auto flex items-center gap-2 rounded-full bg-gray-900 px-4 py-2.5 text-xs font-medium text-white shadow-lg transition-colors hover:bg-gray-800"
+					aria-label="Registro por voz (Mantén Espacio)"
+					title="Registro por voz · Mantén Espacio"
+					className="group pointer-events-auto relative flex h-14 w-14 items-center justify-center rounded-full bg-gray-900 shadow-xl ring-2 ring-gray-900/10 transition-all duration-200 hover:scale-110 hover:bg-gray-800 hover:shadow-2xl active:scale-95"
 				>
-					<Bell size={14} className="text-orange-400" />
-					<span>
-						Registro por voz
-						<br />
-						<span className="text-[10px] font-normal text-gray-400">Mantén · Espacio</span>
-					</span>
+					<span className="absolute inset-0 rounded-full bg-orange-400/20 animate-ping opacity-75" />
+					<Mic size={22} className="relative text-orange-400 transition-transform duration-200 group-hover:scale-110" />
 				</button>
 			</div>
 		</div>
