@@ -5,15 +5,16 @@ import {
 	AlertCircle,
 	AlertTriangle,
 	ArrowUpRight,
-	Award,
 	Bell,
 	Clock,
 	FileText,
-	Medal,
+	Flame,
+	Mic,
 	Plus,
+	Sparkles,
+	Star,
 	TrendingDown,
 	TrendingUp,
-	Trophy,
 	Users,
 } from "lucide-react";
 import {
@@ -58,7 +59,7 @@ interface DashboardData {
 		profit: { delta: number; percent: number | null };
 		tickets: { delta: number; percent: number | null };
 	} | null;
-	time_series?: { date: string; income: number; expenses: number; profit: number }[];
+	time_series?: { date: string; income: number; expenses: number; profit: number; orders?: number }[];
 }
 
 interface StockAlert {
@@ -347,9 +348,8 @@ function DashboardPage() {
 		[d.time_series],
 	);
 	const sparkOrders = useMemo(() => {
-		// Use real sparkline if time_series has data, fallback to simple pattern
 		const ts = d.time_series ?? [];
-		if (ts.length > 0) return ts.slice(-7).map((t) => ({ v: t.income }));
+		if (ts.length > 0 && ts.some((t) => t.orders != null)) return ts.slice(-7).map((t) => ({ v: t.orders ?? 0 }));
 		return Array.from({ length: 7 }, () => ({ v: 0 }));
 	}, [d.time_series]);
 	const sparkProducts = useMemo(() => {
@@ -449,7 +449,7 @@ function DashboardPage() {
 					<KpiCard
 						label="Ganancia neta"
 						value={`S/ ${Number(d.estimated_profit).toLocaleString("es-PE", { maximumFractionDigits: 0 })}`}
-						sub={`margen ${margin}%`}
+						sub={d.total_expenses > 0 ? `margen ${margin}%` : "Sin gastos registrados"}
 						delta={profitDelta.text}
 						positive={profitDelta.positive}
 						sparkData={sparkProfit}
@@ -567,15 +567,15 @@ function DashboardPage() {
 											<div className="flex items-center gap-2.5">
 												{i === 0 ? (
 													<span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-100">
-														<Trophy size={13} className="text-amber-500" />
+														<Flame size={13} className="text-amber-500" />
 													</span>
 												) : i === 1 ? (
-													<span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100">
-														<Medal size={13} className="text-slate-400" />
+													<span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-violet-100">
+														<Star size={13} className="text-violet-500" />
 													</span>
 												) : i === 2 ? (
-													<span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-100">
-														<Award size={13} className="text-orange-600" />
+													<span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100">
+														<Sparkles size={13} className="text-emerald-500" />
 													</span>
 												) : (
 													<span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gray-100 text-[10px] font-bold text-gray-400">
@@ -606,14 +606,12 @@ function DashboardPage() {
 			<div className="pointer-events-none fixed bottom-6 right-6">
 				<button
 					type="button"
-					className="pointer-events-auto flex items-center gap-2 rounded-full bg-gray-900 px-4 py-2.5 text-xs font-medium text-white shadow-lg transition-colors hover:bg-gray-800"
+					aria-label="Registro por voz (Mantén Espacio)"
+					title="Registro por voz · Mantén Espacio"
+					className="group pointer-events-auto relative flex h-14 w-14 items-center justify-center rounded-full bg-gray-900 shadow-xl ring-2 ring-gray-900/10 transition-all duration-200 hover:scale-110 hover:bg-gray-800 hover:shadow-2xl active:scale-95"
 				>
-					<Bell size={14} className="text-orange-400" />
-					<span>
-						Registro por voz
-						<br />
-						<span className="text-[10px] font-normal text-gray-400">Mantén · Espacio</span>
-					</span>
+					<span className="absolute inset-0 rounded-full bg-orange-400/20 animate-ping opacity-75" />
+					<Mic size={22} className="relative text-orange-400 transition-transform duration-200 group-hover:scale-110" />
 				</button>
 			</div>
 		</div>
