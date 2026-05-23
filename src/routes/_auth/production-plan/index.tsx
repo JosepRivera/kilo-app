@@ -39,7 +39,7 @@ function ProductionPlanPage() {
 	});
 
 	const regenerateMutation = useMutation({
-		mutationFn: () => api.post("/production-plans/regenerate"),
+		mutationFn: () => api.put("/production-plans/current"),
 		onSuccess: () => void qc.invalidateQueries({ queryKey: ["production-plan"] }),
 	});
 

@@ -7,6 +7,8 @@ import {
 	BarChart2,
 	Check,
 	DollarSign,
+	Eye,
+	EyeOff,
 	HardHat,
 	Loader2,
 	Mic,
@@ -417,7 +419,7 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
 	const [sent, setSent] = useState(false);
 
 	const mutation = useMutation({
-		mutationFn: (e: string) => api.post("/auth/forgot-password", { email: e }).then((r) => r.data),
+		mutationFn: (e: string) => api.post("/auth/password-recovery", { email: e }).then((r) => r.data),
 		onSuccess: () => setSent(true),
 	});
 
@@ -509,7 +511,7 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
 function LoginPage() {
 	const navigate = useNavigate();
 	const setAuth = useAuthStore((s) => s.setAuth);
-	const [showPassword] = useState(false);
+	const [showPassword, setShowPassword] = useState(false);
 	const [forgotOpen, setForgotOpen] = useState(false);
 
 	const loginMutation = useMutation({
@@ -670,8 +672,16 @@ function LoginPage() {
 												<rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
 											</svg>
 										</span>
-										<input id={field.name} type={showPassword ? "text" : "password"} placeholder="••••••••" autoComplete="current-password" value={field.state.value} onChange={(e) => field.handleChange(e.target.value)} onBlur={field.handleBlur} aria-invalid={field.state.meta.errors.length > 0} className="login-input" style={{ paddingRight: 38 }} />
-										</div>
+											<input id={field.name} type={showPassword ? "text" : "password"} placeholder="••••••••" autoComplete="current-password" value={field.state.value} onChange={(e) => field.handleChange(e.target.value)} onBlur={field.handleBlur} aria-invalid={field.state.meta.errors.length > 0} className="login-input" style={{ paddingRight: 38 }} />
+											<button
+												type="button"
+												onClick={() => setShowPassword((v) => !v)}
+												className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+												aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+											>
+												{showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+											</button>
+											</div>
 										{field.state.meta.errors.length > 0 && (
 											<p className="text-xs mt-1 text-destructive">{field.state.meta.errors[0]}</p>
 										)}

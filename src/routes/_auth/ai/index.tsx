@@ -29,7 +29,7 @@ function AIPage() {
 	const queryMutation = useMutation({
 		mutationFn: (q: string) =>
 			api
-				.post<{ sql: string; result: Record<string, unknown>[] }>("/ai/query", { question: q })
+				.post<{ sql: string; result: Record<string, unknown>[] }>("/ai/queries", { question: q })
 				.then((r) => r.data),
 		onSuccess: (data, q) => {
 			setHistory((prev) => [

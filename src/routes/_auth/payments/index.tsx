@@ -35,7 +35,8 @@ function PaymentsPage() {
 	});
 
 	const reviewMutation = useMutation({
-		mutationFn: (id: string) => api.patch(`/payments/notifications/${id}/review`),
+		mutationFn: (id: string) =>
+			api.patch(`/payments/notifications/${id}`, { status: "REVIEWED" }),
 		onSuccess: () => void qc.invalidateQueries({ queryKey: ["payments"] }),
 	});
 

@@ -30,7 +30,7 @@ const createEmployeeSchema = z.object({
 });
 
 const resetPasswordSchema = z.object({
-	password: z.string().min(6, "Mínimo 6 caracteres"),
+	password: z.string().min(8, "Mínimo 8 caracteres"),
 });
 
 function EmployeesPage() {
@@ -58,7 +58,7 @@ function EmployeesPage() {
 
 	const resetMutation = useMutation({
 		mutationFn: ({ id, password }: { id: string; password: string }) =>
-			api.patch(`/users/${id}/reset-password`, { password }),
+			api.patch(`/users/${id}/password`, { password }),
 		onSuccess: () => {
 			void qc.invalidateQueries({ queryKey: ["employees"] });
 			setResetId(null);
