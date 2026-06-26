@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ClipboardList, Minus, Plus, Search, Trash2 } from "lucide-react";
+import { ClipboardList, Minus, Plus, Search, ShoppingBag, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { VoiceFab } from "@/components/ui/VoiceFab";
+import { getCategoryIcon } from "@/lib/categoryIcons";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { requireRole } from "@/lib/guards";
@@ -91,6 +93,7 @@ function NewSalePage() {
 		: [activeCategory];
 
 	return (
+		<>
 		<div className="flex h-full flex-col gap-0 md:flex-row md:gap-5">
 
 			{/* ── Catalog ── */}
@@ -124,21 +127,25 @@ function NewSalePage() {
 
 				{/* Category pills */}
 				<div className="mb-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
-					{["Todos", ...allCategories].map((cat) => (
-						<button
-							key={cat}
-							type="button"
-							onClick={() => setActiveCategory(cat)}
-							className={cn(
-								"shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-all",
-								activeCategory === cat
-									? "bg-orange-500 text-white shadow-sm"
-									: "bg-white text-gray-500 border border-gray-200 hover:border-orange-300 hover:text-orange-500",
-							)}
-						>
-							{cat}
-						</button>
-					))}
+					{["Todos", ...allCategories].map((cat) => {
+						const CatIcon = getCategoryIcon(cat);
+						return (
+							<button
+								key={cat}
+								type="button"
+								onClick={() => setActiveCategory(cat)}
+								className={cn(
+									"shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all",
+									activeCategory === cat
+										? "bg-orange-500 text-white shadow-sm"
+										: "bg-white text-gray-500 border border-gray-200 hover:border-orange-300 hover:text-orange-500",
+								)}
+							>
+								<CatIcon size={12} />
+								{cat}
+							</button>
+						);
+					})}
 				</div>
 
 				{/* Products */}
@@ -216,31 +223,29 @@ function NewSalePage() {
 					{/* Panel header */}
 					<div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
 						<div className="flex items-center gap-2">
-							<div className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-100">
-								<ClipboardList size={14} className="text-orange-500" />
+							<div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-50">
+								<ShoppingBag size={16} className="text-orange-600" />
 							</div>
-							<span className="text-sm font-semibold text-gray-800">Pedido</span>
+							<span className="text-sm font-semibold text-gray-800">Pedido Actual</span>
 						</div>
-						{order.length > 0 && (
-							<span className="rounded-full bg-orange-500 px-2 py-0.5 text-[10px] font-bold text-white">
-								{totalItems}
-							</span>
-						)}
+						<span className="rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-semibold text-orange-600">
+							{totalItems} {totalItems === 1 ? "item" : "items"}
+						</span>
 					</div>
 
 					{/* Items */}
-					<div className="flex-1 overflow-y-auto px-4 py-3">
+					<div className="max-h-[340px] overflow-y-auto px-4 py-3">
 						{order.length === 0 ? (
 							<div className="flex flex-col items-center justify-center py-8 text-center">
 								<div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-gray-50">
-									<ClipboardList size={18} className="text-gray-300" />
+									<ShoppingBag size={18} className="text-gray-300" />
 								</div>
 								<p className="text-xs text-gray-400">Sin productos</p>
 							</div>
 						) : (
-							<div className="space-y-3">
+							<ul className="space-y-2">
 								{order.map((item) => (
-									<div key={item.product.id} className="flex items-center gap-2">
+									<li key={item.product.id} className="flex items-start gap-2 rounded-lg border border-gray-100 p-2">
 										<div className="min-w-0 flex-1">
 											<p className="truncate text-xs font-medium text-gray-800">
 												{item.product.name}
@@ -268,43 +273,43 @@ function NewSalePage() {
 												<Plus size={10} />
 											</button>
 										</div>
-										<span className="w-14 shrink-0 text-right text-xs font-semibold text-gray-700">
+										<span className="w-14 shrink-0 text-right text-xs font-semibold tabular-nums text-gray-700">
 											S/ {(item.product.price * item.quantity).toFixed(2)}
 										</span>
-									</div>
+									</li>
 								))}
-							</div>
+							</ul>
 						)}
 					</div>
 
 					{/* Footer: total + notes + button */}
-					{order.length > 0 && (
-						<div className="border-t border-gray-100 px-4 pb-4 pt-3">
-							<div className="mb-3 flex items-center justify-between">
-								<span className="text-xs text-gray-500">Total</span>
-								<span className="text-base font-bold text-gray-900">S/ {total.toFixed(2)}</span>
-							</div>
-							<textarea
-								placeholder="Notas del pedido…"
-								value={notes}
-								onChange={(e) => setNotes(e.target.value)}
-								rows={2}
-								className="mb-3 w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-700 outline-none placeholder:text-gray-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
-							/>
-							<Button
-								className="w-full bg-orange-500 text-white hover:bg-orange-600 active:scale-[0.98]"
-								onClick={handleSubmit}
-								disabled={createMutation.isPending}
-							>
-								{createMutation.isPending ? "Registrando…" : "Confirmar pedido"}
-							</Button>
-							{createMutation.isError && (
-								<p className="mt-2 text-center text-xs text-red-500">Error al registrar</p>
-							)}
+					<div className="border-t border-gray-100 px-4 pb-4 pt-3">
+						<div className="mb-3 flex items-center justify-between">
+							<span className="text-xs text-gray-500">Total</span>
+							<span className="text-base font-bold text-gray-900">S/ {total.toFixed(2)}</span>
 						</div>
-					)}
+						<textarea
+							placeholder="Notas del pedido..."
+							value={notes}
+							onChange={(e) => setNotes(e.target.value)}
+							rows={2}
+							className="mb-3 w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-700 outline-none placeholder:text-gray-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
+						/>
+						<Button
+							className="w-full bg-orange-500 text-white hover:bg-orange-600 active:scale-[0.98] disabled:bg-slate-200 disabled:text-slate-400"
+							onClick={handleSubmit}
+							disabled={order.length === 0 || createMutation.isPending}
+						>
+							{createMutation.isPending ? "Registrando…" : "Confirmar pedido"}
+						</Button>
+						{createMutation.isError && (
+							<p className="mt-2 text-center text-xs text-red-500">Error al registrar</p>
+						)}
+					</div>
 				</div>
 			</div>
 		</div>
+		<VoiceFab formType="sale" />
+		</>
 	);
 }

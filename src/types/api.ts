@@ -75,7 +75,26 @@ export interface Recipe {
 }
 
 // Sales
-export type SaleStatus = "PENDING" | "COMPLETED" | "CANCELLED";
+export type SaleStatus =
+	| "OPEN"
+	| "PAID_CASH"
+	| "PAID_YAPE"
+	| "PAID_PLIN"
+	| "PAID_AGORA"
+	| "CANCELLED";
+
+export type SaleStatusGroup = "pending" | "completed" | "cancelled";
+
+export function getSaleStatusGroup(status: SaleStatus): SaleStatusGroup {
+	if (status === "OPEN") return "pending";
+	if (status === "CANCELLED") return "cancelled";
+	if (status.startsWith("PAID_")) return "completed";
+	return "pending";
+}
+
+export function isSaleCompleted(status: SaleStatus): boolean {
+	return status.startsWith("PAID_");
+}
 
 export interface SaleItem {
 	id: string;
@@ -108,9 +127,18 @@ export interface Expense {
 }
 
 export const SALE_STATUS_LABELS: Record<SaleStatus, string> = {
-	PENDING: "Pendiente",
-	COMPLETED: "Completada",
+	OPEN: "Pendiente",
+	PAID_CASH: "Completada",
+	PAID_YAPE: "Completada",
+	PAID_PLIN: "Completada",
+	PAID_AGORA: "Completada",
 	CANCELLED: "Cancelada",
+};
+
+export const SALE_STATUS_GROUP_LABELS: Record<SaleStatusGroup, string> = {
+	pending: "Pendiente",
+	completed: "Completada",
+	cancelled: "Cancelada",
 };
 
 export const EXPENSE_CATEGORIES = [

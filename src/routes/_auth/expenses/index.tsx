@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { VoiceFab } from "@/components/ui/VoiceFab";
 import { z } from "zod";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -143,6 +144,7 @@ function ExpensesPage() {
 					</table>
 				</div>
 			)}
+		<VoiceFab formType="expense" />
 		</div>
 	);
 }

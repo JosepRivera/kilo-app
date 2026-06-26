@@ -6,8 +6,10 @@ import {
 	BotMessageSquare,
 	Building2,
 	ChefHat,
+	ClipboardCheck,
 	CreditCard,
 	DollarSign,
+	History,
 	Home,
 	LogOut,
 	Package,
@@ -61,6 +63,12 @@ const OPERACION: NavItem[] = [
 		roles: ["OWNER", "CASHIER"],
 	},
 	{
+		label: "Historial",
+		to: "/sales/history",
+		icon: <History size={15} />,
+		roles: ["OWNER", "CASHIER", "WAITER"],
+	},
+	{
 		label: "Cocina",
 		to: "/production-plan",
 		icon: <ChefHat size={15} />,
@@ -79,6 +87,7 @@ const GESTION: NavItem[] = [
 	{ label: "Recetas", to: "/recipes", icon: <BookOpen size={15} />, roles: ["OWNER"] },
 	{ label: "Finanzas", to: "/expenses", icon: <DollarSign size={15} />, roles: ["OWNER"] },
 	{ label: "Equipo", to: "/employees", icon: <Users size={15} />, roles: ["OWNER"] },
+	{ label: "Cierre de Caja", to: "/cash-closes", icon: <ClipboardCheck size={15} />, roles: ["OWNER"] },
 ];
 
 function NavSection({
@@ -116,11 +125,11 @@ function NavSection({
 								className={cn(
 									"flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition-all",
 									isActive
-										? "bg-gray-200 shadow-sm text-gray-800"
-										: "text-gray-500 hover:text-gray-800",
+										? "bg-orange-50 text-orange-600 shadow-sm"
+										: "text-gray-600 hover:bg-slate-100 hover:text-gray-800",
 								)}
 							>
-								<span className={cn("shrink-0", isActive ? "text-orange-500" : "text-gray-400")}>
+								<span className={cn("shrink-0", isActive ? "text-orange-600" : "text-gray-400")}>
 									{item.icon}
 								</span>
 								<span className="flex-1">{item.label}</span>

@@ -5,11 +5,9 @@ import {
 	AlertCircle,
 	AlertTriangle,
 	ArrowUpRight,
-	Bell,
 	Clock,
 	FileText,
 	Flame,
-	Mic,
 	Plus,
 	Sparkles,
 	Star,
@@ -390,6 +388,18 @@ function DashboardPage() {
 
 	const totalAlerts = stockAlerts.length + operationalAlerts.length;
 
+	const ALERTS_PER_PAGE = 5;
+	const [alertPage, setAlertPage] = useState(1);
+	const allAlerts = useMemo(
+		() => [
+			...stockAlerts.map((a) => ({ kind: "stock" as const, data: a })),
+			...operationalAlerts.map((a) => ({ kind: "operational" as const, data: a })),
+		],
+		[stockAlerts, operationalAlerts],
+	);
+	const alertTotalPages = Math.max(1, Math.ceil(allAlerts.length / ALERTS_PER_PAGE));
+	const pagedAlerts = allAlerts.slice((alertPage - 1) * ALERTS_PER_PAGE, alertPage * ALERTS_PER_PAGE);
+
 	return (
 		<div className="space-y-5">
 			{/* ── header ── */}
@@ -492,49 +502,74 @@ function DashboardPage() {
 						</span>
 					</div>
 					<div className="divide-y divide-gray-50">
-						{/* real stock alerts from API */}
-						{stockAlerts.map((a) => (
-							<div key={a.id} className="flex items-start gap-3 px-5 py-3.5">
-								<div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-red-50">
-									<AlertTriangle size={15} className="text-red-500" />
+						{pagedAlerts.map((item, i) => {
+							if (item.kind === "stock") {
+								const a = item.data as StockAlert;
+								return (
+									<div key={`stock-${a.id}`} className="flex items-start gap-3 px-5 py-3.5">
+										<div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-red-50">
+											<AlertTriangle size={15} className="text-red-500" />
+										</div>
+										<div className="min-w-0 flex-1">
+											<p className="text-xs font-semibold text-gray-800">{a.name} bajo mínimo</p>
+											<p className="text-[11px] text-gray-400">
+												{a.stock} {a.unit} · déficit {a.shortage} {a.unit}
+											</p>
+										</div>
+										<Link
+											to="/ingredients"
+											className="flex shrink-0 items-center gap-0.5 text-[11px] font-semibold text-blue-600 hover:text-blue-700"
+										>
+											Ver
+											<ArrowUpRight size={11} />
+										</Link>
+									</div>
+								);
+							}
+							const alert = item.data as OperationalAlert;
+							return (
+								<div key={`op-${alert.type}-${i}`} className="flex items-start gap-3 px-5 py-3.5">
+									<div
+										className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${OPERATIONAL_BG[alert.type] ?? "bg-gray-50"}`}
+									>
+										{OPERATIONAL_ICONS[alert.type]}
+									</div>
+									<div className="min-w-0 flex-1">
+										<p className="text-xs font-semibold text-gray-800">{alert.title}</p>
+										<p className="text-[11px] text-gray-400">{alert.sub}</p>
+									</div>
+									<Link
+										to={alert.to}
+										className="flex shrink-0 items-center gap-0.5 text-[11px] font-semibold text-blue-600 hover:text-blue-700"
+									>
+										Ver
+										<ArrowUpRight size={11} />
+									</Link>
 								</div>
-								<div className="min-w-0 flex-1">
-									<p className="text-xs font-semibold text-gray-800">{a.name} bajo mínimo</p>
-									<p className="text-[11px] text-gray-400">
-										{a.stock} {a.unit} · déficit {a.shortage} {a.unit}
-									</p>
-								</div>
-								<Link
-									to="/ingredients"
-									className="flex shrink-0 items-center gap-0.5 text-[11px] font-semibold text-blue-600 hover:text-blue-700"
-								>
-									Ver
-									<ArrowUpRight size={11} />
-								</Link>
-							</div>
-						))}
-						{/* operational alerts from API */}
-						{operationalAlerts.map((alert) => (
-							<div key={alert.type} className="flex items-start gap-3 px-5 py-3.5">
-								<div
-									className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${OPERATIONAL_BG[alert.type] ?? "bg-gray-50"}`}
-								>
-									{OPERATIONAL_ICONS[alert.type]}
-								</div>
-								<div className="min-w-0 flex-1">
-									<p className="text-xs font-semibold text-gray-800">{alert.title}</p>
-									<p className="text-[11px] text-gray-400">{alert.sub}</p>
-								</div>
-								<Link
-									to={alert.to}
-									className="flex shrink-0 items-center gap-0.5 text-[11px] font-semibold text-blue-600 hover:text-blue-700"
-								>
-									Ver
-									<ArrowUpRight size={11} />
-								</Link>
-							</div>
-						))}
+							);
+						})}
 					</div>
+					{alertTotalPages > 1 && (
+						<div className="flex items-center justify-between border-t border-gray-100 px-5 py-2.5">
+							<button
+								onClick={() => setAlertPage((p) => Math.max(1, p - 1))}
+								disabled={alertPage === 1}
+								className="rounded px-2 py-1 text-[11px] font-semibold text-gray-500 hover:bg-gray-50 disabled:opacity-30"
+							>
+								← Anterior
+							</button>
+							<span className="text-[11px] text-gray-400">
+								{alertPage} / {alertTotalPages}
+							</span>
+							<button
+								onClick={() => setAlertPage((p) => Math.min(alertTotalPages, p + 1))}
+								disabled={alertPage === alertTotalPages}
+								className="rounded px-2 py-1 text-[11px] font-semibold text-gray-500 hover:bg-gray-50 disabled:opacity-30"
+							>
+								Siguiente →
+							</button>
+						</div>
+					)}
 				</div>
 			</div>
 
@@ -602,18 +637,6 @@ function DashboardPage() {
 				)}
 			</div>
 
-			{/* ── voice FAB ── */}
-			<div className="pointer-events-none fixed bottom-6 right-6">
-				<button
-					type="button"
-					aria-label="Registro por voz (Mantén Espacio)"
-					title="Registro por voz · Mantén Espacio"
-					className="group pointer-events-auto relative flex h-14 w-14 items-center justify-center rounded-full bg-gray-900 shadow-xl ring-2 ring-gray-900/10 transition-all duration-200 hover:scale-110 hover:bg-gray-800 hover:shadow-2xl active:scale-95"
-				>
-					<span className="absolute inset-0 rounded-full bg-orange-400/20 animate-ping opacity-75" />
-					<Mic size={22} className="relative text-orange-400 transition-transform duration-200 group-hover:scale-110" />
-				</button>
-			</div>
 		</div>
 	);
 }

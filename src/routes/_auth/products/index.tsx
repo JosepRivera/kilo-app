@@ -92,6 +92,7 @@ function ProductsPage() {
 					onCancel={() => setShowForm(false)}
 					isPending={createMutation.isPending}
 					error={createMutation.isError ? "Error al crear el producto" : undefined}
+					categoryOptions={[...new Set(products.map((p) => p.category))]}
 				/>
 			)}
 
@@ -102,6 +103,7 @@ function ProductsPage() {
 					onCancel={handleCancelEdit}
 					isPending={updateMutation.isPending}
 					error={updateMutation.isError ? "Error al actualizar" : undefined}
+					categoryOptions={[...new Set(products.map((p) => p.category))]}
 				/>
 			)}
 
@@ -196,12 +198,14 @@ function ProductForm({
 	onCancel,
 	isPending,
 	error,
+	categoryOptions = [],
 }: {
 	initialValues?: Product;
 	onSubmit: (v: ProductForm) => void;
 	onCancel: () => void;
 	isPending: boolean;
 	error?: string;
+	categoryOptions?: string[];
 }) {
 	const form = useForm({
 		defaultValues: {
@@ -248,10 +252,17 @@ function ProductForm({
 							<Label htmlFor={field.name}>Categoría</Label>
 							<Input
 								id={field.name}
+								list="category-options"
 								value={field.state.value}
 								onChange={(e) => field.handleChange(e.target.value)}
-								placeholder="Platos de fondo"
+								placeholder="Hamburguesas"
+								autoComplete="off"
 							/>
+							<datalist id="category-options">
+								{categoryOptions.map((cat) => (
+									<option key={cat} value={cat} />
+								))}
+							</datalist>
 						</div>
 					)}
 				</form.Field>

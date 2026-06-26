@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { AlertTriangle, Pencil, Plus } from "lucide-react";
 import { useState } from "react";
+import { VoiceFab } from "@/components/ui/VoiceFab";
 import { z } from "zod";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -180,6 +181,7 @@ function IngredientsPage() {
 					</table>
 				</div>
 			)}
+		<VoiceFab formType="ingredient_update" />
 		</div>
 	);
 }
