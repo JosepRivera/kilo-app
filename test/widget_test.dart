@@ -1,13 +1,17 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kilo_app/app.dart';
+import 'package:kilo_app/data/store.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kilo_app/data/supplies.dart';
 import 'package:kilo_app/features/dictation/dictation_sheet.dart';
 import 'package:kilo_app/features/today/today_screen.dart';
 
 void main() {
   Future<void> pumpApp(WidgetTester tester) async {
-    await tester.pumpWidget(const KiloApp());
+    SharedPreferences.setMockInitialValues({});
+    final store = await KiloStore.load(clock: () => DateTime(2026, 9, 23, 9));
+    await tester.pumpWidget(KiloApp(store: store));
     await tester.pumpAndSettle();
   }
 

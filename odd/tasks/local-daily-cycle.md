@@ -22,7 +22,7 @@ Out of scope (later points): Fase 1 onboarding, Holt-Winters (point 3), real voi
 
 ## Tasks
 - [x] T1 Domain models + engine + unit tests — route: inline
-- [ ] T2 Store with persistence + seeded history — route: inline
+- [x] T2 Store with persistence + seeded history — route: inline
 - [ ] T3 Wire Hoy, Insumos, detail, Ahorro to the store — route: inline
 - [ ] T4 Wire stock-close and purchase reviews (save updates the model) — route: inline
 - [ ] T5 Simulator pass + APK for the user's Android check — route: inline

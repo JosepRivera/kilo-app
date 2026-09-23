@@ -5,6 +5,7 @@ import 'package:flutter/material.dart' show DefaultMaterialLocalizations;
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'data/store.dart';
 import 'features/dictation/dictation_sheet.dart';
 import 'features/savings/savings_screen.dart';
 import 'features/supplies/supplies_screen.dart';
@@ -12,7 +13,9 @@ import 'features/today/today_screen.dart';
 import 'theme/forecast_palette.dart';
 
 class KiloApp extends StatelessWidget {
-  const KiloApp({super.key});
+  const KiloApp({super.key, required this.store});
+
+  final KiloStore store;
 
   @override
   Widget build(BuildContext context) => CupertinoApp(
@@ -24,6 +27,7 @@ class KiloApp extends StatelessWidget {
       ...GlobalMaterialLocalizations.delegates,
       DefaultMaterialLocalizations.delegate,
     ],
+    builder: (_, child) => KiloScope(store: store, child: child!),
     home: const _Shell(),
   );
 }
