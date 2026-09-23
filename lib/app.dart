@@ -5,6 +5,7 @@ import 'package:flutter/material.dart' show DefaultMaterialLocalizations;
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'features/supplies/supplies_screen.dart';
 import 'features/today/today_screen.dart';
 import 'theme/forecast_palette.dart';
 
@@ -49,12 +50,13 @@ class _ShellState extends State<_Shell> {
       backgroundColor: p.background,
       child: Stack(
         children: [
+          // Each tab keeps its own navigation stack, so the floating bar stays over pushed pages.
           IndexedStack(
             index: _tab,
-            children: const [
-              TodayScreen(),
-              _Placeholder('Insumos'),
-              _Placeholder('Ahorro'),
+            children: [
+              CupertinoTabView(builder: (_) => const TodayScreen()),
+              CupertinoTabView(builder: (_) => const SuppliesScreen()),
+              CupertinoTabView(builder: (_) => const _Placeholder('Ahorro')),
             ],
           ),
           Positioned(

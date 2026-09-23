@@ -51,4 +51,26 @@ void main() {
         .map((i) => (i.image as AssetImage).assetName);
     expect(shown, contains('assets/supplies/generic.png'));
   });
+
+  testWidgets('supply detail shows the week and the expiring lot', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await tester.tap(find.text('Insumos').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Pollo entero'));
+    await tester.pumpAndSettle();
+    expect(find.text('Se usa más el viernes y el sábado.'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('vence mañana'), 200);
+    expect(find.text('vence mañana'), findsOneWidget);
+  });
+
+  testWidgets('supply search filters the catalog', (tester) async {
+    await pumpApp(tester);
+    await tester.tap(find.text('Insumos').last);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(CupertinoSearchTextField), 'zzz');
+    await tester.pumpAndSettle();
+    expect(find.text('No hay insumos con “zzz”.'), findsOneWidget);
+  });
 }

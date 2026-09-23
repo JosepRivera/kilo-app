@@ -1,8 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 
-import '../../theme/forecast_palette.dart';
 import '../../data/supplies.dart';
+import '../../theme/forecast_palette.dart';
+import '../../ui/panel.dart';
+import '../../ui/range_bar.dart';
 
 /// "Hoy": the morning purchase list, read like a daily forecast.
 class TodayScreen extends StatefulWidget {
@@ -15,205 +17,138 @@ class TodayScreen extends StatefulWidget {
 class _TodayScreenState extends State<TodayScreen> {
   final _bought = <String>{};
 
-  void _toggle(Supply i) {
+  void _toggle(Supply s) {
     HapticFeedback.selectionClick();
     setState(
-      () => _bought.contains(i.name)
-          ? _bought.remove(i.name)
-          : _bought.add(i.name),
+      () => _bought.contains(s.name)
+          ? _bought.remove(s.name)
+          : _bought.add(s.name),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final p = ForecastPalette.of(context);
-    final alert = demoShoppingList.firstWhere((i) => i.expiryAlert != null);
+    final alert = demoShoppingList.firstWhere((s) => s.expiryAlert != null);
 
-    return CupertinoPageScaffold(
-      backgroundColor: p.background,
-      child: CustomScrollView(
-        slivers: [
-          CupertinoSliverNavigationBar(
-            largeTitle: const Text('Compra de hoy'),
-            backgroundColor: p.background.withValues(alpha: 0.9),
-            border: null,
-          ),
-          SliverPadding(
-            // Bottom room for the floating tab bar.
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 120),
-            sliver: SliverList.list(
-              children: [
-                _Panel(
-                  color: p.alertBackground,
-                  child: Row(
-                    children: [
-                      supplyIcon(alert.icon, 40),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              alert.expiryAlert!,
-                              style: TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w600,
-                                color: p.alert,
-                              ),
-                            ),
-                            Text(
-                              '${alert.name} · úsalo primero',
-                              style: TextStyle(fontSize: 15, color: p.alert),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Icon(
-                        CupertinoIcons.exclamationmark_triangle_fill,
+    return ForecastPage(
+      title: 'Compra de hoy',
+      children: [
+        Panel(
+          color: p.alertBackground,
+          child: Row(
+            children: [
+              supplyIcon(alert.icon, 40),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      alert.expiryAlert!,
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
                         color: p.alert,
                       ),
-                    ],
-                  ),
+                    ),
+                    Text(
+                      '${alert.name} · úsalo primero',
+                      style: TextStyle(fontSize: 15, color: p.alert),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                _Panel(
-                  color: p.surface,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            CupertinoIcons.calendar,
-                            size: 16,
-                            color: p.muted,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'PARA LOS PRÓXIMOS 3 DÍAS',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: p.muted,
-                            ),
-                          ),
-                        ],
-                      ),
-                      for (final i in demoShoppingList) ...[
-                        Container(
-                          height: 0.5,
-                          color: p.track,
-                          margin: const EdgeInsets.only(top: 10),
-                        ),
-                        _SupplyRow(
-                          supply: i,
-                          bought: _bought.contains(i.name),
-                          onTap: () => _toggle(i),
-                        ),
-                      ],
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Container(
-                            width: 10,
-                            height: 10,
-                            decoration: BoxDecoration(
-                              color: p.text,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'lo que tienes',
-                            style: TextStyle(fontSize: 13, color: p.muted),
-                          ),
-                          const SizedBox(width: 16),
-                          Container(
-                            width: 16,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: p.accent,
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'lo que falta',
-                            style: TextStyle(fontSize: 13, color: p.muted),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _Panel(
-                  color: p.surface,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            CupertinoIcons.checkmark_seal_fill,
-                            size: 16,
-                            color: p.muted,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'YA ALCANZA',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: p.muted,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          for (final c in demoCovered.entries)
-                            Column(
-                              children: [
-                                supplyIcon(c.value, 36),
-                                const SizedBox(height: 4),
-                                Text(
-                                  c.key,
-                                  style: TextStyle(fontSize: 13, color: p.text),
-                                ),
-                              ],
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
+              ),
+              Icon(
+                CupertinoIcons.exclamationmark_triangle_fill,
+                color: p.alert,
+              ),
+            ],
+          ),
+        ),
+        Panel(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const PanelHeader(
+                CupertinoIcons.calendar,
+                'PARA LOS PRÓXIMOS 3 DÍAS',
+              ),
+              for (final s in demoShoppingList) ...[
+                const PanelDivider(),
+                _SupplyRow(
+                  supply: s,
+                  bought: _bought.contains(s.name),
+                  onTap: () => _toggle(s),
                 ),
               ],
-            ),
+              const SizedBox(height: 8),
+              const _Legend(),
+            ],
           ),
-        ],
-      ),
+        ),
+        Panel(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const PanelHeader(
+                CupertinoIcons.checkmark_seal_fill,
+                'YA ALCANZA',
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  for (final c in demoCovered.entries)
+                    Column(
+                      children: [
+                        supplyIcon(c.value, 36),
+                        const SizedBox(height: 4),
+                        Text(
+                          c.key,
+                          style: TextStyle(fontSize: 13, color: p.text),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
 
-class _Panel extends StatelessWidget {
-  const _Panel({required this.color, required this.child});
-
-  final Color color;
-  final Widget child;
+class _Legend extends StatelessWidget {
+  const _Legend();
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: color,
-      borderRadius: BorderRadius.circular(16),
-    ),
-    child: child,
-  );
+  Widget build(BuildContext context) {
+    final p = ForecastPalette.of(context);
+    final label = TextStyle(fontSize: 13, color: p.muted);
+    return Row(
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(color: p.text, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 6),
+        Text('lo que tienes', style: label),
+        const SizedBox(width: 16),
+        Container(
+          width: 16,
+          height: 6,
+          decoration: BoxDecoration(
+            color: p.accent,
+            borderRadius: BorderRadius.circular(3),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text('lo que falta', style: label),
+      ],
+    );
+  }
 }
 
 class _SupplyRow extends StatelessWidget {
@@ -230,13 +165,12 @@ class _SupplyRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = ForecastPalette.of(context);
-    final onHand = supply.onHand / supply.needed;
     return Semantics(
       button: true,
       checked: bought,
       label:
-          'Comprar ${formatQty(supply.toBuy)} ${supply.unit} de ${supply.name}. Tienes ${formatQty(supply.onHand)}.'
-          '${supply.isLearning ? ' Kilo aún aprende este insumo.' : ''}',
+          'Comprar ${formatQty(supply.toBuy)} ${supply.unit} de ${supply.name}. '
+          'Tienes ${formatQty(supply.onHand)}.${supply.isLearning ? ' Kilo aún aprende este insumo.' : ''}',
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
@@ -275,52 +209,7 @@ class _SupplyRow extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: LayoutBuilder(
-                      builder: (_, box) => SizedBox(
-                        height: 12,
-                        child: Stack(
-                          alignment: Alignment.centerLeft,
-                          children: [
-                            Container(
-                              height: 6,
-                              decoration: BoxDecoration(
-                                color: p.track,
-                                borderRadius: BorderRadius.circular(3),
-                              ),
-                            ),
-                            Positioned(
-                              left: box.maxWidth * onHand,
-                              right: 0,
-                              child: Container(
-                                height: 6,
-                                decoration: BoxDecoration(
-                                  color: p.accent,
-                                  borderRadius: BorderRadius.circular(3),
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              left: (box.maxWidth * onHand - 5).clamp(
-                                0,
-                                box.maxWidth - 10,
-                              ),
-                              child: Container(
-                                width: 10,
-                                height: 10,
-                                decoration: BoxDecoration(
-                                  color: p.text,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: p.surface,
-                                    width: 2,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                    child: RangeBar(fraction: supply.onHand / supply.needed),
                   ),
                   const SizedBox(width: 12),
                   SizedBox(
