@@ -23,7 +23,7 @@ Out of scope: onboarding/Fase 1 setup, login/account, notifications, real API/vo
 
 ## Tasks
 - [x] T1 Insumos list + supply detail (7-day forecast, lots, unit/conversions, crítico/secundario) — route: inline
-- [ ] T2 Ahorro screen — route: inline
+- [x] T2 Ahorro screen — route: inline
 - [ ] T3 Stock-close review (editable remaining stock, "revisar" anomaly, suggested correction, "hoy no hubo consumo") — route: inline
 - [ ] T4 Purchase review (lots with prefilled expiry, price flag, ambiguous supply picker) — route: inline
 - [ ] T5 Simulator pass light/dark + Impeccable finish review + DESIGN.md — route: delegated (finish reviewer, documenter)

@@ -73,4 +73,13 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('No hay insumos con “zzz”.'), findsOneWidget);
   });
+
+  testWidgets('savings compares this month against the previous one', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await tester.tap(find.text('Ahorro').last);
+    await tester.pumpAndSettle();
+    expect(find.text('S/ 50 menos que el mes pasado'), findsOneWidget);
+  });
 }

@@ -13,6 +13,7 @@ class ForecastPalette {
     required this.alertBackground,
     required this.alert,
     required this.glass,
+    required this.good,
   });
 
   final Color background,
@@ -24,7 +25,8 @@ class ForecastPalette {
       onAccent,
       alertBackground,
       alert,
-      glass;
+      glass,
+      good;
 
   static const light = ForecastPalette._(
     background: Color(0xFFEAF0F7),
@@ -37,6 +39,7 @@ class ForecastPalette {
     alertBackground: Color(0xFFFDECEC),
     alert: Color(0xFFB42318),
     glass: Color(0xB8FFFFFF),
+    good: Color(0xFF1E7F46),
   );
 
   static const dark = ForecastPalette._(
@@ -50,6 +53,7 @@ class ForecastPalette {
     alertBackground: Color(0xFF3A1A1F),
     alert: Color(0xFFFF8A80),
     glass: Color(0xB8233249),
+    good: Color(0xFF4ADE80),
   );
 
   static ForecastPalette of(BuildContext c) =>
