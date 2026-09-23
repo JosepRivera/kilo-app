@@ -1,37 +1,12 @@
 import 'package:flutter/cupertino.dart';
 
-import '../../data/supplies.dart';
+import '../../data/store.dart';
+import '../../domain/engine.dart';
+import '../../domain/models.dart';
 import '../../theme/forecast_palette.dart';
+import '../../ui/format.dart';
 import '../../ui/panel.dart';
 import 'review_parts.dart';
-
-class CloseEntry {
-  const CloseEntry(
-    this.name,
-    this.icon,
-    this.unit,
-    this.remaining, {
-    this.phrase,
-  });
-
-  final String name;
-  final String? icon;
-  final String unit;
-  final double remaining;
-  final String? phrase;
-}
-
-const _transcript =
-    'Quedan cuatro kilos de pollo, trece de papa, tres de cebolla, medio balde de tomate, '
-    'kilo y medio de limón y un atado de culantro.';
-const _entries = [
-  CloseEntry('Pollo entero', 'chicken', 'kg', 4),
-  CloseEntry('Papa canchán', 'potato', 'kg', 13),
-  CloseEntry('Cebolla roja', 'onion', 'kg', 3),
-  CloseEntry('Tomate', 'tomato', 'kg', 5, phrase: 'medio balde'),
-  CloseEntry('Limón sutil', 'lime', 'kg', 1.5),
-  CloseEntry('Culantro', 'cilantro', 'atados', 1),
-];
 
 class StockCloseReviewScreen extends StatefulWidget {
   const StockCloseReviewScreen({super.key});
@@ -41,19 +16,64 @@ class StockCloseReviewScreen extends StatefulWidget {
 }
 
 class _StockCloseReviewScreenState extends State<StockCloseReviewScreen> {
-  late final _qty = {
-    for (final e in _entries)
-      e.name: TextEditingController(text: formatQty(e.remaining)),
+  late final KiloStore _store = KiloScope.of(context);
+  late final List<SupplyInfo> _supplies = _store.closeSupplies();
+  late final Map<String, TextEditingController> _qty = {
+    for (final s in _supplies)
+      s.id: TextEditingController(text: formatQty(_heard(s)))
+        ..addListener(_edited),
   };
-  final _focus = FocusNode();
-  String? _chickenCheck, _potatoCheck;
+  late final Map<String, FocusNode> _focus = {
+    for (final s in _supplies) s.id: FocusNode(),
+  };
+  final _confirmed = <String, double>{};
+  late final String? _misheard = _pickMisheard();
+
+  String? _pickMisheard() {
+    final e = _store.engine;
+    final candidates =
+        _supplies.where((s) {
+          final f = e.forecast(s.id, _store.today);
+          return s.critical && f > 0 && e.currentStock(s.id) >= 3.6 * f;
+        }).toList()..sort(
+          (a, b) => (e.forecast(b.id, _store.today) * b.referencePrice)
+              .compareTo(e.forecast(a.id, _store.today) * a.referencePrice),
+        );
+    return candidates.firstOrNull?.id;
+  }
+
+  double _heard(SupplyInfo s) {
+    final e = _store.engine;
+    final saved = e
+        .records(s.id)
+        .where((r) => r.date == _store.today && !r.isClosed)
+        .firstOrNull;
+    if (saved != null) return saved.remaining!;
+    final expected = e.expectedRemainingTonight(s.id);
+    final misheard = s.id == _misheard
+        ? expected - 2.5 * e.forecast(s.id, _store.today)
+        : expected;
+    return roundUpToStep(misheard < 0 ? 0 : misheard, s.unit);
+  }
+
+  void _edited() => setState(() {});
+
+  double? _value(String id) =>
+      double.tryParse(_qty[id]!.text.replaceAll(',', '.'));
+
+  Map<String, AnomalyFlag> get _flags => {
+    for (final s in _supplies)
+      if (_value(s.id) case final v?) s.id: ?_store.engine.checkClose(s.id, v),
+  };
 
   @override
   void dispose() {
     for (final c in _qty.values) {
       c.dispose();
     }
-    _focus.dispose();
+    for (final f in _focus.values) {
+      f.dispose();
+    }
     super.dispose();
   }
 
@@ -72,6 +92,7 @@ class _StockCloseReviewScreenState extends State<StockCloseReviewScreen> {
         CupertinoDialogAction(
           isDefaultAction: true,
           onPressed: () {
+            _store.markNoConsumption();
             Navigator.pop(dialog);
             Navigator.pop(context);
           },
@@ -84,76 +105,71 @@ class _StockCloseReviewScreenState extends State<StockCloseReviewScreen> {
   @override
   Widget build(BuildContext context) {
     final p = ForecastPalette.of(context);
+    final flags = _flags;
+    final pending = flags.entries
+        .where((f) => _confirmed[f.key] != _value(f.key))
+        .toList();
+    final valid = _supplies.every((s) => _value(s.id) != null);
+    final transcript =
+        'Quedan ${[for (final s in _supplies) '${withUnit(_heard(s), s.unit)} de ${s.name.toLowerCase()}'].join(', ')}.';
+
     return ReviewScaffold(
       title: 'Cierre de hoy',
-      canSave: _chickenCheck != null && _potatoCheck != null,
-      onSave: () => Navigator.pop(context),
+      canSave: valid && pending.isEmpty,
+      onSave: () {
+        _store.saveClose({for (final s in _supplies) s.id: _value(s.id)!});
+        Navigator.pop(context);
+      },
       children: [
-        const TranscriptPanel(_transcript),
-        FlagPanel(
-          icon: supplyIcon('chicken', 32),
-          message: 'Según lo que dictaste, hoy se usaron 13 kg de pollo; normalmente son unos 4 kg. ¿Es correcto?',
-          primary: 'Sí, es correcto',
-          secondary: 'Corregir',
-          resolved: _chickenCheck,
-          onPrimary: () =>
-              setState(() => _chickenCheck = 'Confirmaste 13 kg usados hoy'),
-          onSecondary: () {
-            setState(
-              () => _chickenCheck = 'Corrige la cantidad de pollo abajo',
-            );
-            _focus.requestFocus();
-          },
-        ),
-        FlagPanel(
-          icon: supplyIcon('potato', 32),
-          message: 'Escuché “trece” kilos de papa. ¿Quisiste decir “tres”?',
-          primary: 'Usar 3 kg',
-          secondary: 'Dejar 13 kg',
-          resolved: _potatoCheck,
-          onPrimary: () => setState(() {
-            _qty['Papa canchán']!.text = '3';
-            _potatoCheck = 'Papa corregida a 3 kg';
-          }),
-          onSecondary: () =>
-              setState(() => _potatoCheck = 'Papa se queda en 13 kg'),
-        ),
+        TranscriptPanel(transcript),
+        for (final f in flags.entries)
+          Builder(
+            builder: (context) {
+              final s = _store.data.supply(f.key);
+              final done = _confirmed[f.key] == _value(f.key);
+              return FlagPanel(
+                icon: supplyIcon(s.icon, 32),
+                message:
+                    'Según lo que dictaste, hoy se usaron ${withUnit(double.parse(f.value.consumed.toStringAsFixed(1)), s.unit)} '
+                    'de ${s.name.toLowerCase()}; normalmente son unos ${withUnit(double.parse(f.value.usual.toStringAsFixed(1)), s.unit)}. '
+                    '¿Es correcto?',
+                primary: 'Sí, es correcto',
+                secondary: 'Corregir',
+                resolved: done ? 'Confirmado' : null,
+                onPrimary: () =>
+                    setState(() => _confirmed[f.key] = _value(f.key)!),
+                onSecondary: () => _focus[f.key]!.requestFocus(),
+              );
+            },
+          ),
         Panel(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const PanelHeader(CupertinoIcons.cube_box, 'LO QUE QUEDA'),
-              for (final (i, e) in _entries.indexed) ...[
+              for (final (i, s) in _supplies.indexed) ...[
                 if (i > 0) const PanelDivider(),
                 SizedBox(
                   height: 60,
                   child: Row(
                     children: [
-                      supplyIcon(e.icon, 32),
+                      supplyIcon(s.icon, 32),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              e.name,
-                              style: TextStyle(fontSize: 17, color: p.text),
-                            ),
-                            if (e.phrase != null)
-                              Text(
-                                '“${e.phrase}” = ${withUnit(e.remaining, e.unit)}',
-                                style: TextStyle(fontSize: 13, color: p.muted),
-                              ),
-                          ],
+                        child: Text(
+                          s.name,
+                          style: TextStyle(
+                            fontSize: 17,
+                            color: flags.containsKey(s.id) ? p.alert : p.text,
+                          ),
                         ),
                       ),
                       QuantityField(
-                        controller: _qty[e.name]!,
-                        unit: e.unit,
-                        width: 112,
-                        focusNode: e.name == 'Pollo entero' ? _focus : null,
+                        controller: _qty[s.id]!,
+                        unit: s.unit,
+                        width: 128,
+                        focusNode: _focus[s.id],
                       ),
                     ],
                   ),

@@ -1,8 +1,9 @@
 import 'package:flutter/cupertino.dart';
 
-import '../../data/catalog.dart';
-import '../../data/supplies.dart';
+import '../../data/store.dart';
+import '../../domain/models.dart';
 import '../../theme/forecast_palette.dart';
+import '../../ui/format.dart';
 import '../../ui/panel.dart';
 import 'supply_detail_screen.dart';
 
@@ -16,17 +17,23 @@ class SuppliesScreen extends StatefulWidget {
 class _SuppliesScreenState extends State<SuppliesScreen> {
   var _query = '';
 
-  bool _matches(CatalogSupply s) =>
+  bool _matches(SupplyInfo s) =>
       s.name.toLowerCase().contains(_query.toLowerCase());
 
   @override
   Widget build(BuildContext context) {
+    final store = KiloScope.of(context);
     final p = ForecastPalette.of(context);
-    final categories = [
-      for (final c in demoCatalog)
-        if (c.supplies.any(_matches))
-          Category(c.name, c.supplies.where(_matches).toList()),
-    ];
+    final expiring = {for (final a in store.engine.expiryAlerts()) a.supply.id};
+    final groups = [
+      for (final c in store.data.categories)
+        (
+          c,
+          store.data.supplies
+              .where((s) => s.categoryId == c.id && _matches(s))
+              .toList(),
+        ),
+    ].where((g) => g.$2.isNotEmpty).toList();
 
     return ForecastPage(
       title: 'Insumos',
@@ -36,14 +43,14 @@ class _SuppliesScreenState extends State<SuppliesScreen> {
           backgroundColor: p.surface,
           onChanged: (q) => setState(() => _query = q),
         ),
-        if (categories.isEmpty)
+        if (groups.isEmpty)
           Panel(
             child: Text(
               'No hay insumos con “$_query”.',
               style: TextStyle(fontSize: 17, color: p.muted),
             ),
           ),
-        for (final c in categories)
+        for (final (c, supplies) in groups)
           Panel(
             padding: const EdgeInsets.fromLTRB(16, 14, 8, 6),
             child: Column(
@@ -57,13 +64,18 @@ class _SuppliesScreenState extends State<SuppliesScreen> {
                     color: p.muted,
                   ),
                 ),
-                for (final (i, s) in c.supplies.indexed) ...[
+                for (final (i, s) in supplies.indexed) ...[
                   if (i > 0)
                     const Padding(
                       padding: EdgeInsets.only(left: 48),
                       child: PanelDivider(),
                     ),
-                  _SupplyTile(supply: s),
+                  _SupplyTile(
+                    supply: s,
+                    onHand: store.engine.currentStock(s.id),
+                    learning: store.engine.isLearning(s.id),
+                    expiring: expiring.contains(s.id),
+                  ),
                 ],
               ],
             ),
@@ -74,17 +86,24 @@ class _SuppliesScreenState extends State<SuppliesScreen> {
 }
 
 class _SupplyTile extends StatelessWidget {
-  const _SupplyTile({required this.supply});
+  const _SupplyTile({
+    required this.supply,
+    required this.onHand,
+    required this.learning,
+    required this.expiring,
+  });
 
-  final CatalogSupply supply;
+  final SupplyInfo supply;
+  final double onHand;
+  final bool learning;
+  final bool expiring;
 
   @override
   Widget build(BuildContext context) {
     final p = ForecastPalette.of(context);
-    final expiring = supply.lots.any((l) => l.daysToExpiry <= 1);
     final subtitle = [
       supply.critical ? 'Diario' : 'Semanal',
-      if (supply.isLearning) 'Kilo aún aprende',
+      if (learning) 'Kilo aún aprende',
     ].join(' · ');
 
     return CupertinoButton(
@@ -92,7 +111,7 @@ class _SupplyTile extends StatelessWidget {
       minimumSize: const Size(0, 60),
       onPressed: () => Navigator.of(context).push(
         CupertinoPageRoute<void>(
-          builder: (_) => SupplyDetailScreen(supply: supply),
+          builder: (_) => SupplyDetailScreen(supplyId: supply.id),
         ),
       ),
       child: Row(
@@ -120,7 +139,7 @@ class _SupplyTile extends StatelessWidget {
             const SizedBox(width: 6),
           ],
           Text(
-            withUnit(supply.onHand, supply.unit),
+            withUnit(onHand, supply.unit),
             style: TextStyle(
               fontSize: 17,
               color: p.muted,

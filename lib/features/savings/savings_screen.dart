@@ -2,48 +2,36 @@ import 'dart:math' as math;
 
 import 'package:flutter/cupertino.dart';
 
-import '../../data/supplies.dart';
+import '../../data/store.dart';
 import '../../theme/forecast_palette.dart';
+import '../../ui/format.dart';
 import '../../ui/panel.dart';
-
-class MonthLoss {
-  const MonthLoss(this.month, this.soles);
-
-  final String month;
-  final double soles;
-}
-
-class Waste {
-  const Waste(this.name, this.icon, this.soles, this.quantity, this.unit);
-
-  final String name;
-  final String? icon;
-  final double soles, quantity;
-  final String unit;
-}
-
-const _months = [
-  MonthLoss('Jun', 380),
-  MonthLoss('Jul', 310),
-  MonthLoss('Ago', 250),
-  MonthLoss('Set', 200),
-];
-const _topWaste = [
-  Waste('Pollo entero', 'chicken', 84, 7, 'kg'),
-  Waste('Tomate', 'tomato', 38, 12, 'kg'),
-  Waste('Culantro', 'cilantro', 22, 11, 'atados'),
-  Waste('Queso fresco', 'cheese', 18, 1, 'kg'),
-];
 
 class SavingsScreen extends StatelessWidget {
   const SavingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final store = KiloScope.of(context);
+    final e = store.engine;
     final p = ForecastPalette.of(context);
-    final now = _months.last.soles;
-    final diff = _months[_months.length - 2].soles - now;
-    final better = diff >= 0;
+    final byMonth = e.monthlyWaste();
+    final thisMonth = DateTime(store.today.year, store.today.month);
+    final months = [
+      for (var k = 3; k >= 0; k--)
+        DateTime(thisMonth.year, thisMonth.month - k),
+    ];
+    final now = byMonth[thisMonth] ?? 0;
+    final before = byMonth[months[2]];
+    final perSupply = <String, (double, double)>{};
+    for (final w in e.waste().where(
+      (w) => w.date.year == thisMonth.year && w.date.month == thisMonth.month,
+    )) {
+      final prev = perSupply[w.supplyId] ?? (0, 0);
+      perSupply[w.supplyId] = (prev.$1 + w.soles, prev.$2 + w.quantity);
+    }
+    final top = perSupply.entries.toList()
+      ..sort((a, b) => b.value.$1.compareTo(a.value.$1));
 
     return ForecastPage(
       title: 'Ahorro',
@@ -67,26 +55,13 @@ class SavingsScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              Row(
-                children: [
-                  Icon(
-                    better
-                        ? CupertinoIcons.arrow_down_circle_fill
-                        : CupertinoIcons.arrow_up_circle_fill,
-                    size: 20,
-                    color: better ? p.good : p.alert,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '${soles(diff.abs())} ${better ? 'menos' : 'más'} que el mes pasado',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      color: better ? p.good : p.alert,
-                    ),
-                  ),
-                ],
-              ),
+              if (before == null)
+                Text(
+                  'Aún no hay mes anterior para comparar.',
+                  style: TextStyle(fontSize: 15, color: p.muted),
+                )
+              else
+                _Change(diff: before - now),
             ],
           ),
         ),
@@ -98,7 +73,10 @@ class SavingsScreen extends StatelessWidget {
                 CupertinoIcons.chart_bar_alt_fill,
                 'PERDIDO POR MES',
               ),
-              _MonthBars(months: _months),
+              _MonthBars(
+                months: months,
+                values: [for (final m in months) byMonth[m] ?? 0],
+              ),
             ],
           ),
         ),
@@ -106,42 +84,60 @@ class SavingsScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const PanelHeader(CupertinoIcons.trash, 'LO QUE MÁS SE VENCIÓ'),
-              for (final (i, w) in _topWaste.indexed) ...[
+              const PanelHeader(
+                CupertinoIcons.trash,
+                'LO QUE MÁS SE VENCIÓ ESTE MES',
+              ),
+              if (top.isEmpty)
+                Text(
+                  'Nada se venció este mes.',
+                  style: TextStyle(fontSize: 17, color: p.muted),
+                ),
+              for (final (i, t) in top.take(5).indexed) ...[
                 if (i > 0) const PanelDivider(),
-                SizedBox(
-                  height: 56,
-                  child: Row(
-                    children: [
-                      supplyIcon(w.icon, 32),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              w.name,
-                              style: TextStyle(fontSize: 17, color: p.text),
+                Builder(
+                  builder: (context) {
+                    final s = store.data.supply(t.key);
+                    return SizedBox(
+                      height: 56,
+                      child: Row(
+                        children: [
+                          supplyIcon(s.icon, 32),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  s.name,
+                                  style: TextStyle(fontSize: 17, color: p.text),
+                                ),
+                                Text(
+                                  '${withUnit(double.parse(t.value.$2.toStringAsFixed(1)), s.unit)} vencidos',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: p.muted,
+                                  ),
+                                ),
+                              ],
                             ),
-                            Text(
-                              '${withUnit(w.quantity, w.unit)} vencidos',
-                              style: TextStyle(fontSize: 13, color: p.muted),
+                          ),
+                          Text(
+                            soles(t.value.$1),
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600,
+                              color: p.text,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        soles(w.soles),
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                          color: p.text,
-                          fontFeatures: const [FontFeature.tabularFigures()],
-                        ),
-                      ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
               ],
             ],
@@ -168,17 +164,51 @@ class SavingsScreen extends StatelessWidget {
   }
 }
 
-String soles(double v) => 'S/ ${v.round()}';
+class _Change extends StatelessWidget {
+  const _Change({required this.diff});
 
-class _MonthBars extends StatelessWidget {
-  const _MonthBars({required this.months});
-
-  final List<MonthLoss> months;
+  final double diff;
 
   @override
   Widget build(BuildContext context) {
     final p = ForecastPalette.of(context);
-    final top = months.map((m) => m.soles).reduce(math.max);
+    final better = diff >= 0;
+    final color = better ? p.good : p.alert;
+    return Row(
+      children: [
+        Icon(
+          better
+              ? CupertinoIcons.arrow_down_circle_fill
+              : CupertinoIcons.arrow_up_circle_fill,
+          size: 20,
+          color: color,
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            '${soles(diff.abs())} ${better ? 'menos' : 'más'} que el mes pasado',
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MonthBars extends StatelessWidget {
+  const _MonthBars({required this.months, required this.values});
+
+  final List<DateTime> months;
+  final List<double> values;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = ForecastPalette.of(context);
+    final top = math.max(values.reduce(math.max), 1.0);
     return SizedBox(
       height: 168,
       child: Row(
@@ -187,13 +217,13 @@ class _MonthBars extends StatelessWidget {
           for (final (i, m) in months.indexed)
             Expanded(
               child: Semantics(
-                label: '${m.month}: ${soles(m.soles)}',
+                label: '${monthShort[m.month - 1]}: ${soles(values[i])}',
                 child: ExcludeSemantics(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       Text(
-                        soles(m.soles),
+                        soles(values[i]),
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
@@ -204,7 +234,7 @@ class _MonthBars extends StatelessWidget {
                       const SizedBox(height: 6),
                       Container(
                         width: 36,
-                        height: 110 * m.soles / top,
+                        height: math.max(4, 110 * values[i] / top),
                         decoration: BoxDecoration(
                           color: i == months.length - 1
                               ? p.accent
@@ -214,7 +244,7 @@ class _MonthBars extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        m.month,
+                        monthShort[m.month - 1],
                         style: TextStyle(fontSize: 13, color: p.muted),
                       ),
                     ],

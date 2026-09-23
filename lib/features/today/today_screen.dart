@@ -1,119 +1,156 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 
-import '../../data/supplies.dart';
+import '../../data/store.dart';
+import '../../domain/engine.dart';
 import '../../theme/forecast_palette.dart';
+import '../../ui/format.dart';
 import '../../ui/panel.dart';
 import '../../ui/range_bar.dart';
 
-class TodayScreen extends StatefulWidget {
+class TodayScreen extends StatelessWidget {
   const TodayScreen({super.key});
 
   @override
-  State<TodayScreen> createState() => _TodayScreenState();
-}
-
-class _TodayScreenState extends State<TodayScreen> {
-  final _bought = <String>{};
-
-  void _toggle(Supply s) {
-    HapticFeedback.selectionClick();
-    setState(
-      () => _bought.contains(s.name)
-          ? _bought.remove(s.name)
-          : _bought.add(s.name),
-    );
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final store = KiloScope.of(context);
+    final e = store.engine;
     final p = ForecastPalette.of(context);
-    final alert = demoShoppingList.firstWhere((s) => s.expiryAlert != null);
+    final due = store.data.categories
+        .where((c) => e.isDue(c.id))
+        .map((c) => c.id)
+        .toSet();
+    final recs = [
+      for (final s in store.data.supplies)
+        if (due.contains(s.categoryId)) e.recommend(s.id),
+    ];
+    final toBuy = recs.where((r) => r.toBuy > 0).toList();
+    final covered = recs.where((r) => r.toBuy == 0).toList();
 
     return ForecastPage(
       title: 'Compra de hoy',
       children: [
-        Panel(
-          color: p.alertBackground,
-          child: Row(
-            children: [
-              supplyIcon(alert.icon, 40),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      alert.expiryAlert!,
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        color: p.alert,
-                      ),
-                    ),
-                    Text(
-                      '${alert.name} · úsalo primero',
-                      style: TextStyle(fontSize: 15, color: p.alert),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                CupertinoIcons.exclamationmark_triangle_fill,
-                color: p.alert,
-              ),
-            ],
-          ),
-        ),
-        Panel(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const PanelHeader(
-                CupertinoIcons.calendar,
-                'PARA LOS PRÓXIMOS 3 DÍAS',
-              ),
-              for (final s in demoShoppingList) ...[
-                const PanelDivider(),
-                _SupplyRow(
-                  supply: s,
-                  bought: _bought.contains(s.name),
-                  onTap: () => _toggle(s),
+        for (final a in e.expiryAlerts())
+          _AlertPanel(alert: a, lotLabel: e.lotLabel(a.lot.lot)),
+        if (toBuy.isEmpty)
+          Panel(
+            child: Row(
+              children: [
+                Icon(CupertinoIcons.sun_max_fill, color: p.accent, size: 28),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    due.isEmpty
+                        ? 'Hoy no toca ir al mercado. Tu stock alcanza.'
+                        : 'Ya tienes todo lo de hoy.',
+                    style: TextStyle(fontSize: 17, color: p.text),
+                  ),
                 ),
               ],
-              const SizedBox(height: 8),
-              const _Legend(),
-            ],
+            ),
           ),
-        ),
-        Panel(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const PanelHeader(
-                CupertinoIcons.checkmark_seal_fill,
-                'YA ALCANZA',
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  for (final c in demoCovered.entries)
-                    Column(
-                      children: [
-                        supplyIcon(c.value, 36),
-                        const SizedBox(height: 4),
-                        Text(
-                          c.key,
-                          style: TextStyle(fontSize: 13, color: p.text),
-                        ),
-                      ],
-                    ),
+        if (toBuy.isNotEmpty)
+          Panel(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const PanelHeader(
+                  CupertinoIcons.calendar,
+                  'HASTA TU PRÓXIMA COMPRA',
+                ),
+                for (final r in toBuy) ...[
+                  const PanelDivider(),
+                  _SupplyRow(
+                    rec: r,
+                    learning: e.isLearning(r.supply.id),
+                    bought: store.isBought(r.supply.id),
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      store.toggleBought(r.supply.id);
+                    },
+                  ),
                 ],
-              ),
-            ],
+                const SizedBox(height: 8),
+                const _Legend(),
+              ],
+            ),
           ),
-        ),
+        if (covered.isNotEmpty)
+          Panel(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const PanelHeader(
+                  CupertinoIcons.checkmark_seal_fill,
+                  'YA ALCANZA',
+                ),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 12,
+                  children: [
+                    for (final r in covered)
+                      SizedBox(
+                        width: 84,
+                        child: Column(
+                          children: [
+                            supplyIcon(r.supply.icon, 36),
+                            const SizedBox(height: 4),
+                            Text(
+                              r.supply.name,
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              style: TextStyle(fontSize: 13, color: p.text),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
       ],
+    );
+  }
+}
+
+class _AlertPanel extends StatelessWidget {
+  const _AlertPanel({required this.alert, required this.lotLabel});
+
+  final ExpiryAlert alert;
+  final String lotLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = ForecastPalette.of(context);
+    return Panel(
+      color: p.alertBackground,
+      child: Row(
+        children: [
+          supplyIcon(alert.supply.icon, 40),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'El lote $lotLabel ${expiryText(alert.daysLeft)}',
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: p.alert,
+                  ),
+                ),
+                Text(
+                  '${alert.supply.name} · quedan ${withUnit(alert.lot.remaining, alert.supply.unit)} · úsalo primero',
+                  style: TextStyle(fontSize: 15, color: p.alert),
+                ),
+              ],
+            ),
+          ),
+          Icon(CupertinoIcons.exclamationmark_triangle_fill, color: p.alert),
+        ],
+      ),
     );
   }
 }
@@ -152,24 +189,27 @@ class _Legend extends StatelessWidget {
 
 class _SupplyRow extends StatelessWidget {
   const _SupplyRow({
-    required this.supply,
+    required this.rec,
+    required this.learning,
     required this.bought,
     required this.onTap,
   });
 
-  final Supply supply;
+  final Recommendation rec;
+  final bool learning;
   final bool bought;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final p = ForecastPalette.of(context);
+    final s = rec.supply;
     return Semantics(
       button: true,
       checked: bought,
       label:
-          'Comprar ${withUnit(supply.toBuy, supply.unit)} de ${supply.name}. '
-          'Tienes ${formatQty(supply.onHand)}.${supply.isLearning ? ' Kilo aún aprende este insumo.' : ''}',
+          'Comprar ${withUnit(rec.toBuy, s.unit)} de ${s.name}. '
+          'Tienes ${withUnit(rec.onHand, s.unit)}.${learning ? ' Kilo aún aprende este insumo.' : ''}',
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
@@ -181,7 +221,7 @@ class _SupplyRow extends StatelessWidget {
               constraints: const BoxConstraints(minHeight: 60),
               child: Row(
                 children: [
-                  supplyIcon(supply.icon, 36),
+                  supplyIcon(s.icon, 36),
                   const SizedBox(width: 10),
                   SizedBox(
                     width: 122,
@@ -190,7 +230,7 @@ class _SupplyRow extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          supply.name,
+                          s.name,
                           style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w500,
@@ -198,7 +238,7 @@ class _SupplyRow extends StatelessWidget {
                           ),
                           maxLines: 2,
                         ),
-                        if (supply.isLearning)
+                        if (learning)
                           Text(
                             'Kilo aún aprende',
                             style: TextStyle(fontSize: 12, color: p.muted),
@@ -208,7 +248,9 @@ class _SupplyRow extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: RangeBar(fraction: supply.onHand / supply.needed),
+                    child: RangeBar(
+                      fraction: rec.needed == 0 ? 1 : rec.onHand / rec.needed,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   SizedBox(
@@ -226,7 +268,7 @@ class _SupplyRow extends StatelessWidget {
                               color: p.text,
                             ),
                           Text(
-                            ' ${withUnit(supply.toBuy, supply.unit)}',
+                            ' ${withUnit(rec.toBuy, s.unit)}',
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w600,

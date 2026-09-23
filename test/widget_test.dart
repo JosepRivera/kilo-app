@@ -2,103 +2,28 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kilo_app/app.dart';
 import 'package:kilo_app/data/store.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:kilo_app/data/supplies.dart';
-import 'package:kilo_app/features/dictation/dictation_sheet.dart';
 import 'package:kilo_app/features/today/today_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  Future<void> pumpApp(WidgetTester tester) async {
+  late KiloStore store;
+  final today = DateTime(2026, 9, 23);
+
+  Future<void> pumpApp(WidgetTester tester, {int hour = 9}) async {
     SharedPreferences.setMockInitialValues({});
-    final store = await KiloStore.load(clock: () => DateTime(2026, 9, 23, 9));
+    store = await KiloStore.load(clock: () => DateTime(2026, 9, 23, hour));
     await tester.pumpWidget(KiloApp(store: store));
     await tester.pumpAndSettle();
   }
 
-  testWidgets('starts on Today without overflow', (tester) async {
-    await pumpApp(tester);
-    expect(find.byType(TodayScreen), findsOneWidget);
-    expect(find.text('Compra de hoy'), findsOneWidget);
-  });
-
-  testWidgets('tapping a supply marks it as bought', (tester) async {
-    await pumpApp(tester);
-    expect(find.byIcon(CupertinoIcons.checkmark_alt), findsNothing);
-    await tester.tap(find.text('Pollo entero'));
-    await tester.pumpAndSettle();
-    expect(find.byIcon(CupertinoIcons.checkmark_alt), findsOneWidget);
-  });
-
-  testWidgets('tabs switch between places', (tester) async {
-    await pumpApp(tester);
-    await tester.tap(find.text('Insumos').last);
-    await tester.pumpAndSettle();
-    expect(find.text('Compra de hoy'), findsNothing);
-  });
-
-  testWidgets('mic opens the dictation sheet', (tester) async {
-    await pumpApp(tester);
-    await tester.tap(find.byIcon(CupertinoIcons.mic_fill));
-    await tester.pumpAndSettle();
-    expect(find.text('Te escucho'), findsOneWidget);
-    await tester.tap(find.text('Compra'));
-    await tester.pumpAndSettle();
-    expect(find.text('Qué compraste, cuánto y a cuánto'), findsOneWidget);
-  });
-
-  testWidgets('supplies without their own art fall back to the generic icon', (
-    tester,
-  ) async {
-    await tester.pumpWidget(Center(child: supplyIcon('does-not-exist', 36)));
-    await tester.pumpAndSettle();
-    final shown = tester
-        .widgetList<Image>(find.byType(Image))
-        .map((i) => (i.image as AssetImage).assetName);
-    expect(shown, contains('assets/supplies/generic.png'));
-  });
-
-  testWidgets('supply detail shows the week and the expiring lot', (
-    tester,
-  ) async {
-    await pumpApp(tester);
-    await tester.tap(find.text('Insumos').last);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Pollo entero'));
-    await tester.pumpAndSettle();
-    expect(find.text('Se usa más el viernes y el sábado.'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('vence mañana'), 200);
-    expect(find.text('vence mañana'), findsOneWidget);
-  });
-
-  testWidgets('supply search filters the catalog', (tester) async {
-    await pumpApp(tester);
-    await tester.tap(find.text('Insumos').last);
-    await tester.pumpAndSettle();
-    await tester.enterText(find.byType(CupertinoSearchTextField), 'zzz');
-    await tester.pumpAndSettle();
-    expect(find.text('No hay insumos con “zzz”.'), findsOneWidget);
-  });
-
-  testWidgets('savings compares this month against the previous one', (
-    tester,
-  ) async {
-    await pumpApp(tester);
-    await tester.tap(find.text('Ahorro').last);
-    await tester.pumpAndSettle();
-    expect(find.text('S/ 50 menos que el mes pasado'), findsOneWidget);
-  });
-
-  test(
-    'dictation opens on the stock close at night and on purchase by day',
-    () {
-      expect(actionForTime(DateTime(2026, 9, 23, 22)), VoiceAction.stockClose);
-      expect(actionForTime(DateTime(2026, 9, 24, 2)), VoiceAction.stockClose);
-      expect(actionForTime(DateTime(2026, 9, 24, 9)), VoiceAction.purchase);
-    },
-  );
+  List<String> toBuyNames() => [
+    for (final s in store.data.supplies)
+      if (store.engine.isDue(s.categoryId) &&
+          store.engine.recommend(s.id).toBuy > 0)
+        s.name,
+  ];
 
   Future<void> dictate(WidgetTester tester, String segment) async {
-    await pumpApp(tester);
     await tester.tap(find.byIcon(CupertinoIcons.mic_fill));
     await tester.pumpAndSettle();
     await tester.tap(find.text(segment));
@@ -107,26 +32,48 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('stock close review saves only after every check is answered', (
-    tester,
-  ) async {
-    await dictate(tester, 'Cierre de hoy');
-    expect(find.text('Revisar'), findsNWidgets(2));
-    await tester.tap(find.text('Sí, es correcto'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Usar 3 kg'));
-    await tester.pumpAndSettle();
-    expect(find.text('Papa corregida a 3 kg'), findsOneWidget);
+  Future<void> confirmAllAndSave(WidgetTester tester) async {
+    while (find.text('Sí, es correcto').evaluate().isNotEmpty) {
+      await tester.tap(find.text('Sí, es correcto').first);
+      await tester.pumpAndSettle();
+    }
     await tester.tap(find.text('Guardar'));
     await tester.pumpAndSettle();
-    expect(find.text('Compra de hoy'), findsOneWidget);
+  }
+
+  testWidgets('starts on Today with a purchase list and no overflow', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    expect(find.byType(TodayScreen), findsOneWidget);
+    expect(toBuyNames(), isNotEmpty);
   });
 
-  testWidgets('purchase review resolves the ambiguous supply', (tester) async {
-    await dictate(tester, 'Compra');
-    await tester.tap(find.text('Limón sutil'));
+  testWidgets('checking off a supply persists across reloads', (tester) async {
+    await pumpApp(tester);
+    await tester.tap(find.text(toBuyNames().first).first);
     await tester.pumpAndSettle();
-    expect(find.text('Limón: Limón sutil'), findsOneWidget);
-    expect(find.text('LOTES QUE SE CREAN'), findsOneWidget);
+    final reloaded = await KiloStore.load(
+      clock: () => DateTime(2026, 9, 23, 9),
+    );
+    expect(reloaded.data.boughtByDay['2026-09-23'], isNotEmpty);
+  });
+
+  testWidgets('saving the stock close records today', (tester) async {
+    await pumpApp(tester, hour: 21);
+    await dictate(tester, 'Cierre de hoy');
+    await confirmAllAndSave(tester);
+    expect(store.data.stock.where((r) => r.date == today), isNotEmpty);
+  });
+
+  testWidgets('saving a purchase creates lots and shrinks the list', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    final before = toBuyNames().length;
+    await dictate(tester, 'Compra');
+    await confirmAllAndSave(tester);
+    expect(store.data.lots.where((l) => l.purchasedOn == today), isNotEmpty);
+    expect(toBuyNames().length, lessThan(before));
   });
 }

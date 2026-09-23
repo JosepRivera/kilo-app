@@ -2,27 +2,25 @@ import 'dart:math' as math;
 
 import 'package:flutter/cupertino.dart';
 
-import '../../data/catalog.dart';
-import '../../data/supplies.dart';
+import '../../data/store.dart';
+import '../../domain/engine.dart';
+import '../../domain/models.dart';
 import '../../theme/forecast_palette.dart';
+import '../../ui/format.dart';
 import '../../ui/panel.dart';
 
-class SupplyDetailScreen extends StatefulWidget {
-  const SupplyDetailScreen({super.key, required this.supply});
+class SupplyDetailScreen extends StatelessWidget {
+  const SupplyDetailScreen({super.key, required this.supplyId});
 
-  final CatalogSupply supply;
-
-  @override
-  State<SupplyDetailScreen> createState() => _SupplyDetailScreenState();
-}
-
-class _SupplyDetailScreenState extends State<SupplyDetailScreen> {
-  late var _critical = widget.supply.critical;
+  final String supplyId;
 
   @override
   Widget build(BuildContext context) {
+    final store = KiloScope.of(context);
+    final e = store.engine;
     final p = ForecastPalette.of(context);
-    final s = widget.supply;
+    final s = store.data.supply(supplyId);
+    final lots = e.activeLots(s.id);
 
     return CupertinoPageScaffold(
       backgroundColor: p.background,
@@ -37,12 +35,16 @@ class _SupplyDetailScreenState extends State<SupplyDetailScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
           children: [
-            _Now(supply: s),
+            _Now(
+              supply: s,
+              onHand: e.currentStock(s.id),
+              realDays: e.realDays(s.id),
+            ),
             const SizedBox(height: 12),
-            _Week(supply: s),
-            if (s.lots.isNotEmpty) ...[
+            _Week(supply: s, engine: e, from: store.today),
+            if (lots.isNotEmpty) ...[
               const SizedBox(height: 12),
-              _Lots(supply: s),
+              _Lots(supply: s, lots: lots, engine: e, today: store.today),
             ],
             const SizedBox(height: 12),
             Panel(
@@ -53,8 +55,8 @@ class _SupplyDetailScreenState extends State<SupplyDetailScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: CupertinoSlidingSegmentedControl<bool>(
-                      groupValue: _critical,
-                      onValueChanged: (v) => setState(() => _critical = v!),
+                      groupValue: s.critical,
+                      onValueChanged: (v) => store.setCritical(s.id, v!),
                       children: const {
                         true: Text('Cada noche'),
                         false: Text('Cada semana'),
@@ -63,7 +65,7 @@ class _SupplyDetailScreenState extends State<SupplyDetailScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    _critical
+                    s.critical
                         ? 'Lo dictas en el cierre de cada noche. Ideal para insumos caros o que se malogran.'
                         : 'Lo dictas una vez por semana. Ideal para insumos baratos que duran.',
                     style: TextStyle(fontSize: 13, color: p.muted),
@@ -96,14 +98,20 @@ class _SupplyDetailScreenState extends State<SupplyDetailScreen> {
 }
 
 class _Now extends StatelessWidget {
-  const _Now({required this.supply});
+  const _Now({
+    required this.supply,
+    required this.onHand,
+    required this.realDays,
+  });
 
-  final CatalogSupply supply;
+  final SupplyInfo supply;
+  final double onHand;
+  final int realDays;
 
   @override
   Widget build(BuildContext context) {
     final p = ForecastPalette.of(context);
-    final s = supply;
+    final learning = realDays < coldStartDays;
     return Panel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -124,7 +132,7 @@ class _Now extends StatelessWidget {
                       textBaseline: TextBaseline.alphabetic,
                       children: [
                         Text(
-                          formatQty(s.onHand),
+                          formatQty(onHand),
                           style: TextStyle(
                             fontSize: 64,
                             fontWeight: FontWeight.w300,
@@ -135,7 +143,7 @@ class _Now extends StatelessWidget {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          s.unit,
+                          supply.unit,
                           style: TextStyle(fontSize: 22, color: p.muted),
                         ),
                       ],
@@ -143,13 +151,13 @@ class _Now extends StatelessWidget {
                   ],
                 ),
               ),
-              supplyIcon(s.icon, 72),
+              supplyIcon(supply.icon, 72),
             ],
           ),
-          if (s.isLearning) ...[
+          if (learning) ...[
             const SizedBox(height: 12),
             Text(
-              'Kilo aún aprende este insumo · ${s.realDays} de $coldStartDays días',
+              'Kilo aún aprende este insumo · $realDays de $coldStartDays días',
               style: TextStyle(fontSize: 13, color: p.muted),
             ),
             const SizedBox(height: 6),
@@ -157,10 +165,17 @@ class _Now extends StatelessWidget {
               borderRadius: BorderRadius.circular(3),
               child: SizedBox(
                 height: 6,
-                child: LinearProgress(
-                  value: s.realDays / coldStartDays,
-                  color: p.accent,
-                  track: p.track,
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: realDays,
+                      child: ColoredBox(color: p.accent),
+                    ),
+                    Expanded(
+                      flex: coldStartDays - realDays,
+                      child: ColoredBox(color: p.track),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -171,45 +186,26 @@ class _Now extends StatelessWidget {
   }
 }
 
-class LinearProgress extends StatelessWidget {
-  const LinearProgress({
-    super.key,
-    required this.value,
-    required this.color,
-    required this.track,
-  });
-
-  final double value;
-  final Color color, track;
-
-  @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      Expanded(
-        flex: (value * 1000).round(),
-        child: ColoredBox(color: color),
-      ),
-      Expanded(
-        flex: 1000 - (value * 1000).round(),
-        child: ColoredBox(color: track),
-      ),
-    ],
-  );
-}
-
 class _Week extends StatelessWidget {
-  const _Week({required this.supply});
+  const _Week({required this.supply, required this.engine, required this.from});
 
-  final CatalogSupply supply;
+  final SupplyInfo supply;
+  final Engine engine;
+  final DateTime from;
 
   @override
   Widget build(BuildContext context) {
     final p = ForecastPalette.of(context);
-    final w = supply.weekForecast;
-    final top = w.reduce(math.max);
-    final busiest = ([
-      for (var i = 0; i < 7; i++) i,
-    ]..sort((a, b) => w[b].compareTo(w[a]))).take(2).toList()..sort();
+    final days = [
+      for (var k = 0; k < 7; k++) DateTime(from.year, from.month, from.day + k),
+    ];
+    final w = [for (final d in days) engine.forecast(supply.id, d)];
+    final top = math.max(w.reduce(math.max), 0.001);
+    final busiest =
+        ([
+            for (var i = 0; i < 7; i++) i,
+          ]..sort((a, b) => w[b].compareTo(w[a]))).take(2).toList()
+          ..sort((a, b) => days[a].weekday.compareTo(days[b].weekday));
 
     return Panel(
       child: Column(
@@ -220,7 +216,7 @@ class _Week extends StatelessWidget {
             'USO ESPERADO · PRÓXIMOS 7 DÍAS',
           ),
           Text(
-            'Se usa más el ${_dayName(busiest[0])} y el ${_dayName(busiest[1])}.',
+            'Se usa más el ${weekdayLong[days[busiest[0]].weekday - 1]} y el ${weekdayLong[days[busiest[1]].weekday - 1]}.',
             style: TextStyle(fontSize: 15, color: p.text),
           ),
           const SizedBox(height: 6),
@@ -231,9 +227,9 @@ class _Week extends StatelessWidget {
               child: Row(
                 children: [
                   SizedBox(
-                    width: 44,
+                    width: 52,
                     child: Text(
-                      weekdays[i],
+                      i == 0 ? 'Hoy' : weekdayShort[days[i].weekday - 1],
                       style: TextStyle(fontSize: 17, color: p.text),
                     ),
                   ),
@@ -255,9 +251,12 @@ class _Week extends StatelessWidget {
                     ),
                   ),
                   SizedBox(
-                    width: 96,
+                    width: 104,
                     child: Text(
-                      withUnit(w[i], supply.unit),
+                      withUnit(
+                        double.parse(w[i].toStringAsFixed(1)),
+                        supply.unit,
+                      ),
                       textAlign: TextAlign.right,
                       style: TextStyle(
                         fontSize: 17,
@@ -276,20 +275,18 @@ class _Week extends StatelessWidget {
   }
 }
 
-String _dayName(int i) => const [
-  'lunes',
-  'martes',
-  'miércoles',
-  'jueves',
-  'viernes',
-  'sábado',
-  'domingo',
-][i];
-
 class _Lots extends StatelessWidget {
-  const _Lots({required this.supply});
+  const _Lots({
+    required this.supply,
+    required this.lots,
+    required this.engine,
+    required this.today,
+  });
 
-  final CatalogSupply supply;
+  final SupplyInfo supply;
+  final List<LotState> lots;
+  final Engine engine;
+  final DateTime today;
 
   @override
   Widget build(BuildContext context) {
@@ -299,43 +296,52 @@ class _Lots extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const PanelHeader(CupertinoIcons.cube_box, 'LOTES'),
-          for (final (i, l) in supply.lots.indexed) ...[
+          for (final (i, l) in lots.indexed) ...[
             if (i > 0) const PanelDivider(),
-            SizedBox(
-              height: 48,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Lote ${l.label}',
-                      style: TextStyle(fontSize: 17, color: p.text),
-                    ),
-                  ),
-                  Text(
-                    withUnit(l.quantity, supply.unit),
-                    style: TextStyle(
-                      fontSize: 17,
-                      color: p.muted,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  SizedBox(
-                    width: 108,
-                    child: Text(
-                      _expiry(l.daysToExpiry),
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: l.daysToExpiry <= 1
-                            ? FontWeight.w600
-                            : FontWeight.w400,
-                        color: l.daysToExpiry <= 1 ? p.alert : p.muted,
+            Builder(
+              builder: (context) {
+                final days = l.lot.expiresOn.difference(today).inDays;
+                final urgent = days <= 1;
+                return SizedBox(
+                  height: 48,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Lote ${engine.lotLabel(l.lot)}',
+                          style: TextStyle(fontSize: 17, color: p.text),
+                        ),
                       ),
-                    ),
+                      Text(
+                        withUnit(
+                          double.parse(l.remaining.toStringAsFixed(1)),
+                          supply.unit,
+                        ),
+                        style: TextStyle(
+                          fontSize: 17,
+                          color: p.muted,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      SizedBox(
+                        width: 116,
+                        child: Text(
+                          expiryText(days),
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: urgent
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                            color: urgent ? p.alert : p.muted,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                );
+              },
             ),
           ],
         ],
@@ -343,12 +349,6 @@ class _Lots extends StatelessWidget {
     );
   }
 }
-
-String _expiry(int days) => switch (days) {
-  <= 0 => 'vence hoy',
-  1 => 'vence mañana',
-  _ => 'vence en $days días',
-};
 
 class _Line extends StatelessWidget {
   const _Line({required this.label, required this.value});
