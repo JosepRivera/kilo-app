@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import '../../theme/forecast_palette.dart';
 import '../../ui/faded_header.dart';
 import '../../ui/panel.dart';
+import '../../ui/sheet.dart';
 
 class ReviewScaffold extends StatelessWidget {
   const ReviewScaffold({
@@ -23,18 +24,16 @@ class ReviewScaffold extends StatelessWidget {
     title: title,
     largeTitle: false,
     bottomPadding: 32,
-    leading: CupertinoButton(
-      padding: EdgeInsets.zero,
+    leading: CircleButton(
+      icon: CupertinoIcons.xmark,
+      label: 'Cancelar',
       onPressed: () => Navigator.pop(context),
-      child: const Text('Cancelar'),
     ),
-    trailing: CupertinoButton(
-      padding: EdgeInsets.zero,
+    trailing: CircleButton(
+      icon: CupertinoIcons.checkmark,
+      label: 'Guardar',
+      prominent: true,
       onPressed: canSave ? onSave : null,
-      child: const Text(
-        'Guardar',
-        style: TextStyle(fontWeight: FontWeight.w600),
-      ),
     ),
     children: children,
   );

@@ -6,6 +6,7 @@ import '../../domain/models.dart';
 import '../../theme/forecast_palette.dart';
 import '../../ui/format.dart';
 import '../../ui/panel.dart';
+import '../../ui/sheet.dart';
 import 'review_parts.dart';
 
 class _Line {
@@ -76,19 +77,16 @@ class _PurchaseReviewScreenState extends State<PurchaseReviewScreen> {
     super.dispose();
   }
 
-  Future<void> _pickExpiry(_Line line) => showCupertinoModalPopup<void>(
-    context: context,
-    builder: (_) => Container(
-      height: 280,
-      color: ForecastPalette.of(context).surface,
-      child: SafeArea(
-        top: false,
-        child: CupertinoDatePicker(
-          mode: CupertinoDatePickerMode.date,
-          initialDateTime: line.expiresOn,
-          minimumDate: _today,
-          onDateTimeChanged: (d) => setState(() => line.expiresOn = day(d)),
-        ),
+  Future<void> _pickExpiry(_Line line) => showFloatingSheet<void>(
+    context,
+    title: 'Fecha de vencimiento',
+    builder: (_) => SizedBox(
+      height: 216,
+      child: CupertinoDatePicker(
+        mode: CupertinoDatePickerMode.date,
+        initialDateTime: line.expiresOn,
+        minimumDate: _today,
+        onDateTimeChanged: (d) => setState(() => line.expiresOn = day(d)),
       ),
     ),
   );

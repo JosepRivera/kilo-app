@@ -6,6 +6,7 @@ import '../../domain/models.dart';
 import '../../theme/forecast_palette.dart';
 import '../../ui/format.dart';
 import '../../ui/panel.dart';
+import '../../ui/sheet.dart';
 import 'review_parts.dart';
 
 class StockCloseReviewScreen extends StatefulWidget {
@@ -77,29 +78,17 @@ class _StockCloseReviewScreenState extends State<StockCloseReviewScreen> {
     super.dispose();
   }
 
-  void _noConsumption() => showCupertinoDialog<void>(
-    context: context,
-    builder: (dialog) => CupertinoAlertDialog(
-      title: const Text('¿Hoy no hubo consumo?'),
-      content: const Text(
-        'El día queda en cero y cuenta como dato real, no como olvido.',
-      ),
-      actions: [
-        CupertinoDialogAction(
-          onPressed: () => Navigator.pop(dialog),
-          child: const Text('Cancelar'),
-        ),
-        CupertinoDialogAction(
-          isDefaultAction: true,
-          onPressed: () {
-            _store.markNoConsumption();
-            Navigator.pop(dialog);
-            Navigator.pop(context);
-          },
-          child: const Text('Marcar sin consumo'),
-        ),
-      ],
-    ),
+  void _noConsumption() => showCapsuleAlert(
+    context,
+    title: '¿Hoy no hubo consumo?',
+    message: 'El día queda en cero y cuenta como dato real, no como olvido.',
+    actions: [
+      AlertAction('Cancelar', () {}),
+      AlertAction('Marcar sin consumo', () {
+        _store.markNoConsumption();
+        Navigator.pop(context);
+      }, primary: true),
+    ],
   );
 
   @override

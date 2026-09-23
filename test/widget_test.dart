@@ -37,7 +37,7 @@ void main() {
       await tester.tap(find.text('Sí, es correcto').first);
       await tester.pumpAndSettle();
     }
-    await tester.tap(find.text('Guardar'));
+    await tester.tap(find.bySemanticsLabel('Guardar'));
     await tester.pumpAndSettle();
   }
 
