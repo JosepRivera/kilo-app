@@ -25,7 +25,7 @@ Out of scope (later points): Fase 1 onboarding, Holt-Winters (point 3), real voi
 - [x] T2 Store with persistence + seeded history — route: inline
 - [x] T3 Wire Hoy, Insumos, detail, Ahorro to the store — route: inline
 - [x] T4 Wire stock-close and purchase reviews (save updates the model) — route: inline
-- [ ] T5 Simulator pass + APK for the user's Android check — route: inline
+- [x] T5 Simulator pass (Hoy with real alerts/quantities, purchase review with real price flag) + APK sent — route: inline
 
 Route rationale: the parent already holds the domain and design context from the previous feature; a single coherent writer keeps rules and screens consistent.
 
@@ -43,7 +43,10 @@ Route rationale: the parent already holds the domain and design context from the
 Forecast ~1,500 authored lines. Strategy ask-on-risk; no push/PR without the user.
 
 ## Progress
+- 029914d domain engine + 13 rule tests · 1b61e13 store + seed · 16dd0b3 screens wired · 4c54d60 bottom fade
+- Tests trimmed per user: 13 engine + 2 seed + 4 core-flow widget tests; all pass; analyze clean.
+- Known: cold-start estimate (declared spend split evenly, per docs) overshoots low-price items early (e.g. culantro 12 atados).
 - a0b0c2f fix(android): transparent system bars (pre-feature request)
 
 ## Next step
-T1.
+User checks Android status bar on device. Then point 2 (Fase 1 onboarding).
