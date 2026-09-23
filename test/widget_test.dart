@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kilo_app/app.dart';
 import 'package:kilo_app/data/supplies.dart';
+import 'package:kilo_app/features/dictation/dictation_sheet.dart';
 import 'package:kilo_app/features/today/today_screen.dart';
 
 void main() {
@@ -81,5 +82,47 @@ void main() {
     await tester.tap(find.text('Ahorro').last);
     await tester.pumpAndSettle();
     expect(find.text('S/ 50 menos que el mes pasado'), findsOneWidget);
+  });
+
+  test(
+    'dictation opens on the stock close at night and on purchase by day',
+    () {
+      expect(actionForTime(DateTime(2026, 9, 23, 22)), VoiceAction.stockClose);
+      expect(actionForTime(DateTime(2026, 9, 24, 2)), VoiceAction.stockClose);
+      expect(actionForTime(DateTime(2026, 9, 24, 9)), VoiceAction.purchase);
+    },
+  );
+
+  Future<void> dictate(WidgetTester tester, String segment) async {
+    await pumpApp(tester);
+    await tester.tap(find.byIcon(CupertinoIcons.mic_fill));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(segment));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Listo'));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('stock close review saves only after every check is answered', (
+    tester,
+  ) async {
+    await dictate(tester, 'Cierre de hoy');
+    expect(find.text('Revisar'), findsNWidgets(2));
+    await tester.tap(find.text('Sí, es correcto'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Usar 3 kg'));
+    await tester.pumpAndSettle();
+    expect(find.text('Papa corregida a 3 kg'), findsOneWidget);
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Compra de hoy'), findsOneWidget);
+  });
+
+  testWidgets('purchase review resolves the ambiguous supply', (tester) async {
+    await dictate(tester, 'Compra');
+    await tester.tap(find.text('Limón sutil'));
+    await tester.pumpAndSettle();
+    expect(find.text('Limón: Limón sutil'), findsOneWidget);
+    expect(find.text('LOTES QUE SE CREAN'), findsOneWidget);
   });
 }
