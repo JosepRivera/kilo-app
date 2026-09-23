@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 
 import '../../theme/forecast_palette.dart';
+import '../../ui/faded_header.dart';
 import '../../ui/panel.dart';
 
 class ReviewScaffold extends StatelessWidget {
@@ -18,41 +19,25 @@ class ReviewScaffold extends StatelessWidget {
   final VoidCallback onSave;
 
   @override
-  Widget build(BuildContext context) {
-    final p = ForecastPalette.of(context);
-    return CupertinoPageScaffold(
-      backgroundColor: p.background,
-      navigationBar: CupertinoNavigationBar(
-        backgroundColor: p.background.withValues(alpha: 0.9),
-        border: null,
-        leading: CupertinoButton(
-          padding: EdgeInsets.zero,
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancelar'),
-        ),
-        middle: Text(title),
-        trailing: CupertinoButton(
-          padding: EdgeInsets.zero,
-          onPressed: canSave ? onSave : null,
-          child: const Text(
-            'Guardar',
-            style: TextStyle(fontWeight: FontWeight.w600),
-          ),
-        ),
+  Widget build(BuildContext context) => FadedHeaderScaffold(
+    title: title,
+    largeTitle: false,
+    bottomPadding: 32,
+    leading: CupertinoButton(
+      padding: EdgeInsets.zero,
+      onPressed: () => Navigator.pop(context),
+      child: const Text('Cancelar'),
+    ),
+    trailing: CupertinoButton(
+      padding: EdgeInsets.zero,
+      onPressed: canSave ? onSave : null,
+      child: const Text(
+        'Guardar',
+        style: TextStyle(fontWeight: FontWeight.w600),
       ),
-      child: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-          children: [
-            for (final (i, c) in children.indexed) ...[
-              if (i > 0) const SizedBox(height: 12),
-              c,
-            ],
-          ],
-        ),
-      ),
-    );
-  }
+    ),
+    children: children,
+  );
 }
 
 class TranscriptPanel extends StatelessWidget {

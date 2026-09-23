@@ -24,7 +24,8 @@ class _SuppliesScreenState extends State<SuppliesScreen> {
   Widget build(BuildContext context) {
     final store = KiloScope.of(context);
     final p = ForecastPalette.of(context);
-    final expiring = {for (final a in store.engine.expiryAlerts()) a.supply.id};
+    final alerts = store.engine.expiryAlerts();
+    final expiring = {for (final a in alerts.reversed) a.supply.id: a.daysLeft};
     final groups = [
       for (final c in store.data.categories)
         (
@@ -43,6 +44,72 @@ class _SuppliesScreenState extends State<SuppliesScreen> {
           backgroundColor: p.surface,
           onChanged: (q) => setState(() => _query = q),
         ),
+        if (alerts.isNotEmpty && _query.isEmpty)
+          Panel(
+            padding: const EdgeInsets.fromLTRB(16, 14, 8, 6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                PanelHeader(
+                  CupertinoIcons.exclamationmark_triangle_fill,
+                  'POR VENCER',
+                  color: p.alert,
+                ),
+                for (final (i, a) in alerts.indexed) ...[
+                  if (i > 0)
+                    const Padding(
+                      padding: EdgeInsets.only(left: 48),
+                      child: PanelDivider(),
+                    ),
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(0, 60),
+                    onPressed: () => Navigator.of(context).push(
+                      CupertinoPageRoute<void>(
+                        builder: (_) =>
+                            SupplyDetailScreen(supplyId: a.supply.id),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        supplyIcon(a.supply.icon, 36),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                a.supply.name,
+                                style: TextStyle(fontSize: 17, color: p.text),
+                              ),
+                              Text(
+                                'Lote ${store.engine.lotLabel(a.lot.lot)} · ${withUnit(double.parse(a.lot.remaining.toStringAsFixed(1)), a.supply.unit)}',
+                                style: TextStyle(fontSize: 13, color: p.muted),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          expiryText(a.daysLeft),
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: p.alert,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          CupertinoIcons.chevron_forward,
+                          size: 16,
+                          color: p.muted.withValues(alpha: 0.6),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
         if (groups.isEmpty)
           Panel(
             child: Text(
@@ -74,7 +141,7 @@ class _SuppliesScreenState extends State<SuppliesScreen> {
                     supply: s,
                     onHand: store.engine.currentStock(s.id),
                     learning: store.engine.isLearning(s.id),
-                    expiring: expiring.contains(s.id),
+                    expiresIn: expiring[s.id],
                   ),
                 ],
               ],
@@ -90,13 +157,13 @@ class _SupplyTile extends StatelessWidget {
     required this.supply,
     required this.onHand,
     required this.learning,
-    required this.expiring,
+    required this.expiresIn,
   });
 
   final SupplyInfo supply;
   final double onHand;
   final bool learning;
-  final bool expiring;
+  final int? expiresIn;
 
   @override
   Widget build(BuildContext context) {
@@ -105,6 +172,7 @@ class _SupplyTile extends StatelessWidget {
       supply.critical ? 'Diario' : 'Semanal',
       if (learning) 'Kilo aún aprende',
     ].join(' · ');
+    final muted = TextStyle(fontSize: 13, color: p.muted);
 
     return CupertinoButton(
       padding: EdgeInsets.zero,
@@ -126,18 +194,25 @@ class _SupplyTile extends StatelessWidget {
                   supply.name,
                   style: TextStyle(fontSize: 17, color: p.text),
                 ),
-                Text(subtitle, style: TextStyle(fontSize: 13, color: p.muted)),
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      if (expiresIn != null)
+                        TextSpan(
+                          text:
+                              '${expiryText(expiresIn!)[0].toUpperCase()}${expiryText(expiresIn!).substring(1)} · ',
+                          style: muted.copyWith(
+                            color: p.alert,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      TextSpan(text: subtitle, style: muted),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
-          if (expiring) ...[
-            Icon(
-              CupertinoIcons.exclamationmark_triangle_fill,
-              size: 16,
-              color: p.alert,
-            ),
-            const SizedBox(width: 6),
-          ],
           Text(
             withUnit(onHand, supply.unit),
             style: TextStyle(

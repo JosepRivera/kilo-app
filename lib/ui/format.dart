@@ -16,16 +16,18 @@ Widget supplyIcon(String? icon, double size) => Image.asset(
 String formatQty(double v) =>
     v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1);
 
+bool isCountUnit(String unit) => unit != 'kg' && unit != 'litros';
+
 String withUnit(double v, String unit) {
-  final one = v == 1;
-  final u = !one
+  final shown = isCountUnit(unit) ? v.roundToDouble() : v;
+  final u = shown != 1
       ? unit
       : unit.endsWith('des')
       ? unit.substring(0, unit.length - 2)
       : unit.endsWith('s')
       ? unit.substring(0, unit.length - 1)
       : unit;
-  return '${formatQty(v)} $u';
+  return '${formatQty(shown)} $u';
 }
 
 String soles(double v) => 'S/ ${v.round()}';

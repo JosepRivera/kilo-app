@@ -60,7 +60,7 @@ void main() {
     expect(e.consumption('chicken')[d(2)]!.estimated, isFalse);
   });
 
-  test('forgotten days are spread evenly and marked estimated', () {
+  test('forgotten days are spread evenly, marked estimated and weigh half', () {
     final e = Engine(
       data(
         stock: [
@@ -75,7 +75,7 @@ void main() {
       expect(c[d(day)]!.amount, 3);
       expect(c[d(day)]!.estimated, isTrue);
     }
-    expect(e.realDays('chicken'), 0);
+    expect(e.realDays('chicken'), 1);
   });
 
   test('a closed day is a real zero and keeps the stock', () {

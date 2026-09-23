@@ -7,6 +7,7 @@ import '../../domain/engine.dart';
 import '../../domain/models.dart';
 import '../../theme/forecast_palette.dart';
 import '../../ui/format.dart';
+import '../../ui/faded_header.dart';
 import '../../ui/panel.dart';
 
 class SupplyDetailScreen extends StatelessWidget {
@@ -20,79 +21,72 @@ class SupplyDetailScreen extends StatelessWidget {
     final e = store.engine;
     final p = ForecastPalette.of(context);
     final s = store.data.supply(supplyId);
-    final lots = e.activeLots(s.id);
+    final lots = e
+        .activeLots(s.id)
+        .where((l) => !l.lot.id.startsWith(openingLotPrefix))
+        .toList();
 
-    return CupertinoPageScaffold(
-      backgroundColor: p.background,
-      navigationBar: CupertinoNavigationBar(
-        middle: Text(s.name),
+    return FadedHeaderScaffold(
+      title: s.name,
+      largeTitle: false,
+      leading: CupertinoNavigationBarBackButton(
         previousPageTitle: 'Insumos',
-        backgroundColor: p.background.withValues(alpha: 0.9),
-        border: null,
+        color: p.accent,
       ),
-      child: SafeArea(
-        bottom: false,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
-          children: [
-            _Now(
-              supply: s,
-              onHand: e.currentStock(s.id),
-              realDays: e.realDays(s.id),
-            ),
-            const SizedBox(height: 12),
-            _Week(supply: s, engine: e, from: store.today),
-            if (lots.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              _Lots(supply: s, lots: lots, engine: e, today: store.today),
-            ],
-            const SizedBox(height: 12),
-            Panel(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const PanelHeader(CupertinoIcons.mic, 'CÓMO SE REGISTRA'),
-                  SizedBox(
-                    width: double.infinity,
-                    child: CupertinoSlidingSegmentedControl<bool>(
-                      groupValue: s.critical,
-                      onValueChanged: (v) => store.setCritical(s.id, v!),
-                      children: const {
-                        true: Text('Cada noche'),
-                        false: Text('Cada semana'),
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    s.critical
-                        ? 'Lo dictas en el cierre de cada noche. Ideal para insumos caros o que se malogran.'
-                        : 'Lo dictas una vez por semana. Ideal para insumos baratos que duran.',
-                    style: TextStyle(fontSize: 13, color: p.muted),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            Panel(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const PanelHeader(CupertinoIcons.scope, 'UNIDAD'),
-                  _Line(label: 'Se mide en', value: s.unit),
-                  for (final e in s.phrases.entries) ...[
-                    const PanelDivider(),
-                    _Line(
-                      label: '“${e.key}”',
-                      value: withUnit(e.value, s.unit),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
+      children: [
+        _Now(
+          supply: s,
+          onHand: e.currentStock(s.id),
+          realDays: e.realDays(s.id),
         ),
-      ),
+        const SizedBox(height: 12),
+        _Week(supply: s, engine: e, from: store.today),
+        if (lots.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          _Lots(supply: s, lots: lots, engine: e, today: store.today),
+        ],
+        const SizedBox(height: 12),
+        Panel(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const PanelHeader(CupertinoIcons.mic, 'CÓMO SE REGISTRA'),
+              SizedBox(
+                width: double.infinity,
+                child: CupertinoSlidingSegmentedControl<bool>(
+                  groupValue: s.critical,
+                  onValueChanged: (v) => store.setCritical(s.id, v!),
+                  children: const {
+                    true: Text('Cada noche'),
+                    false: Text('Cada semana'),
+                  },
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                s.critical
+                    ? 'Lo dictas en el cierre de cada noche. Ideal para insumos caros o que se malogran.'
+                    : 'Lo dictas una vez por semana. Ideal para insumos baratos que duran.',
+                style: TextStyle(fontSize: 13, color: p.muted),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Panel(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const PanelHeader(CupertinoIcons.scope, 'UNIDAD'),
+              _Line(label: 'Se mide en', value: s.unit),
+              for (final e in s.phrases.entries) ...[
+                const PanelDivider(),
+                _Line(label: '“${e.key}”', value: withUnit(e.value, s.unit)),
+              ],
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -132,7 +126,11 @@ class _Now extends StatelessWidget {
                       textBaseline: TextBaseline.alphabetic,
                       children: [
                         Text(
-                          formatQty(onHand),
+                          formatQty(
+                            isCountUnit(supply.unit)
+                                ? onHand.roundToDouble()
+                                : onHand,
+                          ),
                           style: TextStyle(
                             fontSize: 64,
                             fontWeight: FontWeight.w300,

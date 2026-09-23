@@ -23,4 +23,11 @@ void main() {
       expect(engine.currentStock(s.id), greaterThanOrEqualTo(0), reason: s.id);
     }
   });
+
+  test('lots stay reconciled with the recorded stock', () {
+    for (final s in data.supplies) {
+      final lots = engine.activeLots(s.id).fold(0.0, (t, l) => t + l.remaining);
+      expect(lots, closeTo(engine.currentStock(s.id), 0.05), reason: s.id);
+    }
+  });
 }

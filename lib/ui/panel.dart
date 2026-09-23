@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 
 import '../theme/forecast_palette.dart';
+import 'faded_header.dart';
 
 class ForecastPage extends StatelessWidget {
   const ForecastPage({
@@ -15,34 +16,9 @@ class ForecastPage extends StatelessWidget {
   final Widget? trailing;
 
   @override
-  Widget build(BuildContext context) {
-    final p = ForecastPalette.of(context);
-    return CupertinoPageScaffold(
-      backgroundColor: p.background,
-      child: CustomScrollView(
-        slivers: [
-          CupertinoSliverNavigationBar(
-            largeTitle: Text(title),
-            trailing: trailing,
-            backgroundColor: p.background.withValues(alpha: 0.9),
-            border: null,
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 120),
-            sliver: SliverList.list(children: _spaced(children)),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) =>
+      FadedHeaderScaffold(title: title, trailing: trailing, children: children);
 }
-
-List<Widget> _spaced(List<Widget> children) => [
-  for (final (i, c) in children.indexed) ...[
-    if (i > 0) const SizedBox(height: 12),
-    c,
-  ],
-];
 
 class Panel extends StatelessWidget {
   const Panel({
@@ -68,10 +44,11 @@ class Panel extends StatelessWidget {
 }
 
 class PanelHeader extends StatelessWidget {
-  const PanelHeader(this.icon, this.label, {super.key});
+  const PanelHeader(this.icon, this.label, {super.key, this.color});
 
   final IconData icon;
   final String label;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -80,14 +57,14 @@ class PanelHeader extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: p.muted),
+          Icon(icon, size: 16, color: color ?? p.muted),
           const SizedBox(width: 6),
           Text(
             label,
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: p.muted,
+              color: color ?? p.muted,
             ),
           ),
         ],

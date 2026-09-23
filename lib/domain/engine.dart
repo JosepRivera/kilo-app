@@ -9,6 +9,8 @@ const bufferCeiling = 0.60;
 const anomalyFactor = 3.0;
 const anomalyFloorSoles = 10.0;
 const priceTolerance = 0.40;
+const estimatedDayWeight = 0.5;
+const openingLotPrefix = 'opening-';
 
 class Consumption {
   const Consumption(this.amount, {this.estimated = false, this.closed = false});
@@ -159,15 +161,18 @@ class Engine {
   );
 
   int realDays(String id) =>
-      consumption(id).values.where((c) => !c.estimated).length;
+      consumption(id).values
+          .fold(0.0, (t, c) => t + (c.estimated ? estimatedDayWeight : 1))
+          .floor();
 
   bool isLearning(String id) => realDays(id) < coldStartDays;
 
   double currentStock(String id) {
+    if (lotsOf(id).isNotEmpty) {
+      return activeLots(id).fold(0.0, (t, l) => t + l.remaining);
+    }
     final recs = records(id).where((r) => !r.isClosed).toList();
-    if (recs.isEmpty) return lotsOf(id).fold(0.0, (t, l) => t + l.quantity);
-    final last = recs.last;
-    return last.remaining! + purchasesIn(id, last.date, _plus(today, 3650));
+    return recs.isEmpty ? 0 : recs.last.remaining!;
   }
 
   double coldStartEstimate(String id) {
@@ -262,15 +267,22 @@ class Engine {
       _lots.putIfAbsent(id, () {
         final lots = lotsOf(id);
         if (lots.isEmpty) return (const <LotState>[], const <WasteEvent>[]);
-        final cons = consumption(id);
+        final counted = {
+          for (final r in records(id))
+            if (!r.isClosed) r.date: r.remaining!,
+        };
         final queue = <(Lot, double)>[];
         final waste = <WasteEvent>[];
         var i = 0;
-        for (
-          var d = lots.first.purchasedOn;
-          !d.isAfter(today);
-          d = _plus(d, 1)
-        ) {
+        final firstCount = counted.keys.fold<DateTime?>(
+          null,
+          (a, b) => a == null || b.isBefore(a) ? b : a,
+        );
+        final start =
+            firstCount != null && firstCount.isBefore(lots.first.purchasedOn)
+            ? firstCount
+            : lots.first.purchasedOn;
+        for (var d = start; !d.isAfter(today); d = _plus(d, 1)) {
           queue.removeWhere((e) {
             if (!e.$1.expiresOn.isBefore(d) || e.$2 <= 0.001) return false;
             waste.add(WasteEvent(d, id, e.$2, e.$2 * e.$1.unitPrice));
@@ -280,12 +292,27 @@ class Engine {
             queue.add((lots[i], lots[i].quantity));
             i++;
           }
-          if (!d.isBefore(today)) break;
-          var need = cons[d]?.amount ?? 0;
-          for (var k = 0; k < queue.length && need > 0; k++) {
-            final take = math.min(need, queue[k].$2);
+          final remaining = counted[d];
+          if (remaining == null) continue;
+          var used = queue.fold(0.0, (t, e) => t + e.$2) - remaining;
+          if (used < -0.001) {
+            final price = data.supply(id).referencePrice;
+            queue.insert(0, (
+              Lot(
+                id: '$openingLotPrefix$id-${dayKey(d)}',
+                supplyId: id,
+                purchasedOn: d,
+                quantity: -used,
+                cost: -used * price,
+                expiresOn: DateTime(9999),
+              ),
+              -used,
+            ));
+          }
+          for (var k = 0; k < queue.length && used > 0; k++) {
+            final take = math.min(used, queue[k].$2);
             queue[k] = (queue[k].$1, queue[k].$2 - take);
-            need -= take;
+            used -= take;
           }
           queue.removeWhere((e) => e.$2 <= 0.001);
         }
