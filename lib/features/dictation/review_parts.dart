@@ -3,7 +3,6 @@ import 'package:flutter/cupertino.dart';
 import '../../theme/forecast_palette.dart';
 import '../../ui/panel.dart';
 
-/// Full-screen review after dictating: Cancel / title / Save, content in forecast panels.
 class ReviewScaffold extends StatelessWidget {
   const ReviewScaffold({
     super.key,
@@ -56,7 +55,6 @@ class ReviewScaffold extends StatelessWidget {
   }
 }
 
-/// What Kilo heard, so the person can see why each number is there.
 class TranscriptPanel extends StatelessWidget {
   const TranscriptPanel(this.transcript, {super.key});
 
@@ -84,7 +82,6 @@ class TranscriptPanel extends StatelessWidget {
   }
 }
 
-/// A "revisar" check: Kilo explains why it asks and offers two answers; nothing is applied on its own.
 class FlagPanel extends StatelessWidget {
   const FlagPanel({
     super.key,
@@ -101,7 +98,6 @@ class FlagPanel extends StatelessWidget {
   final String message, primary, secondary;
   final VoidCallback onPrimary, onSecondary;
 
-  /// Shown instead of the buttons once answered.
   final String? resolved;
 
   @override
@@ -191,7 +187,6 @@ class FlagPanel extends StatelessWidget {
   }
 }
 
-/// Numeric entry sized for a quantity column.
 class QuantityField extends StatelessWidget {
   const QuantityField({
     super.key,

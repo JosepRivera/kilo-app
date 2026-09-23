@@ -5,7 +5,6 @@ import '../../theme/forecast_palette.dart';
 import '../../ui/panel.dart';
 import 'review_parts.dart';
 
-/// One dictated line of the nightly close: how much is left of a supply.
 class CloseEntry {
   const CloseEntry(
     this.name,
@@ -19,11 +18,9 @@ class CloseEntry {
   final String? icon;
   final String unit;
   final double remaining;
-  final String?
-  phrase; // informal quantity as spoken, already converted to [unit]
+  final String? phrase;
 }
 
-// ponytail: simulated transcription (Doña Rosa) until the voice pipeline exists.
 const _transcript =
     'Quedan cuatro kilos de pollo, trece de papa, tres de cebolla, medio balde de tomate, '
     'kilo y medio de limón y un atado de culantro.';
@@ -36,7 +33,6 @@ const _entries = [
   CloseEntry('Culantro', 'cilantro', 'atados', 1),
 ];
 
-/// Fase 2 review: editable remaining stock, anomaly and mishearing checks, then save.
 class StockCloseReviewScreen extends StatefulWidget {
   const StockCloseReviewScreen({super.key});
 

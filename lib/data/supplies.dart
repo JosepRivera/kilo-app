@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 
-/// A supply Kilo recommends buying before this market trip.
 class Supply {
   const Supply(
     this.name,
@@ -16,16 +15,14 @@ class Supply {
   final String unit;
   final double toBuy;
   final double onHand;
-  final int realDays; // real history days; under 28 the forecast still leans on the cold-start estimate
-  final String?
-  expiryAlert; // lot-expiry alert, when a lot of this supply is at risk
-  final String? icon; // asset name under assets/supplies/; null falls back to the generic icon
+  final int realDays;
+  final String? expiryAlert;
+  final String? icon;
 
   double get needed => toBuy + onHand;
   bool get isLearning => realDays < 28;
 }
 
-// ponytail: synthetic demo data (Doña Rosa, from the product docs) until the API exists.
 const demoShoppingList = [
   Supply(
     'Pollo entero',
@@ -84,7 +81,6 @@ const demoCovered = {
   'Ajo': 'garlic',
 };
 
-/// Food illustration for a supply (Fluent Emoji 3D, MIT); supplies without their own art get a generic cart.
 Widget supplyIcon(String? icon, double size) => Image.asset(
   'assets/supplies/${icon ?? 'generic'}.png',
   width: size,

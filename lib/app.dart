@@ -34,7 +34,6 @@ const _tabs = [
   (CupertinoIcons.chart_bar_alt_fill, 'Ahorro'),
 ];
 
-/// Tabs are places (Hoy, Insumos, Ahorro); dictating is an action, so the mic floats beside the bar.
 class _Shell extends StatefulWidget {
   const _Shell();
 
@@ -52,7 +51,6 @@ class _ShellState extends State<_Shell> {
       backgroundColor: p.background,
       child: Stack(
         children: [
-          // Each tab keeps its own navigation stack, so the floating bar stays over pushed pages.
           IndexedStack(
             index: _tab,
             children: [
@@ -118,7 +116,6 @@ class _ShellState extends State<_Shell> {
   }
 }
 
-/// System-style translucent material for floating bars (Flutter has no native Liquid Glass).
 class _Glass extends StatelessWidget {
   const _Glass({required this.child, this.circle = false});
 

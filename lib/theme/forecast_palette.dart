@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 
-/// Kilo's "forecast" palette: the purchase list read like a daily weather forecast.
 class ForecastPalette {
   const ForecastPalette._({
     required this.background,

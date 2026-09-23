@@ -6,7 +6,6 @@ import '../../data/supplies.dart';
 import '../../theme/forecast_palette.dart';
 import '../../ui/panel.dart';
 
-/// Money lost to expired supplies, compared only against the previous month.
 class MonthLoss {
   const MonthLoss(this.month, this.soles);
 
@@ -14,7 +13,6 @@ class MonthLoss {
   final double soles;
 }
 
-/// A supply whose expired lots cost the most this month.
 class Waste {
   const Waste(this.name, this.icon, this.soles, this.quantity, this.unit);
 
@@ -24,7 +22,6 @@ class Waste {
   final String unit;
 }
 
-// ponytail: synthetic demo figures from the product docs' illustrative example until pilot data exists.
 const _months = [
   MonthLoss('Jun', 380),
   MonthLoss('Jul', 310),
@@ -38,7 +35,6 @@ const _topWaste = [
   Waste('Queso fresco', 'cheese', 18, 1, 'kg'),
 ];
 
-/// "Ahorro": owner-facing, month over month.
 class SavingsScreen extends StatelessWidget {
   const SavingsScreen({super.key});
 

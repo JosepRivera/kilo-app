@@ -1,13 +1,11 @@
-/// A lot created by a purchase (date, quantity, expiry); FIFO decides which one is at risk.
 class Lot {
   const Lot(this.label, this.quantity, this.daysToExpiry);
 
-  final String label; // e.g. "del lunes"
+  final String label;
   final double quantity;
   final int daysToExpiry;
 }
 
-/// A supply in the restaurant's catalog, with what Kilo has learned about it.
 class CatalogSupply {
   const CatalogSupply({
     required this.name,
@@ -22,14 +20,14 @@ class CatalogSupply {
   });
 
   final String name;
-  final String unit; // fixed once, at creation
+  final String unit;
   final double onHand;
   final int realDays;
-  final List<double> weekForecast; // predicted consumption Mon..Sun
+  final List<double> weekForecast;
   final String? icon;
-  final bool critical; // critical = recorded daily; secondary = weekly
+  final bool critical;
   final List<Lot> lots;
-  final Map<String, double> phrases; // informal quantity -> amount in [unit]
+  final Map<String, double> phrases;
 
   bool get isLearning => realDays < coldStartDays;
 }
@@ -41,12 +39,10 @@ class Category {
   final List<CatalogSupply> supplies;
 }
 
-/// 4 weekly cycles: after this Holt-Winters no longer leans on the cold-start estimate.
 const coldStartDays = 28;
 
 const weekdays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
-// ponytail: synthetic demo catalog (Doña Rosa, criolla) until the API exists.
 const demoCatalog = [
   Category('Proteínas', [
     CatalogSupply(

@@ -6,7 +6,6 @@ import '../../theme/forecast_palette.dart';
 import '../../ui/panel.dart';
 import '../../ui/range_bar.dart';
 
-/// "Hoy": the morning purchase list, read like a daily forecast.
 class TodayScreen extends StatefulWidget {
   const TodayScreen({super.key});
 

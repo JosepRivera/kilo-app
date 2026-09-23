@@ -7,7 +7,6 @@ import '../../data/supplies.dart';
 import '../../theme/forecast_palette.dart';
 import '../../ui/panel.dart';
 
-/// One supply, read like a city's forecast detail: now, next 7 days, lots, and how it's recorded.
 class SupplyDetailScreen extends StatefulWidget {
   const SupplyDetailScreen({super.key, required this.supply});
 
@@ -18,7 +17,6 @@ class SupplyDetailScreen extends StatefulWidget {
 }
 
 class _SupplyDetailScreenState extends State<SupplyDetailScreen> {
-  // ponytail: local only until the API persists the critical/secondary choice.
   late var _critical = widget.supply.critical;
 
   @override
@@ -173,7 +171,6 @@ class _Now extends StatelessWidget {
   }
 }
 
-/// Flat progress bar (no Material dependency).
 class LinearProgress extends StatelessWidget {
   const LinearProgress({
     super.key,
@@ -210,7 +207,6 @@ class _Week extends StatelessWidget {
     final p = ForecastPalette.of(context);
     final w = supply.weekForecast;
     final top = w.reduce(math.max);
-    // The two busiest days explain the weekly pattern in one line.
     final busiest = ([
       for (var i = 0; i < 7; i++) i,
     ]..sort((a, b) => w[b].compareTo(w[a]))).take(2).toList()..sort();

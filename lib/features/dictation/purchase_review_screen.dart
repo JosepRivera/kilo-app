@@ -5,7 +5,6 @@ import '../../theme/forecast_palette.dart';
 import '../../ui/panel.dart';
 import 'review_parts.dart';
 
-/// One dictated purchase line; saving it creates a lot.
 class LotDraft {
   LotDraft(
     this.name,
@@ -20,19 +19,16 @@ class LotDraft {
   final String? icon;
   final String unit;
   final double quantity, cost;
-  DateTime
-  expires; // prefilled from the supply's standard shelf life, editable per lot
+  DateTime expires;
 
   double get unitPrice => cost / quantity;
 }
 
-// ponytail: simulated transcription and prices (Doña Rosa) until the voice pipeline exists.
 const _transcript =
     'Compré veintisiete kilos de pollo a doscientos cuarenta y tres soles, dieciocho de papa a treinta '
     'y seis, diez de cebolla a cuarenta y dos, y seis kilos de limón a treinta.';
 const _limeMatches = ['Limón sutil', 'Limón tahití', 'Lima persa'];
 
-/// Fase 5 review: lots with prefilled expiry, price check and supply resolution, then save.
 class PurchaseReviewScreen extends StatefulWidget {
   const PurchaseReviewScreen({super.key});
 

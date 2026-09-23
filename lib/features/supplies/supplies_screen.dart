@@ -6,7 +6,6 @@ import '../../theme/forecast_palette.dart';
 import '../../ui/panel.dart';
 import 'supply_detail_screen.dart';
 
-/// "Insumos": the restaurant's catalog grouped by category.
 class SuppliesScreen extends StatefulWidget {
   const SuppliesScreen({super.key});
 

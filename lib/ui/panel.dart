@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 
 import '../theme/forecast_palette.dart';
 
-/// A top-level tab page: large collapsing title over the forecast ground.
 class ForecastPage extends StatelessWidget {
   const ForecastPage({
     super.key,
@@ -29,7 +28,6 @@ class ForecastPage extends StatelessWidget {
             border: null,
           ),
           SliverPadding(
-            // Bottom room for the floating tab bar.
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 120),
             sliver: SliverList.list(children: _spaced(children)),
           ),
@@ -46,7 +44,6 @@ List<Widget> _spaced(List<Widget> children) => [
   ],
 ];
 
-/// A rounded forecast module, like a weather-app card.
 class Panel extends StatelessWidget {
   const Panel({
     super.key,
@@ -70,7 +67,6 @@ class Panel extends StatelessWidget {
   );
 }
 
-/// Small uppercase module caption with its glyph, as in weather modules.
 class PanelHeader extends StatelessWidget {
   const PanelHeader(this.icon, this.label, {super.key});
 
@@ -100,7 +96,6 @@ class PanelHeader extends StatelessWidget {
   }
 }
 
-/// Hairline between rows inside a panel.
 class PanelDivider extends StatelessWidget {
   const PanelDivider({super.key});
 

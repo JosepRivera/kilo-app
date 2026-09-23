@@ -6,7 +6,6 @@ import 'stock_close_review_screen.dart';
 
 enum VoiceAction { stockClose, purchase }
 
-// Night (after 5pm, before the ~5-6am processing cut) is the stock close; otherwise it is a purchase.
 VoiceAction actionForTime(DateTime t) =>
     t.hour >= 17 || t.hour < 6 ? VoiceAction.stockClose : VoiceAction.purchase;
 
@@ -15,7 +14,6 @@ void openDictation(BuildContext context) => showCupertinoModalPopup<void>(
   builder: (_) => _DictationSheet(initial: actionForTime(DateTime.now())),
 );
 
-// ponytail: simulated listening; recording + transcription lands with the voice pipeline.
 class _DictationSheet extends StatefulWidget {
   const _DictationSheet({required this.initial});
 

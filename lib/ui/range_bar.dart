@@ -2,11 +2,9 @@ import 'package:flutter/cupertino.dart';
 
 import '../theme/forecast_palette.dart';
 
-/// Weather-style range bar: the dot marks what you have, the accent run is what's missing.
 class RangeBar extends StatelessWidget {
   const RangeBar({super.key, required this.fraction, this.color});
 
-  /// Position of the on-hand dot, 0..1 of what is needed.
   final double fraction;
   final Color? color;
 
