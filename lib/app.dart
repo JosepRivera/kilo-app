@@ -47,70 +47,84 @@ class _ShellState extends State<_Shell> {
   @override
   Widget build(BuildContext context) {
     final p = ForecastPalette.of(context);
-    return CupertinoPageScaffold(
-      backgroundColor: p.background,
-      child: Stack(
-        children: [
-          IndexedStack(
-            index: _tab,
-            children: [
-              CupertinoTabView(builder: (_) => const TodayScreen()),
-              CupertinoTabView(builder: (_) => const SuppliesScreen()),
-              CupertinoTabView(builder: (_) => const SavingsScreen()),
-            ],
-          ),
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 0,
-            child: SafeArea(
-              top: false,
-              minimum: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _Glass(
-                      child: Row(
-                        children: [
-                          for (final (n, t) in _tabs.indexed)
-                            Expanded(
-                              child: _TabItem(
-                                icon: t.$1,
-                                name: t.$2,
-                                active: n == _tab,
-                                onTap: () {
-                                  HapticFeedback.selectionClick();
-                                  setState(() => _tab = n);
-                                },
+    final dark = CupertinoTheme.brightnessOf(context) == Brightness.dark;
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        statusBarColor: const Color(0x00000000),
+        statusBarIconBrightness: dark ? Brightness.light : Brightness.dark,
+        statusBarBrightness: dark ? Brightness.dark : Brightness.light,
+        systemStatusBarContrastEnforced: false,
+        systemNavigationBarColor: const Color(0x00000000),
+        systemNavigationBarIconBrightness: dark
+            ? Brightness.light
+            : Brightness.dark,
+        systemNavigationBarContrastEnforced: false,
+      ),
+      child: CupertinoPageScaffold(
+        backgroundColor: p.background,
+        child: Stack(
+          children: [
+            IndexedStack(
+              index: _tab,
+              children: [
+                CupertinoTabView(builder: (_) => const TodayScreen()),
+                CupertinoTabView(builder: (_) => const SuppliesScreen()),
+                CupertinoTabView(builder: (_) => const SavingsScreen()),
+              ],
+            ),
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 0,
+              child: SafeArea(
+                top: false,
+                minimum: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _Glass(
+                        child: Row(
+                          children: [
+                            for (final (n, t) in _tabs.indexed)
+                              Expanded(
+                                child: _TabItem(
+                                  icon: t.$1,
+                                  name: t.$2,
+                                  active: n == _tab,
+                                  onTap: () {
+                                    HapticFeedback.selectionClick();
+                                    setState(() => _tab = n);
+                                  },
+                                ),
                               ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  _Glass(
-                    circle: true,
-                    child: Semantics(
-                      button: true,
-                      label: 'Dictar',
-                      child: CupertinoButton(
-                        padding: EdgeInsets.zero,
-                        minimumSize: const Size(64, 64),
-                        onPressed: () => openDictation(context),
-                        child: Icon(
-                          CupertinoIcons.mic_fill,
-                          size: 26,
-                          color: p.accent,
+                          ],
                         ),
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 10),
+                    _Glass(
+                      circle: true,
+                      child: Semantics(
+                        button: true,
+                        label: 'Dictar',
+                        child: CupertinoButton(
+                          padding: EdgeInsets.zero,
+                          minimumSize: const Size(64, 64),
+                          onPressed: () => openDictation(context),
+                          child: Icon(
+                            CupertinoIcons.mic_fill,
+                            size: 26,
+                            color: p.accent,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
