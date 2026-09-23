@@ -168,7 +168,7 @@ class _SupplyRow extends StatelessWidget {
       button: true,
       checked: bought,
       label:
-          'Comprar ${formatQty(supply.toBuy)} ${supply.unit} de ${supply.name}. '
+          'Comprar ${withUnit(supply.toBuy, supply.unit)} de ${supply.name}. '
           'Tienes ${formatQty(supply.onHand)}.${supply.isLearning ? ' Kilo aún aprende este insumo.' : ''}',
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -226,7 +226,7 @@ class _SupplyRow extends StatelessWidget {
                               color: p.text,
                             ),
                           Text(
-                            ' ${formatQty(supply.toBuy)} ${supply.unit}',
+                            ' ${withUnit(supply.toBuy, supply.unit)}',
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w600,

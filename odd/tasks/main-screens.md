@@ -26,7 +26,7 @@ Out of scope: onboarding/Fase 1 setup, login/account, notifications, real API/vo
 - [x] T2 Ahorro screen — route: inline
 - [x] T3 Stock-close review (editable remaining stock, "revisar" anomaly, suggested correction, "hoy no hubo consumo") — route: inline
 - [x] T4 Purchase review (lots with prefilled expiry, price flag, ambiguous supply picker) — route: inline
-- [ ] T5 Simulator pass light/dark + Impeccable finish review + DESIGN.md — route: delegated (finish reviewer, documenter)
+- [~] T5 Simulator pass light/dark (done: Hoy, Insumos, detalle, Ahorro, dictado, cierre, compra; dark Hoy) · Impeccable finish review + DESIGN.md PENDING — route: delegated (finish reviewer, documenter)
 
 Route rationale: each screen is one Flutter file built on shared palette/panel helpers already understood in the parent; delegation would re-derive the design context. Finish review and documentation use Impeccable's shipped subagents.
 
@@ -43,8 +43,11 @@ Route rationale: each screen is one Flutter file built on shared palette/panel h
 Forecast: ~1,400 authored lines (>400). Strategy: ask-on-risk; chain strategy to be asked before PR creation. No push/PR without user decision.
 
 ## Progress
+- Cleanup: comments removed (user request); unused go_router/flutter_animate/fl_chart dropped; direct deps latest; Flutter 3.47.5 latest stable.
+- Fixes after simulator pass: singular units, lime lot on resolution, fixed-width expiry buttons.
+- RDD: slices 8340024 and 764fbb0 declined by user (candidate-scoped).
 - 25d9a39 feat(supplies) T1 · analyze clean, 7 tests pass
 - 2d674cc feat(today) · 75fcc08 assets · 4375215 scaffold (pre-feature baseline)
 
 ## Next step
-T1.
+T5: Impeccable finish reviewer over .impeccable/review captures, then documenter writes DESIGN.md.

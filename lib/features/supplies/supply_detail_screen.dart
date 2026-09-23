@@ -82,7 +82,7 @@ class _SupplyDetailScreenState extends State<SupplyDetailScreen> {
                     const PanelDivider(),
                     _Line(
                       label: '“${e.key}”',
-                      value: '${formatQty(e.value)} ${s.unit}',
+                      value: withUnit(e.value, s.unit),
                     ),
                   ],
                 ],
@@ -257,7 +257,7 @@ class _Week extends StatelessWidget {
                   SizedBox(
                     width: 96,
                     child: Text(
-                      '${formatQty(w[i])} ${supply.unit}',
+                      withUnit(w[i], supply.unit),
                       textAlign: TextAlign.right,
                       style: TextStyle(
                         fontSize: 17,
@@ -312,7 +312,7 @@ class _Lots extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '${formatQty(l.quantity)} ${supply.unit}',
+                    withUnit(l.quantity, supply.unit),
                     style: TextStyle(
                       fontSize: 17,
                       color: p.muted,

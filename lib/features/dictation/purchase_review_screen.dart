@@ -71,8 +71,14 @@ class _PurchaseReviewScreenState extends State<PurchaseReviewScreen> {
   ];
   String? _lime, _onionCheck;
 
-  double get _total =>
-      _lots.fold(0.0, (t, l) => t + l.cost) + (_lime == null ? 0 : 30);
+  double get _total => _lots.fold(0.0, (t, l) => t + l.cost);
+
+  void _resolveLime(String name) => setState(() {
+    _lime = name;
+    _lots.add(
+      LotDraft(name, 'lime', 'kg', 6, 30, _today.add(const Duration(days: 7))),
+    );
+  });
 
   Future<void> _pickExpiry(LotDraft lot) => showCupertinoModalPopup<void>(
     context: context,
@@ -135,7 +141,7 @@ class _PurchaseReviewScreenState extends State<PurchaseReviewScreen> {
                           horizontal: 14,
                           vertical: 10,
                         ),
-                        onPressed: () => setState(() => _lime = m),
+                        onPressed: () => _resolveLime(m),
                         child: Text(
                           m,
                           style: TextStyle(fontSize: 15, color: p.text),
@@ -146,7 +152,7 @@ class _PurchaseReviewScreenState extends State<PurchaseReviewScreen> {
                         horizontal: 14,
                         vertical: 10,
                       ),
-                      onPressed: () => setState(() => _lime = 'insumo nuevo'),
+                      onPressed: () => _resolveLime('Limón (nuevo)'),
                       child: Text(
                         '+ Crear nuevo',
                         style: TextStyle(fontSize: 15, color: p.accent),
@@ -236,7 +242,7 @@ class _LotRow extends StatelessWidget {
               children: [
                 Text(lot.name, style: TextStyle(fontSize: 17, color: p.text)),
                 Text(
-                  '${formatQty(lot.quantity)} ${lot.unit} · S/ ${lot.cost.toStringAsFixed(2)}',
+                  '${withUnit(lot.quantity, lot.unit)} · S/ ${lot.cost.toStringAsFixed(2)}',
                   style: numbers,
                 ),
               ],
@@ -244,7 +250,7 @@ class _LotRow extends StatelessWidget {
           ),
           CupertinoButton(
             padding: const EdgeInsets.symmetric(horizontal: 10),
-            minimumSize: const Size(44, 44),
+            minimumSize: const Size(128, 44),
             color: p.background,
             borderRadius: BorderRadius.circular(10),
             onPressed: onExpiry,

@@ -120,7 +120,7 @@ class _SupplyTile extends StatelessWidget {
             const SizedBox(width: 6),
           ],
           Text(
-            '${formatQty(supply.onHand)} ${supply.unit}',
+            withUnit(supply.onHand, supply.unit),
             style: TextStyle(
               fontSize: 17,
               color: p.muted,

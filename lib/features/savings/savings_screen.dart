@@ -125,7 +125,7 @@ class SavingsScreen extends StatelessWidget {
                               style: TextStyle(fontSize: 17, color: p.text),
                             ),
                             Text(
-                              '${formatQty(w.quantity)} ${w.unit} vencidos',
+                              '${withUnit(w.quantity, w.unit)} vencidos',
                               style: TextStyle(fontSize: 13, color: p.muted),
                             ),
                           ],

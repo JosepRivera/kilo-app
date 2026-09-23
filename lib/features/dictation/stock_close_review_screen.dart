@@ -143,7 +143,7 @@ class _StockCloseReviewScreenState extends State<StockCloseReviewScreen> {
                             ),
                             if (e.phrase != null)
                               Text(
-                                '“${e.phrase}” = ${formatQty(e.remaining)} ${e.unit}',
+                                '“${e.phrase}” = ${withUnit(e.remaining, e.unit)}',
                                 style: TextStyle(fontSize: 13, color: p.muted),
                               ),
                           ],

@@ -96,3 +96,15 @@ Widget supplyIcon(String? icon, double size) => Image.asset(
 
 String formatQty(double v) =>
     v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1);
+
+String withUnit(double v, String unit) {
+  final one = v == 1;
+  final u = !one
+      ? unit
+      : unit.endsWith('des')
+      ? unit.substring(0, unit.length - 2)
+      : unit.endsWith('s')
+      ? unit.substring(0, unit.length - 1)
+      : unit;
+  return '${formatQty(v)} $u';
+}
