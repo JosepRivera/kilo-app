@@ -12,9 +12,6 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  go_router: ^18.0.1
-  flutter_animate: ^4.5.2
-  fl_chart: ^1.2.0
   intl: ^0.20.3
   cupertino_icons: ^1.0.9
 
