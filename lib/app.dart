@@ -77,6 +77,28 @@ class _ShellState extends State<_Shell> {
               ],
             ),
             Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: 110 + MediaQuery.paddingOf(context).bottom,
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        p.background.withValues(alpha: 0),
+                        p.background.withValues(alpha: 0.85),
+                        p.background,
+                      ],
+                      stops: const [0, 0.55, 1],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
               left: 16,
               right: 16,
               bottom: 0,
