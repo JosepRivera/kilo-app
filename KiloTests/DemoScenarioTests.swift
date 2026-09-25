@@ -6,8 +6,9 @@ struct DemoScenarioTests {
     let data = demoData()
     var engine: Engine { Engine(data: data, today: demoDay) }
 
-    @Test func chickenIsMatureAndDueWithExpectedRecommendation() {
+    @Test func morningPurchaseListShowsTheDemoCases() {
         let e = engine
+
         #expect(e.realDays("chicken") >= coldStartDays)
         #expect(e.isLearning("chicken") == false)
         #expect(e.isDue("protein") == true)
@@ -19,10 +20,18 @@ struct DemoScenarioTests {
 
         let recommendation = e.recommend("chicken")
         #expect((24.0...30.0).contains(recommendation.toBuy))
-    }
 
-    @Test func chickenLotsExpireTodayAndAnotherLotExpiresTomorrow() {
-        let e = engine
+        #expect(e.realDays("fish") == 12)
+        #expect(e.isLearning("fish") == true)
+
+        #expect(e.isDue("produce") == true)
+        #expect(e.recommend("potato").toBuy == 0)
+
+        #expect(e.isDue("grocery") == false)
+        #expect(e.isDue("seasoning") == false)
+
+        #expect(e.isDue("dairy") == true)
+
         let alerts = e.expiryAlerts()
         let chickenToday = alerts.filter { $0.supply.id == "chicken" && $0.daysLeft == 0 }
         #expect(chickenToday.count == 2)
@@ -31,14 +40,9 @@ struct DemoScenarioTests {
         #expect(alerts.contains { $0.supply.id != "chicken" && $0.daysLeft == 1 })
     }
 
-    @Test func fishIsLearningWithExactlyTwelveRealDays() {
+    @Test func reviewFlagsFollowTheRules() {
         let e = engine
-        #expect(e.realDays("fish") == 12)
-        #expect(e.isLearning("fish") == true)
-    }
 
-    @Test func beefAnomalyIsFlaggedAfterBuyingRecommendations() {
-        let e = engine
         var freshData = data
         for s in data.supplies where e.isDue(s.categoryId) {
             let recommendation = e.recommend(s.id)
@@ -60,40 +64,17 @@ struct DemoScenarioTests {
         #expect(flag != nil)
         #expect(flag?.consumed == 13)
         #expect((3.0...5.0).contains(flag?.usual ?? 0))
-    }
 
-    @Test func cilantroExceedsFactorButStaysUnderSolesFloor() {
-        let e = engine
-        let currentStock = e.currentStock("cilantro")
-        let flag = e.checkClose("cilantro", remaining: currentStock - 3.4)
-        #expect(flag == nil)
-    }
+        #expect(e.checkClose("cilantro", remaining: e.currentStock("cilantro") - 3.4) == nil)
 
-    @Test func onionPriceFlagTriggersAtSixtyPercentButNotAtUsualPrice() {
-        let e = engine
         let usual = median(data.lots.filter { $0.supplyId == "onion" }.map { $0.unitPrice })
         #expect(e.checkPrice("onion", unitPrice: usual * 1.6) != nil)
         #expect(e.checkPrice("onion", unitPrice: usual) == nil)
     }
 
-    @Test func potatoIsDueButNothingToBuy() {
+    @Test func historyHasGapsClosedDaysAndPerishableWaste() {
         let e = engine
-        #expect(e.isDue("produce") == true)
-        #expect(e.recommend("potato").toBuy == 0)
-    }
 
-    @Test func groceryAndSeasoningAreNotDueToday() {
-        let e = engine
-        #expect(e.isDue("grocery") == false)
-        #expect(e.isDue("seasoning") == false)
-    }
-
-    @Test func dairyIsDueToday() {
-        #expect(engine.isDue("dairy") == true)
-    }
-
-    @Test func tomatoHasEstimatedDaysFromForgottenCloseOnlyItDoes() {
-        let e = engine
         let tue = dateFor(year: 2026, month: 10, day: 27)
         let wed = dateFor(year: 2026, month: 10, day: 28)
         #expect(e.consumption("tomato")[tue]?.estimated == true)
@@ -106,10 +87,7 @@ struct DemoScenarioTests {
                 .contains { $0.value.estimated }
             #expect(hasEstimated == false)
         }
-    }
 
-    @Test func sundaysAreClosedExceptTheExceptionalOne() {
-        let e = engine
         #expect(daysBetween(exceptionalSunday, demoDay) > 28)
         let regularSundays = [
             dateFor(year: 2026, month: 8, day: 9),
@@ -122,10 +100,7 @@ struct DemoScenarioTests {
             }
             #expect(e.consumption(supply.id)[exceptionalSunday]?.closed == false)
         }
-    }
 
-    @Test func monthlyWasteFallsFromJulyThroughOctoberAndComesFromPerishables() {
-        let e = engine
         let waste = e.monthlyWaste()
         let july = waste[dateFor(year: 2026, month: 7, day: 1)] ?? 0
         let august = waste[dateFor(year: 2026, month: 8, day: 1)] ?? 0
@@ -155,10 +130,7 @@ struct DemoScenarioTests {
         let octoberTopThree = octoberWasteBySupply.sorted { $0.value > $1.value }.prefix(3).map { $0.key }
         #expect(octoberTopThree.allSatisfy { !longLife.contains($0) })
         #expect(!data.lots.contains { $0.purchasedOn == demoDay })
-    }
 
-    @Test func everySupplyReconcilesLotsWithCurrentStock() {
-        let e = engine
         for supply in data.supplies {
             let lotsTotal = e.activeLots(supply.id).reduce(0.0) { $0 + $1.remaining }
             let current = e.currentStock(supply.id)
