@@ -22,7 +22,7 @@ RDD: disabled globally by the user → delivery `disabled/unmanaged`.
 
 ## Tasks
 - [x] T0 SwiftUI scaffold: Xcode project, asset catalog (AppIcon, AccentColor, Fluent Emoji supplies), Flutter files removed. Route: inline (mechanical). Evidence: TEST BUILD SUCCEEDED (generic iOS Simulator).
-- [ ] T1 Port domain to Swift (models, engine rules, in-memory store) + scripted demo scenario (fixed Friday 2026-10-30, no RNG, reset on launch) + one case-matrix test. Route: delegated writer (writer trigger: 4+ non-trivial files).
+- [x] T1 Port domain to Swift (models, engine rules, in-memory store) + scripted demo scenario (fixed Friday 2026-10-30, no RNG, reset on launch) + one case-matrix test. Route: delegated writer (writer trigger: 4+ non-trivial files).
 - [ ] T2 "¿Por qué comprar esto?" sheet + recent days real/estimado/cerrado in supply detail.
 - [ ] T3 Close review: "¿trece o tres?" suggestion, resume interrupted draft, discard-changes guard, dictation listening/processing states.
 - [ ] T4 Supply resolution in purchase: "¿cuál limón?" picker, create supply, "medio balde" conversion.
@@ -43,7 +43,8 @@ RDD: disabled globally by the user → delivery `disabled/unmanaged`.
 - Monthly waste ≈ S/380 (Jul), then falling, Sep ≈ S/250, Oct ≈ S/200 (±10%).
 
 ## Progress / evidence
-- Simulator blocked: iOS 27 runtime 24A434 installed but not listed after a reboot (SDK expects 24A430; cryptex mount permission denied). Tests compile but cannot run until fixed.
+- T1 evidence (writer report): macOS harness all case checks pass; TEST BUILD SUCCEEDED; `xcodebuild test` on simulator TEST SUCCEEDED, 21 tests (8 engine + 13 scenario). Derived: pollo demand 30.0, error 3.93, buffer 8.71, stock 12.0, buy 27.0; pescado 12 real days; lots expiring today (pollo x2, 8.5 and 9.6 S/kg) and tomorrow (pescado); waste Jul 353 / Aug 322 / Sep 259 / Oct 205.
+- Simulator note (resolved by creating a simulator in DeviceHub): iOS 27 runtime 24A434 installed but not listed after a reboot (SDK expects 24A430; cryptex mount permission denied). Tests compile but cannot run until fixed.
 
 ## Next step
-T1.
+T2 (app shell + screens in SwiftUI).
