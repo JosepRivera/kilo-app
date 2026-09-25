@@ -23,6 +23,8 @@ RDD: disabled globally by the user → delivery `disabled/unmanaged`.
 ## Tasks
 - [x] T0 SwiftUI scaffold: Xcode project, asset catalog (AppIcon, AccentColor, Fluent Emoji supplies), Flutter files removed. Route: inline (mechanical). Evidence: TEST BUILD SUCCEEDED (generic iOS Simulator).
 - [x] T1 Port domain to Swift (models, engine rules, in-memory store) + scripted demo scenario (fixed Friday 2026-10-30, no RNG, reset on launch) + one case-matrix test. Route: delegated writer (writer trigger: 4+ non-trivial files).
+- [x] T1b SwiftUI shell + screens (Impeccable Pronóstico contract, brief repointed to Kilo/Features/Today/TodayView.swift): native TabView Hoy · Insumos · Ahorro, dictation in tabViewBottomAccessory + sheet (medium detent), Hoy (grouped expiry alerts, forecast rows with range bar and check-off, ya alcanza), Insumos (search, Por vencer, categories), supply detail (stock, learning progress, Swift Charts week, lots, registro), Ahorro (month vs previous, 4-month chart, top wasted). Route: inline (user asked for visible progress). Evidence: BUILD SUCCEEDED, verified on simulator iPhone 18 Pro (DeviceHub).
+- [ ] T1c Demo data realism: waste must come from perishables (rice/menestras currently top the wasted list); remove lots bought on demoDay before the market run (fish 'lote de hoy vence mañana'); check tab-switch responsiveness.
 - [ ] T2 "¿Por qué comprar esto?" sheet + recent days real/estimado/cerrado in supply detail.
 - [ ] T3 Close review: "¿trece o tres?" suggestion, resume interrupted draft, discard-changes guard, dictation listening/processing states.
 - [ ] T4 Supply resolution in purchase: "¿cuál limón?" picker, create supply, "medio balde" conversion.
