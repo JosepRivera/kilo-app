@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import Kilo
 
@@ -123,8 +124,9 @@ struct DemoScenarioTests {
         }
     }
 
-    @Test func monthlyWasteFallsFromJulyThroughOctober() {
-        let waste = engine.monthlyWaste()
+    @Test func monthlyWasteFallsFromJulyThroughOctoberAndComesFromPerishables() {
+        let e = engine
+        let waste = e.monthlyWaste()
         let july = waste[dateFor(year: 2026, month: 7, day: 1)] ?? 0
         let august = waste[dateFor(year: 2026, month: 8, day: 1)] ?? 0
         let september = waste[dateFor(year: 2026, month: 9, day: 1)] ?? 0
@@ -136,6 +138,23 @@ struct DemoScenarioTests {
         #expect(july > august)
         #expect(august > september)
         #expect(september > october)
+
+        let longLife: Set<String> = ["rice", "oil", "legumes", "salt", "garlic"]
+        var wasteBySupply: [String: Double] = [:]
+        var octoberWasteBySupply: [String: Double] = [:]
+        for w in e.waste() {
+            wasteBySupply[w.supplyId, default: 0] += w.soles
+            if kiloCalendar.isDate(w.date, equalTo: dateFor(year: 2026, month: 10, day: 1), toGranularity: .month) {
+                octoberWasteBySupply[w.supplyId, default: 0] += w.soles
+            }
+        }
+        for id in longLife {
+            #expect((wasteBySupply[id] ?? 0) < 1.0)
+        }
+
+        let octoberTopThree = octoberWasteBySupply.sorted { $0.value > $1.value }.prefix(3).map { $0.key }
+        #expect(octoberTopThree.allSatisfy { !longLife.contains($0) })
+        #expect(!data.lots.contains { $0.purchasedOn == demoDay })
     }
 
     @Test func everySupplyReconcilesLotsWithCurrentStock() {

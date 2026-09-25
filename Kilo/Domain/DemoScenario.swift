@@ -77,6 +77,26 @@ private struct WeeklyPlan {
     let overbuy: Double
     let intervalDays: Int
     let start: Date
+    let spoilage: [(day: Date, quantity: Double, shelfLife: Int)]
+    let avoidRecentPurchase: Bool
+
+    init(
+        supply: SupplyInfo,
+        weekly: [Double],
+        overbuy: Double,
+        intervalDays: Int,
+        start: Date,
+        spoilage: [(day: Date, quantity: Double, shelfLife: Int)] = [],
+        avoidRecentPurchase: Bool = false
+    ) {
+        self.supply = supply
+        self.weekly = weekly
+        self.overbuy = overbuy
+        self.intervalDays = intervalDays
+        self.start = start
+        self.spoilage = spoilage
+        self.avoidRecentPurchase = avoidRecentPurchase
+    }
 }
 
 private func planTarget(_ plan: WeeklyPlan, _ date: Date) -> Double {
@@ -90,17 +110,21 @@ private func simulateWeeklyPlan(_ plan: WeeklyPlan) -> (stock: [StockRecord], lo
     var stock: [StockRecord] = []
     var lots: [Lot] = []
     var queue: [(lot: Lot, remaining: Double)] = []
+    var doomed: [(lot: Lot, remaining: Double)] = []
     var lastPurchase: Date? = nil
     var d = plan.start
 
     while d < demoDay {
         queue.removeAll { $0.lot.expiresOn < d }
+        doomed.removeAll { $0.lot.expiresOn < d }
 
         let isSunday = weekday(of: d) == 7
         let exceptional = d == exceptionalSunday
         let closedToday = isSunday && !exceptional
 
-        let due = lastPurchase == nil || daysBetween(lastPurchase!, d) >= plan.intervalDays
+        let dueOnSchedule = lastPurchase == nil || daysBetween(lastPurchase!, d) >= plan.intervalDays
+        let withinAvoidanceWindow = plan.avoidRecentPurchase && daysBetween(d, demoDay) < plan.intervalDays
+        let due = dueOnSchedule && !withinAvoidanceWindow
         if due && !closedToday {
             let need = (0..<plan.intervalDays).reduce(0.0) { $0 + planTarget(plan, addDays(d, $1)) }
             let held = queue.reduce(0.0) { $0 + $1.remaining }
@@ -120,6 +144,19 @@ private func simulateWeeklyPlan(_ plan: WeeklyPlan) -> (stock: [StockRecord], lo
             lastPurchase = d
         }
 
+        if let spoiled = plan.spoilage.first(where: { $0.day == d }) {
+            let lot = Lot(
+                id: nextLotId(),
+                supplyId: plan.supply.id,
+                purchasedOn: d,
+                quantity: spoiled.quantity,
+                cost: spoiled.quantity * plan.supply.referencePrice,
+                expiresOn: addDays(d, spoiled.shelfLife)
+            )
+            lots.append(lot)
+            doomed.append((lot, spoiled.quantity))
+        }
+
         if closedToday {
             if plan.supply.critical { stock.append(.closed(plan.supply.id, d)) }
             d = addDays(d, 1)
@@ -136,7 +173,7 @@ private func simulateWeeklyPlan(_ plan: WeeklyPlan) -> (stock: [StockRecord], lo
         }
         queue.removeAll { $0.remaining <= 0.001 }
 
-        let remaining = queue.reduce(0.0) { $0 + $1.remaining }
+        let remaining = queue.reduce(0.0) { $0 + $1.remaining } + doomed.reduce(0.0) { $0 + $1.remaining }
         let shouldRecord = plan.supply.critical || weekday(of: d) == 1 || d == plan.start
         if shouldRecord {
             stock.append(StockRecord(supplyId: plan.supply.id, date: d, remaining: remaining))
@@ -163,11 +200,13 @@ private func buildChicken() -> (stock: [StockRecord], lots: [Lot]) {
     var stock: [StockRecord] = []
     var lots: [Lot] = []
     var queue: [(lot: Lot, remaining: Double)] = []
+    var doomed: [(lot: Lot, remaining: Double)] = []
     var lastPurchase: Date? = nil
     var d = historyStart
 
     while d < demoDay {
         queue.removeAll { $0.lot.expiresOn < d }
+        doomed.removeAll { $0.lot.expiresOn < d }
 
         let due = lastPurchase == nil || daysBetween(lastPurchase!, d) >= 3
         if d == chickenFinalPurchase {
@@ -191,6 +230,12 @@ private func buildChicken() -> (stock: [StockRecord], lots: [Lot]) {
             lastPurchase = d
         }
 
+        if let spoiled = chickenSpoilage.first(where: { $0.day == d }) {
+            let lot = Lot(id: nextLotId(), supplyId: chickenInfo.id, purchasedOn: d, quantity: spoiled.quantity, cost: spoiled.quantity * chickenInfo.referencePrice, expiresOn: addDays(d, spoiled.shelfLife))
+            lots.append(lot)
+            doomed.append((lot, spoiled.quantity))
+        }
+
         let isSunday = weekday(of: d) == 7
         let exceptional = d == exceptionalSunday
         if isSunday && !exceptional {
@@ -208,7 +253,7 @@ private func buildChicken() -> (stock: [StockRecord], lots: [Lot]) {
             k += 1
         }
         queue.removeAll { $0.remaining <= 0.001 }
-        let remaining = queue.reduce(0.0) { $0 + $1.remaining }
+        let remaining = queue.reduce(0.0) { $0 + $1.remaining } + doomed.reduce(0.0) { $0 + $1.remaining }
         stock.append(StockRecord(supplyId: chickenInfo.id, date: d, remaining: remaining))
 
         d = addDays(d, 1)
@@ -223,6 +268,7 @@ private func buildFish() -> (stock: [StockRecord], lots: [Lot]) {
     var stock: [StockRecord] = []
     var lots: [Lot] = []
     var queue: [(lot: Lot, remaining: Double)] = []
+    var doomed: [(lot: Lot, remaining: Double)] = []
     var lastPurchase: Date? = nil
     var d = fishStart
 
@@ -230,8 +276,10 @@ private func buildFish() -> (stock: [StockRecord], lots: [Lot]) {
 
     while d < demoDay {
         queue.removeAll { $0.lot.expiresOn < d }
+        doomed.removeAll { $0.lot.expiresOn < d }
 
-        let due = lastPurchase == nil || daysBetween(lastPurchase!, d) >= 2
+        let dueOnSchedule = lastPurchase == nil || daysBetween(lastPurchase!, d) >= 2
+        let due = dueOnSchedule && daysBetween(d, demoDay) >= 3
         if due {
             let need = (0..<2).reduce(0.0) { $0 + target(addDays(d, $1)) }
             let held = queue.reduce(0.0) { $0 + $1.remaining }
@@ -244,6 +292,12 @@ private func buildFish() -> (stock: [StockRecord], lots: [Lot]) {
             lastPurchase = d
         }
 
+        if let spoiled = fishSpoilage.first(where: { $0.day == d }) {
+            let lot = Lot(id: nextLotId(), supplyId: fishInfo.id, purchasedOn: d, quantity: spoiled.quantity, cost: spoiled.quantity * fishInfo.referencePrice, expiresOn: addDays(d, spoiled.shelfLife))
+            lots.append(lot)
+            doomed.append((lot, spoiled.quantity))
+        }
+
         var use = target(d)
         var k = 0
         while k < queue.count && use > 0.0001 {
@@ -253,7 +307,7 @@ private func buildFish() -> (stock: [StockRecord], lots: [Lot]) {
             k += 1
         }
         queue.removeAll { $0.remaining <= 0.001 }
-        let remaining = queue.reduce(0.0) { $0 + $1.remaining }
+        let remaining = queue.reduce(0.0) { $0 + $1.remaining } + doomed.reduce(0.0) { $0 + $1.remaining }
         stock.append(StockRecord(supplyId: fishInfo.id, date: d, remaining: remaining))
 
         d = addDays(d, 1)
@@ -262,54 +316,37 @@ private func buildFish() -> (stock: [StockRecord], lots: [Lot]) {
     return (stock, lots)
 }
 
-private struct SpoilageEvent {
-    let supplyId: String
-    let year: Int
-    let month: Int
-    let day: Int
-    let quantity: Double
-}
-
-private let spoilageEvents: [SpoilageEvent] = [
-    SpoilageEvent(supplyId: "rice", year: 2026, month: 7, day: 8, quantity: 20),
-    SpoilageEvent(supplyId: "rice", year: 2026, month: 7, day: 22, quantity: 20),
-    SpoilageEvent(supplyId: "oil", year: 2026, month: 7, day: 15, quantity: 10),
-    SpoilageEvent(supplyId: "garlic", year: 2026, month: 7, day: 15, quantity: 6),
-    SpoilageEvent(supplyId: "legumes", year: 2026, month: 7, day: 25, quantity: 10),
-
-    SpoilageEvent(supplyId: "rice", year: 2026, month: 8, day: 5, quantity: 15),
-    SpoilageEvent(supplyId: "rice", year: 2026, month: 8, day: 19, quantity: 15),
-    SpoilageEvent(supplyId: "oil", year: 2026, month: 8, day: 12, quantity: 8),
-    SpoilageEvent(supplyId: "garlic", year: 2026, month: 8, day: 12, quantity: 5),
-    SpoilageEvent(supplyId: "legumes", year: 2026, month: 8, day: 26, quantity: 10),
-
-    SpoilageEvent(supplyId: "rice", year: 2026, month: 9, day: 2, quantity: 10),
-    SpoilageEvent(supplyId: "rice", year: 2026, month: 9, day: 16, quantity: 10),
-    SpoilageEvent(supplyId: "oil", year: 2026, month: 9, day: 9, quantity: 6),
-    SpoilageEvent(supplyId: "garlic", year: 2026, month: 9, day: 9, quantity: 4),
-    SpoilageEvent(supplyId: "legumes", year: 2026, month: 9, day: 23, quantity: 11),
-
-    SpoilageEvent(supplyId: "rice", year: 2026, month: 10, day: 7, quantity: 8),
-    SpoilageEvent(supplyId: "rice", year: 2026, month: 10, day: 21, quantity: 8),
-    SpoilageEvent(supplyId: "oil", year: 2026, month: 10, day: 14, quantity: 5),
-    SpoilageEvent(supplyId: "garlic", year: 2026, month: 10, day: 14, quantity: 3),
-    SpoilageEvent(supplyId: "legumes", year: 2026, month: 10, day: 7, quantity: 7),
+private let cilantroSpoilage: [(day: Date, quantity: Double, shelfLife: Int)] = [
+    (dateFor(year: 2026, month: 7, day: 8), 20, 2),
+    (dateFor(year: 2026, month: 7, day: 22), 20, 2),
+    (dateFor(year: 2026, month: 8, day: 5), 15, 2),
+    (dateFor(year: 2026, month: 8, day: 19), 15, 2),
+    (dateFor(year: 2026, month: 9, day: 2), 10, 2),
+    (dateFor(year: 2026, month: 9, day: 16), 10, 2),
+    (dateFor(year: 2026, month: 9, day: 28), 8, 2),
 ]
 
-private func spoilageLots() -> [Lot] {
-    spoilageEvents.map { event in
-        let info = demoSupplies.first { $0.id == event.supplyId }!
-        let purchasedOn = dateFor(year: event.year, month: event.month, day: event.day)
-        return Lot(
-            id: nextLotId(),
-            supplyId: event.supplyId,
-            purchasedOn: purchasedOn,
-            quantity: event.quantity,
-            cost: event.quantity * info.referencePrice,
-            expiresOn: addDays(purchasedOn, 2)
-        )
-    }
-}
+private let tomatoSpoilage: [(day: Date, quantity: Double, shelfLife: Int)] = [
+    (dateFor(year: 2026, month: 7, day: 15), 30, 2),
+    (dateFor(year: 2026, month: 8, day: 12), 25, 2),
+    (dateFor(year: 2026, month: 9, day: 9), 18, 2),
+    (dateFor(year: 2026, month: 9, day: 28), 12, 2),
+]
+
+private let cornSpoilage: [(day: Date, quantity: Double, shelfLife: Int)] = [
+    (dateFor(year: 2026, month: 10, day: 26), 20, cornInfo.shelfLifeDays),
+]
+
+private let chickenSpoilage: [(day: Date, quantity: Double, shelfLife: Int)] = [
+    (dateFor(year: 2026, month: 7, day: 25), 21, 2),
+    (dateFor(year: 2026, month: 8, day: 24), 17, 2),
+    (dateFor(year: 2026, month: 9, day: 23), 16, 2),
+    (dateFor(year: 2026, month: 9, day: 29), 11, 1),
+]
+
+private let fishSpoilage: [(day: Date, quantity: Double, shelfLife: Int)] = [
+    (dateFor(year: 2026, month: 10, day: 22), 4, 2),
+]
 
 func demoData() -> KiloData {
     lotSequence = 0
@@ -325,21 +362,21 @@ func demoData() -> KiloData {
     lots.append(contentsOf: fish.lots)
 
     let genericPlans: [WeeklyPlan] = [
-        WeeklyPlan(supply: beefInfo, weekly: [3, 3, 3, 3, 4, 4.5, 0], overbuy: 1.0, intervalDays: 3, start: historyStart),
+        WeeklyPlan(supply: beefInfo, weekly: [3, 3, 3, 3, 4, 4.5, 0], overbuy: 1.0, intervalDays: 3, start: historyStart, avoidRecentPurchase: true),
         WeeklyPlan(supply: potatoInfo, weekly: [5, 5, 5, 5.5, 6, 6.5, 0], overbuy: 1.15, intervalDays: 14, start: historyStart),
-        WeeklyPlan(supply: onionInfo, weekly: [3, 3, 3, 3, 3.5, 4, 0], overbuy: 1.0, intervalDays: 3, start: historyStart),
-        WeeklyPlan(supply: tomatoInfo, weekly: [2, 2, 2, 2, 2.5, 2.5, 0], overbuy: 1.0, intervalDays: 3, start: historyStart),
-        WeeklyPlan(supply: limeInfo, weekly: [1.5, 1.5, 1.5, 1.5, 2, 2, 0], overbuy: 1.0, intervalDays: 3, start: historyStart),
-        WeeklyPlan(supply: cilantroInfo, weekly: [1, 1, 1, 1, 1, 1, 0], overbuy: 1.0, intervalDays: 3, start: historyStart),
-        WeeklyPlan(supply: chiliInfo, weekly: [0.5, 0.5, 0.5, 0.5, 1, 1, 0], overbuy: 1.0, intervalDays: 3, start: historyStart),
-        WeeklyPlan(supply: cornInfo, weekly: [6, 6, 6, 6, 8, 8, 0], overbuy: 1.0, intervalDays: 3, start: historyStart),
+        WeeklyPlan(supply: onionInfo, weekly: [3, 3, 3, 3, 3.5, 4, 0], overbuy: 1.0, intervalDays: 3, start: historyStart, avoidRecentPurchase: true),
+        WeeklyPlan(supply: tomatoInfo, weekly: [2, 2, 2, 2, 2.5, 2.5, 0], overbuy: 1.0, intervalDays: 3, start: historyStart, spoilage: tomatoSpoilage, avoidRecentPurchase: true),
+        WeeklyPlan(supply: limeInfo, weekly: [1.5, 1.5, 1.5, 1.5, 2, 2, 0], overbuy: 1.0, intervalDays: 3, start: historyStart, avoidRecentPurchase: true),
+        WeeklyPlan(supply: cilantroInfo, weekly: [1, 1, 1, 1, 1, 1, 0], overbuy: 1.0, intervalDays: 3, start: historyStart, spoilage: cilantroSpoilage, avoidRecentPurchase: true),
+        WeeklyPlan(supply: chiliInfo, weekly: [0.5, 0.5, 0.5, 0.5, 1, 1, 0], overbuy: 1.0, intervalDays: 3, start: historyStart, avoidRecentPurchase: true),
+        WeeklyPlan(supply: cornInfo, weekly: [6, 6, 6, 6, 8, 8, 0], overbuy: 1.0, intervalDays: 3, start: historyStart, spoilage: cornSpoilage, avoidRecentPurchase: true),
         WeeklyPlan(supply: riceInfo, weekly: [4, 4, 4, 4, 5, 5, 0], overbuy: 1.0, intervalDays: 10, start: dateFor(year: 2026, month: 7, day: 3)),
         WeeklyPlan(supply: oilInfo, weekly: [1.5, 1.5, 1.5, 1.5, 2, 2.5, 0], overbuy: 1.0, intervalDays: 10, start: dateFor(year: 2026, month: 7, day: 3)),
         WeeklyPlan(supply: legumesInfo, weekly: [1, 1, 1, 1, 1, 1, 0], overbuy: 1.0, intervalDays: 10, start: dateFor(year: 2026, month: 7, day: 3)),
         WeeklyPlan(supply: saltInfo, weekly: [0.5, 0.5, 0.5, 0.5, 0.5, 1, 0], overbuy: 1.0, intervalDays: 14, start: historyStart),
         WeeklyPlan(supply: garlicInfo, weekly: [0.5, 0.5, 0.5, 0.5, 0.5, 1, 0], overbuy: 1.0, intervalDays: 14, start: historyStart),
-        WeeklyPlan(supply: eggInfo, weekly: [20, 20, 20, 20, 25, 30, 0], overbuy: 1.0, intervalDays: 4, start: dateFor(year: 2026, month: 7, day: 2)),
-        WeeklyPlan(supply: cheeseInfo, weekly: [0.5, 0.5, 0.5, 0.5, 0.5, 1, 0], overbuy: 1.0, intervalDays: 4, start: dateFor(year: 2026, month: 7, day: 2)),
+        WeeklyPlan(supply: eggInfo, weekly: [20, 20, 20, 20, 25, 30, 0], overbuy: 1.0, intervalDays: 4, start: dateFor(year: 2026, month: 7, day: 2), avoidRecentPurchase: true),
+        WeeklyPlan(supply: cheeseInfo, weekly: [0.5, 0.5, 0.5, 0.5, 0.5, 1, 0], overbuy: 1.0, intervalDays: 4, start: dateFor(year: 2026, month: 7, day: 2), avoidRecentPurchase: true),
     ]
 
     for plan in genericPlans {
@@ -347,15 +384,6 @@ func demoData() -> KiloData {
         stock.append(contentsOf: result.stock)
         lots.append(contentsOf: result.lots)
     }
-
-    lots.append(contentsOf: spoilageLots())
-
-    let forceDueLots: [Lot] = [
-        Lot(id: nextLotId(), supplyId: fishInfo.id, purchasedOn: demoDay, quantity: 2, cost: 2 * fishInfo.referencePrice, expiresOn: addDays(demoDay, 1)),
-        Lot(id: nextLotId(), supplyId: onionInfo.id, purchasedOn: demoDay, quantity: 1, cost: 1 * onionInfo.referencePrice, expiresOn: addDays(demoDay, onionInfo.shelfLifeDays)),
-        Lot(id: nextLotId(), supplyId: cheeseInfo.id, purchasedOn: demoDay, quantity: 0.5, cost: 0.5 * cheeseInfo.referencePrice, expiresOn: addDays(demoDay, cheeseInfo.shelfLifeDays)),
-    ]
-    lots.append(contentsOf: forceDueLots)
 
     let tomatoGapDays: Set<Date> = [
         dateFor(year: 2026, month: 10, day: 27),
