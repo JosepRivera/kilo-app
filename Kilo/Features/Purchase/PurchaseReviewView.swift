@@ -69,7 +69,7 @@ struct PurchaseReviewView: View {
             )) { target in
                 if let index = lines.firstIndex(where: { $0.id == target.value }),
                    case .unknown(let spoken) = lines[index].kind {
-                    CreateSupplySheet(spokenName: spoken, categories: store.data.categories) { newSupply in
+                    CreateSupplySheet(spokenName: spoken, spokenUnit: "atados", categoryHint: "seasoning", categories: store.data.categories) { newSupply in
                         let unitPrice = lines[index].quantity > 0 ? lines[index].cost / lines[index].quantity : 0
                         let supply = SupplyInfo(
                             id: newSupply.id,

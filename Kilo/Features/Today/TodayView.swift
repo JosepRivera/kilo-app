@@ -66,6 +66,7 @@ struct TodayView: View {
         .listStyle(.insetGrouped)
         .kiloScreen()
         .navigationTitle("Compra de hoy")
+        .navigationSubtitle(store.today.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "es_PE"))))
         .sheet(item: $explained) { WhyBuySheet(supplyId: $0.id) }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {

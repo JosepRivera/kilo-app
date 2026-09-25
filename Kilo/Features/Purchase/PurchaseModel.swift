@@ -86,9 +86,9 @@ struct PurchaseModel {
         lines.append(PurchaseLineDraft(
             id: "spoken-huacatay",
             kind: .unknown(spoken: "huacatay"),
-            heard: "un atado de huacatay",
+            heard: "un atado de huacatay a dos soles",
             quantity: 1,
-            cost: 0,
+            cost: 2,
             expiresOn: addDays(engine.today, 3)
         ))
 

@@ -10,15 +10,16 @@ struct CreateSupplySheet: View {
 
     @State private var name: String
     @State private var categoryId: String
-    @State private var unit = "kg"
+    @State private var unit: String
     @State private var shelfLifeDays = 5
 
-    init(spokenName: String, categories: [CategoryInfo], onCreate: @escaping (SupplyInfo) -> Void) {
+    init(spokenName: String, spokenUnit: String = "kg", categoryHint: String? = nil, categories: [CategoryInfo], onCreate: @escaping (SupplyInfo) -> Void) {
+        _unit = State(initialValue: spokenUnit)
         self.spokenName = spokenName
         self.categories = categories
         self.onCreate = onCreate
         _name = State(initialValue: spokenName.prefix(1).uppercased() + spokenName.dropFirst())
-        _categoryId = State(initialValue: categories.first?.id ?? "")
+        _categoryId = State(initialValue: categories.first { $0.id == categoryHint }?.id ?? categories.first?.id ?? "")
     }
 
     var body: some View {
