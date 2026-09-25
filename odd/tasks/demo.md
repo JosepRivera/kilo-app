@@ -49,5 +49,7 @@ RDD: disabled globally by the user → delivery `disabled/unmanaged`.
 - T1 evidence (writer report): macOS harness all case checks pass; TEST BUILD SUCCEEDED; `xcodebuild test` on simulator TEST SUCCEEDED, 21 tests (8 engine + 13 scenario). Derived: pollo demand 30.0, error 3.93, buffer 8.71, stock 12.0, buy 27.0; pescado 12 real days; lots expiring today (pollo x2, 8.5 and 9.6 S/kg) and tomorrow (pescado); waste Jul 353 / Aug 322 / Sep 259 / Oct 205.
 - Simulator note (resolved by creating a simulator in DeviceHub): iOS 27 runtime 24A434 installed but not listed after a reboot (SDK expects 24A430; cryptex mount permission denied). Tests compile but cannot run until fixed.
 
+- Impeccable finish: review disposition fix → 3 fixes resolved → ship (76490a9); DESIGN.md + .impeccable/design.json written by documenter.
+
 ## Next step
 T2 (app shell + screens in SwiftUI).
