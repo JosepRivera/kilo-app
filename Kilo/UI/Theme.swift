@@ -1,29 +1,4 @@
 import SwiftUI
-import UIKit
-
-extension Color {
-    private static func dynamic(_ light: UInt32, _ dark: UInt32) -> Color {
-        Color(UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: dark) : UIColor(hex: light) })
-    }
-
-    static let kiloGround = dynamic(0xEAF0F7, 0x0B1422)
-    static let kiloModule = dynamic(0xFFFFFF, 0x16233A)
-    static let kiloTrack = dynamic(0xDCE3EC, 0x24334D)
-    static let kiloAlertGround = dynamic(0xFDECEC, 0x3A1A1F)
-    static let kiloAlert = dynamic(0xB42318, 0xFF8A80)
-    static let kiloGood = dynamic(0x1E7F46, 0x4ADE80)
-}
-
-extension UIColor {
-    convenience init(hex: UInt32) {
-        self.init(
-            red: CGFloat((hex >> 16) & 0xFF) / 255,
-            green: CGFloat((hex >> 8) & 0xFF) / 255,
-            blue: CGFloat(hex & 0xFF) / 255,
-            alpha: 1
-        )
-    }
-}
 
 struct KiloScreen: ViewModifier {
     func body(content: Content) -> some View {

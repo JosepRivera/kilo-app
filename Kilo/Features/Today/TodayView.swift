@@ -15,10 +15,16 @@ struct TodayView: View {
             .sorted { ($0.daysLeft, $0.supply.name) < ($1.daysLeft, $1.supply.name) }
 
         List {
-            if !alerts.isEmpty {
+            if let urgent = alerts.first {
                 Section {
-                    ForEach(alerts, id: \.supply.id) { group in
-                        ExpiryAlertRow(group: group, label: engine.lotLabel(group.alerts[0].lot.lot))
+                    ExpiryAlertRow(group: urgent, label: engine.lotLabel(urgent.alerts[0].lot.lot))
+                    if alerts.count > 1 {
+                        NavigationLink {
+                            ExpiringView(groups: alerts)
+                        } label: {
+                            Text("Ver todo lo que vence (\(alerts.count))")
+                                .foregroundStyle(Color.kiloAlert)
+                        }
                     }
                 }
                 .listRowBackground(Color.kiloAlertGround)
@@ -66,7 +72,7 @@ struct TodayView: View {
     }
 }
 
-private struct ExpiryGroup {
+struct ExpiryGroup {
     let alerts: [ExpiryAlert]
 
     var supply: SupplyInfo { alerts[0].supply }
@@ -74,7 +80,7 @@ private struct ExpiryGroup {
     var remaining: Double { alerts.reduce(0) { $0 + $1.lot.remaining } }
 }
 
-private struct ExpiryAlertRow: View {
+struct ExpiryAlertRow: View {
     let group: ExpiryGroup
     let label: String
 
@@ -179,5 +185,27 @@ private struct LegendLabelStyle: LabelStyle {
             configuration.icon.font(.system(size: 6))
             configuration.title
         }
+    }
+}
+
+struct ExpiringView: View {
+    @Environment(KiloStore.self) private var store
+    let groups: [ExpiryGroup]
+
+    var body: some View {
+        List {
+            Section {
+                ForEach(groups, id: \.supply.id) { group in
+                    ExpiryAlertRow(group: group, label: store.engine.lotLabel(group.alerts[0].lot.lot))
+                }
+            } footer: {
+                Text("Kilo asume que se usa primero lo más antiguo.")
+            }
+            .listRowBackground(Color.kiloModule)
+        }
+        .listStyle(.insetGrouped)
+        .kiloScreen()
+        .navigationTitle("Por vencer")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }

@@ -19,28 +19,34 @@ enum VoiceAction: String, CaseIterable, Identifiable {
     }
 }
 
+enum AppTab: Hashable {
+    case today, supplies, savings, dictate
+}
+
 struct RootView: View {
+    @State private var tab = AppTab.today
     @State private var dictating = false
 
     var body: some View {
-        TabView {
-            Tab("Hoy", systemImage: "sun.max.fill") {
+        TabView(selection: $tab) {
+            Tab("Hoy", systemImage: "sun.max.fill", value: .today) {
                 NavigationStack { TodayView() }
             }
-            Tab("Insumos", systemImage: "square.stack.3d.up.fill") {
+            Tab("Insumos", systemImage: "square.stack.3d.up.fill", value: .supplies) {
                 NavigationStack { SuppliesView() }
             }
-            Tab("Ahorro", systemImage: "chart.bar.fill") {
+            Tab("Ahorro", systemImage: "chart.bar.fill", value: .savings) {
                 NavigationStack { SavingsView() }
             }
-        }
-        .tabViewBottomAccessory {
-            Button {
-                dictating = true
-            } label: {
-                Label("Dictar \(VoiceAction.forTime(.now).title.lowercased())", systemImage: "mic.fill")
-                    .frame(maxWidth: .infinity)
+            Tab("Dictar", systemImage: "mic.fill", value: .dictate, role: .search) {
+                Color.clear
             }
+        }
+        .tabViewSearchActivation(.searchTabSelection)
+        .onChange(of: tab) { previous, current in
+            guard current == .dictate else { return }
+            tab = previous
+            dictating = true
         }
         .sheet(isPresented: $dictating) {
             DictationSheet(initial: VoiceAction.forTime(.now))
