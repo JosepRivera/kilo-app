@@ -6,3 +6,8 @@ build/
 .build/
 .swiftpm/
 .impeccable/review/
+.impeccable/
+odd/
+.claude/
+.codegraph/
+*.log
