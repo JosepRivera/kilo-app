@@ -7,7 +7,7 @@ struct PurchaseReviewView: View {
     @State private var lines: [PurchaseLineDraft] = []
     @State private var showDiscardConfirm = false
     @State private var creatingSupplyFor: String? = nil
-    @FocusState private var focusedCostField: String?
+    @State private var editingLineFor: EditorTarget? = nil
 
     var body: some View {
         let engine = store.engine
@@ -21,18 +21,18 @@ struct PurchaseReviewView: View {
                 }
                 .listRowBackground(Color.kiloModule)
 
-                ForEach(lines.indices, id: \.self) { index in
-                    let lineId = lines[index].id
-                    Section {
+                Section("Lo que compraste") {
+                    ForEach(lines.indices, id: \.self) { index in
+                        let lineId = lines[index].id
                         PurchaseLineRow(
                             line: $lines[index],
                             engine: engine,
-                            focusedCostField: $focusedCostField,
+                            openEditor: { focusPrice in editingLineFor = EditorTarget(id: lineId, focusPrice: focusPrice) },
                             creatingSupply: { creatingSupplyFor = lineId },
                             remove: { lines.removeAll { $0.id == lineId } }
                         )
+                        .listRowBackground(Color.kiloModule)
                     }
-                    .listRowBackground(Color.kiloModule)
                 }
 
                 Section {
@@ -89,6 +89,11 @@ struct PurchaseReviewView: View {
                     }
                 }
             }
+            .sheet(item: $editingLineFor) { target in
+                if let index = lines.firstIndex(where: { $0.id == target.id }) {
+                    PurchaseLineEditor(line: $lines[index], engine: engine, focusPrice: target.focusPrice)
+                }
+            }
         }
         .onAppear {
             if lines.isEmpty {
@@ -126,4 +131,9 @@ struct PurchaseReviewView: View {
 private struct IdentifiedString: Identifiable {
     let value: String
     var id: String { value }
+}
+
+private struct EditorTarget: Identifiable {
+    let id: String
+    let focusPrice: Bool
 }

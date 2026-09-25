@@ -21,6 +21,10 @@ func money(_ value: Double) -> String {
     "S/\(value.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "es_PE"))))"
 }
 
+func shortDate(_ date: Date) -> String {
+    date.formatted(.dateTime.day().month(.abbreviated).locale(Locale(identifier: "es_PE")))
+}
+
 func expiryText(_ days: Int) -> String {
     switch days {
     case ..<0: "venció"

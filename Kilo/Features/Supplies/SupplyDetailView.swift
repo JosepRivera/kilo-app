@@ -101,9 +101,10 @@ struct SupplyDetailView: View {
                     }
                 }
             } header: {
-                Text("Últimos días")
-            } footer: {
-                Text("«Estimado» es un día sin cierre: Kilo repartió la diferencia y lo cuenta a medias mientras aprende.")
+                InfoHeader(
+                    title: "Últimos días",
+                    info: "«Estimado» es un día sin cierre: Kilo repartió la diferencia y lo cuenta a medias mientras aprende."
+                )
             }
             .listRowBackground(Color.kiloModule)
 

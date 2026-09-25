@@ -44,9 +44,14 @@ struct WhyBuySheet: View {
                         value: "+ \(withUnit(rec.buffer, unit))"
                     )
                     Term(title: "Ya tienes", detail: nil, value: "− \(withUnit(rec.onHand, unit))")
-                } footer: {
                     if realDays < coldStartDays {
-                        Text("Kilo aún aprende: lleva \(realDays) de \(coldStartDays) días de datos reales de \(supply.name.lowercased()). Mientras tanto se apoya en tu gasto mensual declarado.")
+                        Label {
+                            Text("Kilo aún aprende: lleva \(realDays) de \(coldStartDays) días de datos reales de \(supply.name.lowercased()). Mientras tanto se apoya en tu gasto mensual declarado.")
+                                .foregroundStyle(.secondary)
+                        } icon: {
+                            Image(systemName: "graduationcap")
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
                 .listRowBackground(Color.kiloModule)

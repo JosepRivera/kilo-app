@@ -10,8 +10,11 @@ struct ExpiringView: View {
                 ForEach(groups, id: \.supply.id) { group in
                     ExpiryAlertRow(group: group, label: store.engine.lotLabel(group.alerts[0].lot.lot))
                 }
-            } footer: {
-                Text("Kilo asume que se usa primero lo más antiguo.")
+            } header: {
+                InfoHeader(
+                    title: "Por vencer",
+                    info: "Kilo asume que se usa primero lo más antiguo."
+                )
             }
             .listRowBackground(Color.kiloModule)
         }

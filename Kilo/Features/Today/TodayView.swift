@@ -48,10 +48,10 @@ struct TodayView: View {
                         }
                     }
                 } header: {
-                    Text("Hasta tu próxima compra")
-                } footer: {
-                    Label("El punto es lo que tienes; lo azul, lo que falta.", systemImage: "circle.fill")
-                        .labelStyle(LegendLabelStyle())
+                    InfoHeader(
+                        title: "Hasta tu próxima compra",
+                        info: "El punto es lo que tienes; lo azul, lo que falta. Toca una fila para ver cómo se calculó."
+                    )
                 }
                 .listRowBackground(Color.kiloModule)
             }
@@ -79,13 +79,4 @@ struct TodayView: View {
 
 private struct ExplainedSupply: Identifiable {
     let id: String
-}
-
-private struct LegendLabelStyle: LabelStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        HStack(spacing: 6) {
-            configuration.icon.font(.system(size: 6))
-            configuration.title
-        }
-    }
 }

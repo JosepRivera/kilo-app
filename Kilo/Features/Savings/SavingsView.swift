@@ -39,6 +39,9 @@ struct SavingsView: View {
                         .font(.headline)
                         .foregroundStyle(diff >= 0 ? Color.kiloGood : Color.kiloAlert)
                     }
+                    Label("Solo lo ve el dueño", systemImage: "lock.fill")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
                 .padding(.vertical, 6)
 
@@ -67,7 +70,7 @@ struct SavingsView: View {
             .listRowBackground(Color.kiloModule)
 
             if !model.topWasted.isEmpty {
-                Section("Lo que más se venció este mes") {
+                Section {
                     ForEach(model.topWasted, id: \.supply.id) { item in
                         HStack(spacing: 12) {
                             SupplyIcon(supply: item.supply)
@@ -78,13 +81,13 @@ struct SavingsView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
+                } header: {
+                    InfoHeader(
+                        title: "Lo que más se venció este mes",
+                        info: "Es el costo de compra de lo que se venció, no la ganancia perdida."
+                    )
                 }
                 .listRowBackground(Color.kiloModule)
-            }
-
-            Section {
-            } footer: {
-                Label("Solo lo ve el dueño. Es el costo de compra de lo que se venció, no la ganancia.", systemImage: "lock.fill")
             }
         }
         .listStyle(.insetGrouped)

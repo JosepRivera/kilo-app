@@ -28,9 +28,10 @@ struct SettingsView: View {
                     }
                     LabeledContent("Hoy es", value: store.today.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "es_PE"))))
                 } header: {
-                    Text("Demostración")
-                } footer: {
-                    Text("Los datos de Doña Rosa son de ejemplo y vuelven a empezar cada vez que abres la app.")
+                    InfoHeader(
+                        title: "Demostración",
+                        info: "Los datos de Doña Rosa son de ejemplo y vuelven a empezar cada vez que abres la app."
+                    )
                 }
                 .listRowBackground(Color.kiloModule)
             }
@@ -95,8 +96,11 @@ private struct RecordingModeView: View {
     var body: some View {
         List {
             Section {
-            } footer: {
-                Text("Activa los insumos caros o que se malogran rápido. Los demás se cuentan una vez por semana.")
+            } header: {
+                InfoHeader(
+                    title: "Registro diario",
+                    info: "Activa los insumos caros o que se malogran rápido. Los demás se cuentan una vez por semana."
+                )
             }
             ForEach(store.data.categories) { category in
                 let supplies = store.data.supplies.filter { $0.categoryId == category.id }
