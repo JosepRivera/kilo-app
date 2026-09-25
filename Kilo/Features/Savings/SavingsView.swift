@@ -5,33 +5,19 @@ struct SavingsView: View {
     @Environment(KiloStore.self) private var store
 
     var body: some View {
-        let engine = store.engine
-        let byMonth = engine.monthlyWaste()
-        let thisMonth = monthStart(engine.today)
-        let months = (0..<4).reversed().map { back in
-            let month = kiloCalendar.date(byAdding: .month, value: -back, to: thisMonth)!
-            return (month: month, soles: byMonth[month] ?? 0)
-        }
-        let now = months.last!.soles
-        let before = months[months.count - 2].soles
-        let top = Dictionary(
-            grouping: engine.waste().filter { monthStart($0.date) == thisMonth },
-            by: \.supplyId
-        )
-        .map { (supply: store.data.supply($0.key), soles: $0.value.reduce(0) { $0 + $1.soles }) }
-        .sorted { $0.soles > $1.soles }
-        .prefix(5)
+        let model = SavingsModel(engine: store.engine, data: store.data)
+        let thisMonth = model.months.last?.month
 
         List {
             Section {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Este mes perdiste")
                         .foregroundStyle(.secondary)
-                    Text(soles(now))
+                    Text(soles(model.current))
                         .font(.system(size: 48, weight: .bold))
                         .monospacedDigit()
-                    if before > 0 {
-                        let diff = before - now
+                    if model.previous > 0 {
+                        let diff = model.previous - model.current
                         Label(
                             diff >= 0 ? "\(soles(diff)) menos que el mes pasado" : "\(soles(-diff)) más que el mes pasado",
                             systemImage: diff >= 0 ? "arrow.down.right" : "arrow.up.right"
@@ -42,7 +28,7 @@ struct SavingsView: View {
                 }
                 .padding(.vertical, 6)
 
-                Chart(months, id: \.month) { item in
+                Chart(model.months, id: \.month) { item in
                     BarMark(
                         x: .value("Mes", item.month, unit: .month),
                         y: .value("Perdido", item.soles)
@@ -66,9 +52,9 @@ struct SavingsView: View {
             }
             .listRowBackground(Color.kiloModule)
 
-            if !top.isEmpty {
+            if !model.topWasted.isEmpty {
                 Section("Lo que más se venció este mes") {
-                    ForEach(top, id: \.supply.id) { item in
+                    ForEach(model.topWasted, id: \.supply.id) { item in
                         HStack(spacing: 12) {
                             SupplyIcon(supply: item.supply)
                             Text(item.supply.name)
@@ -90,9 +76,5 @@ struct SavingsView: View {
         .listStyle(.insetGrouped)
         .kiloScreen()
         .navigationTitle("Ahorro")
-    }
-
-    private func monthStart(_ date: Date) -> Date {
-        kiloCalendar.date(from: kiloCalendar.dateComponents([.year, .month], from: date))!
     }
 }

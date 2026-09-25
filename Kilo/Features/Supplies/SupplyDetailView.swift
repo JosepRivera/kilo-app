@@ -6,18 +6,7 @@ struct SupplyDetailView: View {
     let supplyId: String
 
     var body: some View {
-        let engine = store.engine
-        let supply = store.data.supply(supplyId)
-        let real = engine.realDays(supplyId)
-        let week = (0..<7).map { offset in
-            let date = addDays(engine.today, offset)
-            return (label: offset == 0 ? "Hoy" : weekdayShort[weekday(of: date) - 1], amount: engine.forecast(supplyId, date))
-        }
-        let peaks = (0..<7).map { addDays(engine.today, $0) }
-            .sorted { engine.forecast(supplyId, $0) > engine.forecast(supplyId, $1) }
-            .prefix(2)
-            .map { weekdayLong[weekday(of: $0) - 1] }
-        let lots = engine.activeLots(supplyId).filter { !$0.lot.id.hasPrefix(openingLotPrefix) }
+        let model = SupplyDetailModel(engine: store.engine, data: store.data, supplyId: supplyId)
 
         List {
             Section {
@@ -25,19 +14,19 @@ struct SupplyDetailView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Quedan")
                             .foregroundStyle(.secondary)
-                        Text(withUnit(engine.currentStock(supplyId), supply.unit))
+                        Text(withUnit(model.stock, model.supply.unit))
                             .font(.system(.largeTitle, weight: .bold))
                             .monospacedDigit()
                     }
                     Spacer()
-                    SupplyIcon(supply: supply, size: 72)
+                    SupplyIcon(supply: model.supply, size: 72)
                 }
                 .padding(.vertical, 6)
 
-                if real < coldStartDays {
+                if model.realDays < coldStartDays {
                     VStack(alignment: .leading, spacing: 8) {
-                        ProgressView(value: Double(real), total: Double(coldStartDays))
-                        Text("Kilo aún aprende · \(real) de \(coldStartDays) días")
+                        ProgressView(value: Double(model.realDays), total: Double(coldStartDays))
+                        Text("Kilo aún aprende · \(model.realDays) de \(coldStartDays) días")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -47,7 +36,7 @@ struct SupplyDetailView: View {
             .listRowBackground(Color.kiloModule)
 
             Section {
-                Chart(week, id: \.label) { day in
+                Chart(model.week, id: \.label) { day in
                     BarMark(
                         x: .value("Día", day.label),
                         y: .value("Uso", day.amount)
@@ -60,7 +49,7 @@ struct SupplyDetailView: View {
                 .padding(.vertical, 8)
                 .accessibilityLabel("Uso esperado por día")
 
-                Text("Se usa más el \(peaks.joined(separator: " y el ")).")
+                Text("Se usa más el \(model.peaks.joined(separator: " y el ")).")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             } header: {
@@ -68,24 +57,23 @@ struct SupplyDetailView: View {
             }
             .listRowBackground(Color.kiloModule)
 
-            if !lots.isEmpty {
+            if !model.lots.isEmpty {
                 Section("Lotes") {
-                    ForEach(lots, id: \.lot.id) { state in
-                        let days = daysBetween(engine.today, state.lot.expiresOn)
+                    ForEach(model.lots, id: \.state.lot.id) { display in
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Lote \(engine.lotLabel(state.lot))")
-                                Text("\(money(state.lot.unitPrice)) por \(withUnit(1, supply.unit).dropFirst(2))")
+                                Text("Lote \(store.engine.lotLabel(display.state.lot))")
+                                Text("\(money(display.state.lot.unitPrice)) por \(withUnit(1, model.supply.unit).dropFirst(2))")
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
                             }
                             Spacer()
                             VStack(alignment: .trailing, spacing: 2) {
-                                Text(withUnit(state.remaining, supply.unit))
+                                Text(withUnit(display.state.remaining, model.supply.unit))
                                     .monospacedDigit()
-                                Text(expiryText(days))
+                                Text(expiryText(display.daysLeft))
                                     .font(.subheadline)
-                                    .foregroundStyle(days <= 1 ? Color.kiloAlert : .secondary)
+                                    .foregroundStyle(display.daysLeft <= 1 ? Color.kiloAlert : .secondary)
                             }
                         }
                     }
@@ -94,10 +82,10 @@ struct SupplyDetailView: View {
             }
 
             Section {
-                LabeledContent("Registro", value: supply.critical ? "Diario" : "Semanal")
-                LabeledContent("Unidad", value: supply.unit)
-                ForEach(supply.phrases.sorted { $0.key < $1.key }, id: \.key) { phrase, amount in
-                    LabeledContent("“\(phrase)”", value: withUnit(amount, supply.unit))
+                LabeledContent("Registro", value: model.supply.critical ? "Diario" : "Semanal")
+                LabeledContent("Unidad", value: model.supply.unit)
+                ForEach(model.supply.phrases.sorted { $0.key < $1.key }, id: \.key) { phrase, amount in
+                    LabeledContent("“\(phrase)”", value: withUnit(amount, model.supply.unit))
                 }
             } header: {
                 Text("Cómo se registra")
@@ -106,7 +94,7 @@ struct SupplyDetailView: View {
         }
         .listStyle(.insetGrouped)
         .kiloScreen()
-        .navigationTitle(supply.name)
+        .navigationTitle(model.supply.name)
         .navigationBarTitleDisplayMode(.inline)
     }
 }

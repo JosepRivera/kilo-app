@@ -6,15 +6,12 @@ struct SuppliesView: View {
 
     var body: some View {
         let engine = store.engine
-        let alerts = engine.expiryAlerts()
-        let matches = store.data.supplies.filter {
-            query.isEmpty || $0.name.localizedStandardContains(query)
-        }
+        let model = SuppliesModel(engine: engine, data: store.data, query: query)
 
         List {
-            if query.isEmpty && !alerts.isEmpty {
+            if query.isEmpty && !model.alerts.isEmpty {
                 Section {
-                    ForEach(alerts, id: \.lot.lot.id) { alert in
+                    ForEach(model.alerts, id: \.lot.lot.id) { alert in
                         NavigationLink(value: alert.supply.id) {
                             HStack(spacing: 12) {
                                 SupplyIcon(supply: alert.supply)
@@ -34,23 +31,15 @@ struct SuppliesView: View {
                 .listRowBackground(Color.kiloModule)
             }
 
-            ForEach(store.data.categories) { category in
-                let supplies = matches.filter { $0.categoryId == category.id }
-                if !supplies.isEmpty {
-                    Section(category.name) {
-                        ForEach(supplies) { supply in
-                            NavigationLink(value: supply.id) {
-                                SupplyRow(
-                                    supply: supply,
-                                    stock: engine.currentStock(supply.id),
-                                    learning: engine.isLearning(supply.id),
-                                    expiresIn: alerts.first { $0.supply.id == supply.id }?.daysLeft
-                                )
-                            }
+            ForEach(model.sections, id: \.category.id) { section in
+                Section(section.category.name) {
+                    ForEach(section.supplies, id: \.supply.id) { item in
+                        NavigationLink(value: item.supply.id) {
+                            SupplyRow(supply: item.supply, stock: item.stock, learning: item.learning, expiresIn: item.expiresIn)
                         }
                     }
-                    .listRowBackground(Color.kiloModule)
                 }
+                .listRowBackground(Color.kiloModule)
             }
         }
         .listStyle(.insetGrouped)
@@ -58,7 +47,7 @@ struct SuppliesView: View {
         .navigationTitle("Insumos")
         .searchable(text: $query, prompt: "Buscar insumo")
         .overlay {
-            if matches.isEmpty {
+            if !model.hasMatches {
                 ContentUnavailableView.search(text: query)
             }
         }
