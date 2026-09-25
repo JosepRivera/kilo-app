@@ -26,10 +26,10 @@ RDD: disabled globally by the user → delivery `disabled/unmanaged`.
 - [x] T1b SwiftUI shell + screens (Impeccable Pronóstico contract, brief repointed to Kilo/Features/Today/TodayView.swift): native TabView Hoy · Insumos · Ahorro, dictation in tabViewBottomAccessory + sheet (medium detent), Hoy (grouped expiry alerts, forecast rows with range bar and check-off, ya alcanza), Insumos (search, Por vencer, categories), supply detail (stock, learning progress, Swift Charts week, lots, registro), Ahorro (month vs previous, 4-month chart, top wasted). Route: inline (user asked for visible progress). Evidence: BUILD SUCCEEDED, verified on simulator iPhone 18 Pro (DeviceHub).
 - [x] T1c Demo data realism (b6dfa8d; waste Oct top: pollo, tomate, pescado, culantro; long-life waste 0; no demo-day lots): waste must come from perishables (rice/menestras currently top the wasted list); remove lots bought on demoDay before the market run (fish 'lote de hoy vence mañana'); check tab-switch responsiveness.
 - [x] Refactor 60a8a6a: App / Domain / Data / DesignSystem / Formatting / Features (View + plain Model per screen). Route: delegated writer.
-- [~] T2 "¿Por qué comprar esto?" sheet done (fab017a); pending: recent days real/estimado/cerrado in supply detail.
-- [ ] T3 Close review: "¿trece o tres?" suggestion, resume interrupted draft, discard-changes guard, dictation listening/processing states.
-- [ ] T4 Supply resolution in purchase: "¿cuál limón?" picker, create supply, "medio balde" conversion.
-- [ ] T5 Ajustes: pasar al día siguiente, ver como dueño/encargado, crítico/secundario bulk review, Tu restaurante (intervals, spend, closed days).
+- [x] T2 "¿Por qué comprar esto?" sheet (fab017a) + recent days real/estimado/cerrado in detail (47b333c).
+- [ ] T3 (delegated writer, in progress) Close review: "¿trece o tres?" suggestion, resume interrupted draft, discard-changes guard, dictation listening/processing states.
+- [ ] T4 (delegated writer, in progress) Purchase review + supply resolution in purchase: "¿cuál limón?" picker, create supply, "medio balde" conversion.
+- [x] T5 (47b333c) Ajustes: pasar al día siguiente, ver como dueño/encargado, crítico/secundario bulk review, Tu restaurante (intervals, spend, closed days).
 - [ ] T6 (optional) Onboarding: Bienvenida + day-0 dictation.
 
 ## T1 acceptance (case matrix, asserted by one test)
