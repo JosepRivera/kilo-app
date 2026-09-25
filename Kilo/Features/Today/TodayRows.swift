@@ -16,7 +16,7 @@ struct ExpiryAlertRow: View {
                     .foregroundStyle(Color.kiloAlert)
                 Text("\(group.supply.name) · quedan \(withUnit(group.remaining, group.supply.unit)) · úsalo primero")
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.kiloAlert.opacity(0.8))
             }
             Spacer(minLength: 0)
             Image(systemName: "exclamationmark.triangle.fill")

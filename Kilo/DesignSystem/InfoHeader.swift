@@ -14,6 +14,8 @@ struct InfoHeader: View {
                 showingInfo = true
             } label: {
                 Image(systemName: "info.circle")
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Más información")

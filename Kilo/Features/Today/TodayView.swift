@@ -46,6 +46,12 @@ struct TodayView: View {
                         } explain: {
                             explained = ExplainedSupply(id: item.recommendation.supply.id)
                         }
+                        .swipeActions(edge: .leading) {
+                            Button(item.bought ? "Pendiente" : "Comprado", systemImage: item.bought ? "arrow.uturn.backward" : "checkmark") {
+                                store.toggleBought(item.recommendation.supply.id)
+                            }
+                            .tint(item.bought ? .gray : Color.kiloGood)
+                        }
                     }
                 } header: {
                     InfoHeader(
