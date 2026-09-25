@@ -7,6 +7,7 @@ enum AppTab: Hashable {
 struct RootView: View {
     @State private var tab = AppTab.today
     @State private var dictating = false
+    @State private var reviewing: VoiceAction?
 
     var body: some View {
         TabView(selection: $tab) {
@@ -30,7 +31,13 @@ struct RootView: View {
             dictating = true
         }
         .sheet(isPresented: $dictating) {
-            DictationSheet(initial: VoiceAction.forTime(.now))
+            DictationSheet(initial: VoiceAction.forTime(.now)) { reviewing = $0 }
+        }
+        .fullScreenCover(item: $reviewing) { action in
+            switch action {
+            case .stockClose: StockCloseReviewView()
+            case .purchase: PurchaseReviewView()
+            }
         }
     }
 }

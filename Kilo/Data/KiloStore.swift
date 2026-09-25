@@ -11,6 +11,7 @@ struct PurchaseLine {
 @Observable
 final class KiloStore {
     private(set) var data: KiloData
+    var closeDraft: [String: Double]?
     private let clock: @MainActor () -> Date
     private var cachedEngine: Engine?
 
@@ -62,6 +63,7 @@ final class KiloStore {
     }
 
     func saveClose(_ remaining: [String: Double]) {
+        closeDraft = nil
         data.stock.removeAll { $0.date == today && remaining[$0.supplyId] != nil }
         data.stock.append(contentsOf: remaining.map { StockRecord(supplyId: $0.key, date: today, remaining: $0.value) })
         changed()
@@ -95,6 +97,18 @@ final class KiloStore {
     func setCritical(_ supplyId: String, critical: Bool) {
         guard let index = data.supplies.firstIndex(where: { $0.id == supplyId }) else { return }
         data.supplies[index].critical = critical
+        changed()
+    }
+
+    func addSupply(_ supply: SupplyInfo) {
+        guard !data.supplies.contains(where: { $0.id == supply.id }) else { return }
+        data.supplies.append(supply)
+        changed()
+    }
+
+    func setPhrase(_ phrase: String, amount: Double, for supplyId: String) {
+        guard let index = data.supplies.firstIndex(where: { $0.id == supplyId }) else { return }
+        data.supplies[index].phrases[phrase] = amount
         changed()
     }
 }

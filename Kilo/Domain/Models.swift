@@ -58,7 +58,7 @@ struct SupplyInfo: Identifiable, Hashable {
     let referencePrice: Double
     let icon: String?
     var critical: Bool = true
-    let phrases: [String: Double]
+    var phrases: [String: Double]
 
     var assetName: String {
         guard let icon, !icon.isEmpty else { return "Supplies/generic" }

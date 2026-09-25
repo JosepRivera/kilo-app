@@ -3,9 +3,11 @@ import SwiftUI
 struct DictationSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var action: VoiceAction
+    let onFinish: (VoiceAction) -> Void
 
-    init(initial: VoiceAction) {
+    init(initial: VoiceAction, onFinish: @escaping (VoiceAction) -> Void) {
         _action = State(initialValue: initial)
+        self.onFinish = onFinish
     }
 
     var body: some View {
@@ -36,6 +38,7 @@ struct DictationSheet: View {
 
                 Button {
                     dismiss()
+                    onFinish(action)
                 } label: {
                     Text("Listo").frame(maxWidth: .infinity)
                 }
