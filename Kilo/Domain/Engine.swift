@@ -20,8 +20,11 @@ struct Recommendation {
     let supply: SupplyInfo
     let toBuy: Double
     let onHand: Double
-    let needed: Double
+    let demand: Double
+    let buffer: Double
     let horizonDays: Int
+
+    var needed: Double { demand + buffer }
 }
 
 struct LotState {
@@ -191,7 +194,8 @@ final class Engine {
             supply: s,
             toBuy: raw <= 0 ? 0 : roundUpToStep(raw, unit: s.unit),
             onHand: onHand,
-            needed: demand + buffer,
+            demand: demand,
+            buffer: buffer,
             horizonDays: h
         )
     }
