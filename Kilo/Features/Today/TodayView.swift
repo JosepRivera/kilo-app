@@ -3,6 +3,7 @@ import SwiftUI
 struct TodayView: View {
     @Environment(KiloStore.self) private var store
     @State private var explained: ExplainedSupply?
+    @State private var showingSettings = false
 
     var body: some View {
         let engine = store.engine
@@ -66,6 +67,12 @@ struct TodayView: View {
         .kiloScreen()
         .navigationTitle("Compra de hoy")
         .sheet(item: $explained) { WhyBuySheet(supplyId: $0.id) }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Ajustes", systemImage: "gearshape") { showingSettings = true }
+            }
+        }
+        .sheet(isPresented: $showingSettings) { SettingsView() }
     }
 }
 

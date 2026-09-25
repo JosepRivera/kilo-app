@@ -12,6 +12,8 @@ struct PurchaseLine {
 final class KiloStore {
     private(set) var data: KiloData
     var closeDraft: [String: Double]?
+    var isOwner = true
+    private(set) var dayOffset = 0
     private let clock: @MainActor () -> Date
     private var cachedEngine: Engine?
 
@@ -24,7 +26,19 @@ final class KiloStore {
         KiloStore(data: demoData(), clock: clock)
     }
 
-    var today: Date { businessDate(clock()) }
+    var today: Date { addDays(businessDate(clock()), dayOffset) }
+
+    func advanceDay() {
+        dayOffset += 1
+        closeDraft = nil
+        changed()
+    }
+
+    func updateCategory(_ category: CategoryInfo) {
+        guard let index = data.categories.firstIndex(where: { $0.id == category.id }) else { return }
+        data.categories[index] = category
+        changed()
+    }
 
     var engine: Engine {
         if let cached = cachedEngine, cached.today == today { return cached }

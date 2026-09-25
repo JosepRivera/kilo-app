@@ -10,6 +10,14 @@ struct LotDisplay {
     let daysLeft: Int
 }
 
+struct RecentDay {
+    enum Kind { case real, estimated, closed, missing }
+
+    let date: Date
+    let amount: Double
+    let kind: Kind
+}
+
 struct SupplyDetailModel {
     let supply: SupplyInfo
     let stock: Double
@@ -17,6 +25,7 @@ struct SupplyDetailModel {
     let week: [DayUsage]
     let peaks: [String]
     let lots: [LotDisplay]
+    let recent: [RecentDay]
 
     init(engine: Engine, data: KiloData, supplyId: String) {
         supply = data.supply(supplyId)
@@ -37,5 +46,12 @@ struct SupplyDetailModel {
         lots = engine.activeLots(supplyId)
             .filter { !$0.lot.id.hasPrefix(openingLotPrefix) }
             .map { LotDisplay(state: $0, daysLeft: daysBetween(engine.today, $0.lot.expiresOn)) }
+        let consumption = engine.consumption(supplyId)
+        recent = (1...7).map { back in
+            let date = addDays(engine.today, -back)
+            guard let entry = consumption[date] else { return RecentDay(date: date, amount: 0, kind: .missing) }
+            let kind: RecentDay.Kind = entry.closed ? .closed : entry.estimated ? .estimated : .real
+            return RecentDay(date: date, amount: entry.amount, kind: kind)
+        }
     }
 }

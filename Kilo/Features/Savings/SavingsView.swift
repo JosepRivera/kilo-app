@@ -5,6 +5,20 @@ struct SavingsView: View {
     @Environment(KiloStore.self) private var store
 
     var body: some View {
+        if store.isOwner {
+            content
+        } else {
+            ContentUnavailableView(
+                "Solo lo ve el dueño",
+                systemImage: "lock.fill",
+                description: Text("El ahorro y lo que se pierde en soles es información del dueño.")
+            )
+            .background(Color.kiloGround)
+            .navigationTitle("Ahorro")
+        }
+    }
+
+    @ViewBuilder private var content: some View {
         let model = SavingsModel(engine: store.engine, data: store.data)
         let thisMonth = model.months.last?.month
 

@@ -45,8 +45,8 @@ let farFutureDate = dateFor(year: 9999, month: 1, day: 1)
 struct CategoryInfo: Identifiable, Hashable {
     let id: String
     let name: String
-    let purchaseIntervalDays: Int
-    let monthlySpend: Double
+    var purchaseIntervalDays: Int
+    var monthlySpend: Double
 }
 
 struct SupplyInfo: Identifiable, Hashable {

@@ -82,6 +82,32 @@ struct SupplyDetailView: View {
             }
 
             Section {
+                ForEach(model.recent, id: \.date) { day in
+                    HStack {
+                        Text(day.date.formatted(.dateTime.weekday(.wide).day().locale(Locale(identifier: "es_PE"))).capitalized)
+                        Spacer()
+                        switch day.kind {
+                        case .real:
+                            Text(withUnit(day.amount, model.supply.unit)).monospacedDigit()
+                        case .estimated:
+                            Text("~\(withUnit(day.amount, model.supply.unit)) · estimado")
+                                .foregroundStyle(.secondary)
+                                .monospacedDigit()
+                        case .closed:
+                            Text("cerrado").foregroundStyle(.secondary)
+                        case .missing:
+                            Text("sin dato").foregroundStyle(.tertiary)
+                        }
+                    }
+                }
+            } header: {
+                Text("Últimos días")
+            } footer: {
+                Text("«Estimado» es un día sin cierre: Kilo repartió la diferencia y lo cuenta a medias mientras aprende.")
+            }
+            .listRowBackground(Color.kiloModule)
+
+            Section {
                 LabeledContent("Registro", value: model.supply.critical ? "Diario" : "Semanal")
                 LabeledContent("Unidad", value: model.supply.unit)
                 ForEach(model.supply.phrases.sorted { $0.key < $1.key }, id: \.key) { phrase, amount in
