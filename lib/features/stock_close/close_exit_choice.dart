@@ -1,0 +1,1 @@
+enum CloseExitChoice { keepDraft, discard }

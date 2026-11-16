@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../core/loadable.dart';
+import '../data/models/voice_kind.dart';
 import '../features/savings/savings_screen.dart';
 import '../features/savings/savings_view_model.dart';
 import '../features/supplies/supplies_screen.dart';
@@ -20,6 +21,8 @@ class RootTabs extends StatefulWidget {
 }
 
 class _RootTabsState extends State<RootTabs> {
+  static const _dictateIndex = 3;
+
   late final AppNavigator _navigator = AppNavigator(widget.dependencies);
   late final TodayViewModel _today;
   late final SuppliesViewModel _supplies;
@@ -56,6 +59,10 @@ class _RootTabsState extends State<RootTabs> {
   }
 
   void _select(int index) {
+    if (index == _dictateIndex) {
+      _navigator.openDictation(context);
+      return;
+    }
     final source = <Loadable<Object>>[_today, _supplies, _savings][index];
     if (source.value == null && !source.isLoading) source.load();
     setState(() => _index = index);
@@ -71,7 +78,8 @@ class _RootTabsState extends State<RootTabs> {
             viewModel: _today,
             onOpenSettings: _navigator.openSettings,
             onExplain: _navigator.openWhyBuy,
-            onStartFirstCount: (_) {},
+            onStartFirstCount: (context) =>
+                _navigator.openDictation(context, kind: VoiceKind.close),
           ),
           SuppliesScreen(
             viewModel: _supplies,
@@ -99,6 +107,7 @@ class _RootTabsState extends State<RootTabs> {
             selectedIcon: Icon(Icons.bar_chart),
             label: 'Ahorro',
           ),
+          NavigationDestination(icon: Icon(Icons.mic), label: 'Dictar'),
         ],
       ),
     );
