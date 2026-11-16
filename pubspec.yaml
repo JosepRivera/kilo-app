@@ -1,0 +1,29 @@
+name: kilo_app
+description: "Kilo: la compra diaria de insumos de tu restaurante, sin sobras ni faltantes."
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.14.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_secure_storage: ^11.2.0
+  http: ^1.6.0
+  intl: ^0.20.3
+  material_ui: ^1.11.1
+  record: ^7.2.0
+  shared_preferences: ^2.5.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  config:
+    enable-swift-package-manager: false
+  uses-material-design: true
+  assets:
+    - assets/supplies/
